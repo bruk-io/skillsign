@@ -1,8 +1,16 @@
 """SkillSign CLI entry point."""
 
+import sys
+
 import click
 
 from skillsign import __version__
+
+
+def _not_implemented() -> None:
+    """Exit with code 10 for unimplemented commands."""
+    click.echo("Not yet implemented.", err=True)
+    sys.exit(10)
 
 
 @click.group()
@@ -19,28 +27,38 @@ def auth() -> None:
 @auth.command()
 def login() -> None:
     """Authenticate with GitHub via OIDC."""
-    click.echo("Not yet implemented.")
-    raise SystemExit(10)
+    _not_implemented()
 
 
 @auth.command()
 def status() -> None:
     """Show current authentication state."""
-    click.echo("Not yet implemented.")
-    raise SystemExit(10)
+    _not_implemented()
 
 
 @cli.command()
 @click.argument("file", type=click.Path(exists=True))
 def sign(file: str) -> None:
     """Sign a SKILL.md file, writing a detached sidecar."""
-    click.echo("Not yet implemented.")
-    raise SystemExit(10)
+    _not_implemented()
 
 
 @cli.command()
 @click.argument("files", nargs=-1, required=True, type=click.Path(exists=True))
 def verify(files: tuple[str, ...]) -> None:
     """Verify one or more SKILL.md files against their sidecars."""
-    click.echo("Not yet implemented.")
-    raise SystemExit(10)
+    _not_implemented()
+
+
+@cli.command()
+@click.argument("file", type=click.Path(exists=True))
+def inspect(file: str) -> None:
+    """Show signature metadata without verifying."""
+    _not_implemented()
+
+
+@cli.command()
+@click.argument("file", type=click.Path(exists=True))
+def unsign(file: str) -> None:
+    """Delete the sidecar file for a given SKILL.md."""
+    _not_implemented()

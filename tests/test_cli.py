@@ -37,3 +37,23 @@ def test_verify_help() -> None:
     runner = CliRunner()
     result = runner.invoke(cli, ["verify", "--help"])
     assert result.exit_code == 0
+
+
+def test_inspect_help() -> None:
+    runner = CliRunner()
+    result = runner.invoke(cli, ["inspect", "--help"])
+    assert result.exit_code == 0
+
+
+def test_unsign_help() -> None:
+    runner = CliRunner()
+    result = runner.invoke(cli, ["unsign", "--help"])
+    assert result.exit_code == 0
+
+
+def test_cli_lists_all_commands() -> None:
+    runner = CliRunner()
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0
+    for cmd in ("auth", "sign", "verify", "inspect", "unsign"):
+        assert cmd in result.output
