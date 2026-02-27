@@ -86,9 +86,31 @@ For each task under review:
    - **FAIL** — blocking issues found, specific feedback provided
 5. **Record result** — update the task or send feedback to team lead
 
-## Handling Review Failures
+## Handling Review Findings
 
-When a review fails:
+### Blocking issues in current sprint code
+
+Fix immediately in the same cycle. Do NOT create a GitHub issue — the review-fix loop should stay tight:
+
+1. Fix the code based on reviewer feedback
+2. Re-run the relevant reviewers on the fixed code
+3. Update the review verdict (FAIL → PASS)
+4. Proceed to integration
+
+### Bugs discovered in code from previous sprints
+
+Create a GitHub issue and defer to the next batch:
+
+1. Create an issue via `mcp__i-have-issues__create_issue` describing the bug
+2. Tag with the appropriate milestone and labels
+3. Do NOT fix it in the current sprint — it needs its own review cycle
+4. Note it in the cycle record for the retro
+
+### Non-blocking notes
+
+Record in the cycle record. Address during the EVOLVE phase if they are process/skill changes, or create issues if they are code improvements to defer.
+
+### Review failures (FAIL verdict)
 
 - Create a new task with the specific feedback and required fixes
 - Link it to the original task for context
