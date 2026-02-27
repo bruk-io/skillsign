@@ -1,0 +1,65 @@
+# SkillSign
+
+Cryptographic signing and verification for Claude Code SKILL.md files using Sigstore keyless signing.
+
+## Key Documents
+
+| Document | Location | Purpose |
+|---|---|---|
+| Specification | `docs/spec.md` | v0.1 draft — the source of truth for all behavior |
+| Roadmap | `docs/roadmap.md` | 4 phases, 45 deliverables, milestone-based |
+| Workflow | `docs/workflow.md` | Inner/outer development loops, agent roster, batch plan |
+| Architecture | `architecture/` | C4 model in LikeC4 DSL (21 files, 17 views) |
+
+## Project Conventions
+
+- **Language:** Python 3.14+
+- **Package manager:** UV (required)
+- **CLI framework:** Click
+- **Formatting:** ruff with black profile
+- **Type hints:** Mandatory
+- **Layout:** Flat (`skillsign/skillsign/`, not `skillsign/src/skillsign/`)
+- **License:** MIT
+
+## Agent Roster
+
+Agents are defined in `.claude/agents/`. Each has an explicit `model` in its frontmatter.
+
+| Agent | Model | Purpose |
+|---|---|---|
+| `product-manager` | Sonnet | Roadmap, issue triage, milestone management |
+| `crypto-reviewer` | Opus | Signing/verification protocols, Sigstore integration |
+| `identity-reviewer` | Opus | Signer identity, SAN matching, namespace security |
+| `policy-reviewer` | Opus | Policy engine design, rule evaluation, CLI flag interactions |
+| `input-surface-reviewer` | Opus | YAML parsing security, canonical form, size limits |
+| `attack-researcher` | Opus | Threat modeling, supply chain attacks, TOCTOU |
+| `consistency-checker` | Opus | Cross-references, terminology, exit code mappings |
+
+## How Work Gets Done
+
+See `docs/workflow.md` for the full process. Summary:
+
+1. **Inner loop** (agent-level): receive task → plan → implement in worktree → self-verify → report
+2. **Outer loop** (team-level): PLAN → EXECUTE → VERIFY → INTEGRATE → RETRO → EVOLVE → human checkpoint
+
+Model assignment:
+- **Opus** — Judgment, architecture, security review, retro synthesis
+- **Sonnet** — Implementation, code review, issue management
+- **Haiku** — Explore-only (codebase search, context gathering)
+
+## Architecture
+
+The C4 model lives in `architecture/` and covers:
+- **Level 1 (Context):** Actors (skill author, skill consumer, CI pipeline), SkillSign system, external systems (Sigstore, GitHub OIDC, TUF)
+- **Level 2 (Containers):** CLI tool, skill files, TUF cache
+- **Level 3 (Components):** 8 components inside the CLI (canonical processor, digest engine, signing engine, verification engine, policy engine, sidecar manager, TUF client, OIDC authenticator)
+- **Dynamic views:** 14 flows covering happy paths and all error codes
+
+Validate with: `npx likec4 validate`
+
+## Spec Quick Reference
+
+- **Signing:** Section 7 — canonical form → digest → OIDC → Fulcio cert → ECDSA sign → Rekor log → sidecar
+- **Verification:** Section 8 — sidecar parse → digest recompute → ECDSA verify → cert chain → SAN → EKU → SET
+- **Exit codes:** 0=VERIFIED, 1=hard failure, 2=UNSIGNED, 3=POLICY_FAIL, 10=CLI error
+- **Verification results:** VERIFIED, TAMPERED, INVALID_CERT, IDENTITY_MISMATCH, UNSIGNED, POLICY_FAIL, SKILL_ID_MISMATCH, MALFORMED_SIDECAR
