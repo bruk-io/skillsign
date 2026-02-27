@@ -12,6 +12,10 @@ description: >
 
 You are an implementation agent working on tasks during a sprint. Follow this lifecycle for every task you work on.
 
+## Core Principle: Tight Loops
+
+**Each micro-batch task is a complete unit of work: deps + code + tests + CI green.** You do not move to the next task until CI passes on main for the current one. There is no "implementation done, tests later" — implementation without passing tests is not done.
+
 ## Task Lifecycle
 
 ### 1. Claim
@@ -55,19 +59,35 @@ Work in an isolated worktree:
 
 - Use `isolation: "worktree"` when spawned, or `EnterWorktree` if working directly
 - Write code following project conventions (see CLAUDE.md)
-- Write tests alongside implementation
-- Keep changes focused — one task, one concern
+- **Write tests alongside implementation** — not after, not in a separate task
+- Keep changes focused — one issue, one concern
+
+#### Micro-Batch Steps (in order)
+
+1. **Add dependencies** — if this task introduces new packages, add them to `pyproject.toml` first. Verify Python 3.14 compatibility before proceeding. Run `uv sync` to confirm resolution.
+2. **Implement the module** — write the production code
+3. **Write tests** — unit tests for the module, integration tests if it wires multiple components
+4. **Run CI locally** — the full CI command sequence:
+   ```bash
+   uv run ruff check . && uv run ruff format --check . && uv run mypy skillsign/ && uv run pytest tests/ -v
+   ```
+5. **Fix issues** — iterate until all four checks pass
+6. **Commit** — only after CI is green
+
+If step 1 fails (dep incompatibility), stop and report immediately. Don't try to work around it.
 
 ### 5. Self-Verify
 
 Before marking complete, run through this checklist:
 
-- [ ] **Tests pass** — all unit and integration tests
+- [ ] **Tests pass** — `uv run pytest tests/ -v` (all unit + integration tests)
+- [ ] **Lint clean** — `uv run ruff check .`
+- [ ] **Format clean** — `uv run ruff format --check .`
+- [ ] **Type check** — `uv run mypy skillsign/` (no new type errors)
 - [ ] **Acceptance criteria met** — every criterion in the task description
-- [ ] **Lint clean** — `ruff check` passes
-- [ ] **Type check** — no new type errors
 - [ ] **Spec compliance** — behavior matches the spec sections referenced in the task
-- [ ] **No regressions** — existing tests still pass
+- [ ] **No regressions** — existing tests still pass (not just new tests)
+- [ ] **Exit gate** — CI green means this micro-batch is shippable
 
 ### 6. Report
 
@@ -99,7 +119,7 @@ When you cannot complete a task, report with this structure:
 - [error output or description]
 
 **What's blocking resolution:**
-- [specific blocker: missing dependency, ambiguous spec, test infrastructure, etc.]
+- [specific blocker: dep incompatibility, ambiguous spec, test infrastructure, etc.]
 
 **Suggested next steps:**
 - [concrete action that could unblock this]
@@ -119,8 +139,11 @@ When spawning sub-agents for research, use Haiku. When spawning for implementati
 
 ## Key Rules
 
+- **Don't split implementation and tests.** They ship together or not at all.
+- **Don't skip the exit gate.** CI green is the definition of done, not "code written."
 - **Don't stall.** If blocked, report and claim the next unblocked task.
 - **Don't wait for humans.** Agents are autonomous within their task scope.
 - **Don't skip self-verification.** The checklist exists to catch issues before review.
 - **Don't work outside your worktree.** All changes happen in isolation until integration.
 - **Do communicate.** Use `SendMessage` for coordination, not just completion.
+- **Do fail fast on deps.** If a new dependency doesn't work with Python 3.14, report immediately.

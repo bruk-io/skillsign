@@ -3,8 +3,8 @@ model {
   extend skillsign.cli {
 
     component authHandler 'Auth Handler' {
-      technology 'OIDC'
-      description 'Authenticates signers with GitHub via OpenID Connect token exchange'
+      technology 'OIDC, Sigstore SDK'
+      description 'Detects ambient OIDC credentials (GitHub Actions) or runs interactive browser flow, returning a Sigstore IdentityToken for use by the signing engine'
     }
 
     component canonicalProcessor 'Canonical Form Processor' {
@@ -13,8 +13,8 @@ model {
     }
 
     component signingEngine 'Signing Engine' {
-      technology 'ECDSA P-256, X.509'
-      description 'Orchestrates the signing protocol: generates ephemeral keypair locally, obtains Fulcio certificate, signs digest, submits to Rekor'
+      technology 'ECDSA P-256, X.509, Sigstore SDK'
+      description 'Orchestrates the 11-step signing protocol via the Sigstore SDK: reads manifest, computes canonical digest, delegates key generation and Fulcio/Rekor interaction to the SDK, assembles sidecar data'
     }
 
     component verificationEngine 'Verification Engine' {
@@ -43,7 +43,7 @@ model {
     }
 
     // Signing path
-    signingEngine -> authHandler 'Gets OIDC identity token from'
+    signingEngine -> authHandler 'Obtains Sigstore IdentityToken from'
     signingEngine -> canonicalProcessor 'Gets SHA-256 digest from'
     signingEngine -> sidecarManager 'Checks for existing sidecar and writes assembled sidecar via'
     signingEngine -> manifestReader 'Reads skill_id and skill_version from'
@@ -63,8 +63,8 @@ model {
 
   // Component-to-external relationships
   skillsign.cli.authHandler -> github 'Authenticates via OIDC, receives identity token'
-  skillsign.cli.signingEngine -> fulcio 'Submits ephemeral public key and OIDC token, receives short-lived certificate'
-  skillsign.cli.signingEngine -> rekor 'Submits signature, certificate, and digest as hashedrekord/v0.0.1 entry'
+  skillsign.cli.signingEngine -> fulcio 'Delegates ephemeral key generation and certificate issuance via Sigstore SDK'
+  skillsign.cli.signingEngine -> rekor 'Delegates log entry submission via Sigstore SDK as hashedrekord/v0.0.1 entry'
   skillsign.cli.verificationEngine -> rekor 'Confirms log entry exists and digest matches in --strict mode'
   skillsign.cli.tufClient -> tuf 'Fetches current TUF root metadata via HTTPS'
   skillsign.cli.tufClient -> skillsign.tufCache 'Reads and writes cached TUF metadata via local filesystem'
