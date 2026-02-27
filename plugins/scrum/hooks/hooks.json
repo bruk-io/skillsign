@@ -1,0 +1,29 @@
+{
+  "description": "Scrum workflow hooks for task completion gating and review dispatch",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/task-completed-gate",
+            "timeout": 10
+          }
+        ],
+        "matcher": "TaskUpdate"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/review-dispatch",
+            "timeout": 10
+          }
+        ],
+        "matcher": "TaskUpdate"
+      }
+    ]
+  }
+}

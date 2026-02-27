@@ -1,0 +1,10 @@
+{
+  "name": "product-management",
+  "version": "0.1.0",
+  "description": "Product management agent and roadmap context skill for SkillSign — issue triage, milestone management, and sprint planning",
+  "author": {
+    "name": "bruk-io"
+  },
+  "license": "MIT",
+  "keywords": ["product-management", "roadmap", "issues", "milestones", "planning"]
+}

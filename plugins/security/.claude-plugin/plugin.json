@@ -1,0 +1,10 @@
+{
+  "name": "security",
+  "version": "0.1.0",
+  "description": "Security review agents and domain knowledge skills for SkillSign specification analysis — cryptographic protocols, identity, policy, input parsing, threat modeling, and consistency",
+  "author": {
+    "name": "bruk-io"
+  },
+  "license": "MIT",
+  "keywords": ["security", "review", "crypto", "sigstore", "threat-modeling", "specification"]
+}

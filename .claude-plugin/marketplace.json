@@ -1,0 +1,38 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "skillsign",
+  "description": "Plugins for SkillSign — cryptographic signing and verification for Claude Code SKILL.md files",
+  "owner": {
+    "name": "bruk-io",
+    "email": "brukhabtu@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "scrum",
+      "description": "Scrum workflow for Claude Code agent teams — sprint planning, execution, review, integration, retrospective, and evolution",
+      "author": {
+        "name": "bruk-io"
+      },
+      "category": "workflow",
+      "source": "./plugins/scrum"
+    },
+    {
+      "name": "security",
+      "description": "Security review agents and domain knowledge skills for SkillSign specification analysis",
+      "author": {
+        "name": "bruk-io"
+      },
+      "category": "security",
+      "source": "./plugins/security"
+    },
+    {
+      "name": "product-management",
+      "description": "Product management agent and roadmap context skill for SkillSign",
+      "author": {
+        "name": "bruk-io"
+      },
+      "category": "workflow",
+      "source": "./plugins/product-management"
+    }
+  ]
+}

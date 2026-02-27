@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+"""
+PreToolUse gate for TaskUpdate: block task completion if tests or lint fail.
+
+Reads CLAUDE_TOOL_INPUT to detect status=completed. Runs ruff check and pytest.
+Blocks the tool call if either fails. Gracefully allows if tools aren't
+installed or no tests exist yet.
+"""
+
+import json
+import os
+import subprocess
+import sys
+
+
+def main() -> None:
+    tool_input = os.environ.get("CLAUDE_TOOL_INPUT", "{}")
+    try:
+        params = json.loads(tool_input)
+    except json.JSONDecodeError:
+        json.dump({"decision": "allow"}, sys.stdout)
+        return
+
+    # Only gate on status=completed
+    if params.get("status") != "completed":
+        json.dump({"decision": "allow"}, sys.stdout)
+        return
+
+    errors: list[str] = []
+
+    # Run ruff check
+    try:
+        result = subprocess.run(
+            ["ruff", "check", "."],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if result.returncode != 0:
+            output = result.stdout.strip() or result.stderr.strip()
+            errors.append(f"ruff check failed:\n{output}")
+    except FileNotFoundError:
+        pass  # ruff not installed, skip
+    except subprocess.TimeoutExpired:
+        pass  # timed out, skip
+
+    # Run pytest (fail-fast)
+    try:
+        result = subprocess.run(
+            ["uv", "run", "pytest", "-x", "-q"],
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        # Exit code 5 = no tests collected (OK early in project)
+        if result.returncode not in (0, 5):
+            output = result.stdout.strip() or result.stderr.strip()
+            errors.append(f"pytest failed:\n{output}")
+    except FileNotFoundError:
+        pass  # uv/pytest not installed, skip
+    except subprocess.TimeoutExpired:
+        errors.append("pytest timed out after 120s")
+
+    if errors:
+        json.dump(
+            {
+                "decision": "block",
+                "reason": "Task completion blocked — verification failed:\n\n"
+                + "\n\n".join(errors),
+            },
+            sys.stdout,
+        )
+    else:
+        json.dump({"decision": "allow"}, sys.stdout)
+
+
+if __name__ == "__main__":
+    main()

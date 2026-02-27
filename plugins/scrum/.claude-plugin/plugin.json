@@ -1,0 +1,10 @@
+{
+  "name": "scrum",
+  "version": "0.1.0",
+  "description": "Scrum workflow for Claude Code agent teams — sprint planning, execution, review, integration, retrospective, and evolution",
+  "author": {
+    "name": "bruk-io"
+  },
+  "license": "MIT",
+  "keywords": ["scrum", "agile", "workflow", "agent-teams", "sprint"]
+}
