@@ -1,0 +1,49 @@
+views {
+
+  dynamic view errorPolicyFail {
+    title 'Flows / Skill Consumer / POLICY_FAIL — Trust Policy Not Satisfied'
+    description 'Signature is cryptographically valid but does not meet the trust policy requirements (Section 8.3, Section 10)'
+    variant sequence
+
+    skillConsumer -> skillsign.cli.verificationEngine {
+      title 'Runs: skillsign verify --policy .skillsign-policy.yaml ./SKILL.md'
+      navigateTo verificationFlow
+      notes '''
+        All cryptographic verification passes: sidecar parsing, canonical form,
+        digest match, ECDSA signature, certificate chain, SAN match, EKU,
+        SET temporal binding, and SKILL_ID_MISMATCH check.
+        The signature is valid. Click to see full verification flow.
+      '''
+    }
+
+    skillsign.cli.verificationEngine -> skillsign.cli.policyEngine 'Passes verified signer identity, rekor_timestamp, and skill_id'
+
+    skillsign.cli.policyEngine -> skillsign.skillFiles 'Reads .skillsign-policy.yaml trust policy'
+
+    skillsign.cli.policyEngine -> skillsign.cli.verificationEngine {
+      title 'Returns deny result'
+      notes '''
+        Policy evaluation (Section 10) produces a deny result:
+        - Rules are evaluated in declaration order (first-match-wins)
+        - Each rule checks: signer and/or signer_org and/or max_age_days
+        - All conditions within a rule use AND semantics
+        - If no rule matches, the default action applies
+
+        Common POLICY_FAIL scenarios:
+        - Signer is not in the allowed list
+        - Signer's org does not match any signer_org rule
+        - Signature age exceeds max_age_days threshold
+        - No matching rule and default action is "deny"
+      '''
+    }
+
+    skillsign.cli.verificationEngine -> skillConsumer {
+      title 'POLICY_FAIL — exit code 3'
+      notes '''
+        Exit code 3 is lower severity than exit code 1 (verification failure).
+        In multi-file verification, exit code 1 takes precedence over 3.
+      '''
+    }
+  }
+
+}

@@ -1,0 +1,67 @@
+views {
+
+  dynamic view errorSigningInfra {
+    title 'Flows / Skill Author / SIGNING_INFRA — Signing Infrastructure Failure'
+    description 'Signing fails due to OIDC auth, Fulcio, Rekor, or local crypto errors (Section 7.2.1 steps 6-9)'
+    variant sequence
+
+    skillAuthor -> skillsign.cli.signingEngine {
+      title 'Manifest and canonical form valid, begins signing'
+      navigateTo signingFlow
+      notes '''
+        Manifest parsed, skill_id/skill_version validated, sidecar check passed,
+        canonical form computed, digest ready. Click to see full signing flow.
+      '''
+    }
+
+    skillsign.cli.signingEngine -> skillsign.cli.authHandler 'Requests OIDC authentication'
+
+    skillsign.cli.authHandler -> github {
+      title 'OIDC authentication fails — exit code 10'
+      notes '''
+        GitHub OIDC token exchange fails. Possible causes:
+        - User denies browser authorization
+        - Expired or invalid OIDC session
+        - Network connectivity to GitHub
+        - In CI: ambient OIDC token not available or misconfigured
+        If this fails, subsequent steps (Fulcio, signing, Rekor) do not execute.
+      '''
+    }
+
+    skillsign.cli.signingEngine -> fulcio {
+      title 'Certificate issuance fails — exit code 10'
+      notes '''
+        Fulcio rejects the certificate request. Possible causes:
+        - Invalid or expired OIDC token
+        - Fulcio service unavailable
+        - Network connectivity to Fulcio
+        If this fails, local signing and Rekor submission do not execute.
+      '''
+    }
+
+    skillsign.cli.signingEngine -> skillsign.cli.signingEngine {
+      title 'Local ECDSA signing fails — exit code 10'
+      notes '''
+        The ephemeral key generation or ECDSA P-256 signing operation fails.
+        Possible causes:
+        - Crypto library error
+        - Insufficient entropy
+        If this fails, Rekor submission does not execute.
+      '''
+    }
+
+    skillsign.cli.signingEngine -> rekor {
+      title 'Rekor submission fails — exit code 10'
+      notes '''
+        Rekor rejects the log entry. Possible causes:
+        - Invalid hashedrekord entry format
+        - Rekor service unavailable
+        - Network connectivity to Rekor
+        Sidecar MUST NOT be written if Rekor submission fails.
+      '''
+    }
+
+    skillsign.cli.signingEngine -> skillAuthor 'Signing infrastructure failure — exit code 10'
+  }
+
+}

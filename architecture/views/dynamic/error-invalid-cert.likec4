@@ -1,0 +1,62 @@
+views {
+
+  dynamic view errorInvalidCert {
+    title 'Flows / Skill Consumer / INVALID_CERT — Certificate or SET Verification Failed'
+    description 'Certificate chain validation, EKU check, or SET signature verification fails (Section 8.2 steps 7-9)'
+    variant sequence
+
+    skillConsumer -> skillsign.cli.verificationEngine {
+      title 'Runs: skillsign verify ./SKILL.md'
+      navigateTo verificationFlow
+      notes '''
+        Click to see full verification flow.
+      '''
+    }
+
+    skillsign.cli.verificationEngine -> skillsign.cli.sidecarManager 'Reads and parses sidecar — OK'
+
+    skillsign.cli.sidecarManager -> skillsign.skillFiles 'Reads .skillsign sidecar'
+
+    skillsign.cli.verificationEngine -> skillsign.cli.canonicalProcessor 'Recomputes canonical form and digest — matches'
+
+    skillsign.cli.canonicalProcessor -> skillsign.skillFiles 'Reads SKILL.md file'
+
+    skillsign.cli.verificationEngine -> skillsign.cli.verificationEngine {
+      title 'ECDSA signature verification passes (step 6)'
+      notes '''
+        The ECDSA P-256 signature is verified against the certificate's
+        public key over the freshly-computed SHA-256 digest. This step
+        passes — the failure occurs in subsequent certificate or SET checks.
+      '''
+    }
+
+    skillsign.cli.verificationEngine -> skillsign.cli.tufClient 'Requests trusted Fulcio root certificates and Rekor public key'
+
+    parallel {
+      skillsign.cli.tufClient -> tuf 'Fetches current TUF root metadata'
+      skillsign.cli.tufClient -> skillsign.tufCache 'Reads/writes cached TUF metadata'
+    }
+
+    skillsign.cli.verificationEngine -> skillConsumer {
+      title 'INVALID_CERT — exit code 1'
+      notes '''
+        INVALID_CERT is triggered by any of these conditions:
+
+        Step 7 — Certificate chain validation:
+        - Chain does not validate against Fulcio root CA
+        - Certificate was not issued by the trusted Fulcio CA
+
+        Step 8 — EKU check:
+        - Missing Extended Key Usage (EKU) extension id-kp-codeSigning
+          (OID 1.3.6.1.5.5.7.3.3)
+
+        Step 9 — SET verification and temporal binding:
+        - SET cryptographic signature invalid against Rekor public key
+        - SET embedded timestamp falls outside certificate notBefore/notAfter window
+
+        This is a hard failure — the signature cannot be trusted.
+      '''
+    }
+  }
+
+}

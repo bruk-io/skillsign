@@ -1,0 +1,41 @@
+views {
+
+  dynamic view errorMalformedSidecar {
+    title 'Flows / Skill Consumer / MALFORMED_SIDECAR — Invalid Sidecar'
+    description 'Sidecar file exists but fails strict YAML parsing (Section 6.1, Section 8.2 step 2)'
+    variant sequence
+
+    skillConsumer -> skillsign.cli.verificationEngine {
+      title 'Runs: skillsign verify ./SKILL.md'
+      navigateTo verificationFlow
+      notes '''
+        Click to see full verification flow.
+      '''
+    }
+
+    skillsign.cli.verificationEngine -> skillsign.cli.sidecarManager 'Reads and parses sidecar'
+
+    skillsign.cli.sidecarManager -> skillsign.skillFiles 'Reads .skillsign sidecar file'
+
+    skillsign.cli.verificationEngine -> skillConsumer {
+      title 'MALFORMED_SIDECAR — exit code 1'
+      notes '''
+        Sidecar is rejected if any of these conditions are met:
+        - Invalid YAML syntax
+        - Duplicate keys
+        - YAML anchors or aliases (&anchor, *alias)
+        - YAML tags (!!str, !!map)
+        - Multi-document stream (--- separator after first document)
+        - File exceeds 64KB
+        - Required fields missing (version, skill_id, skill_version,
+          signer, timestamp, digest, rekor_log_id, rekor_timestamp,
+          rekor_set, certificate, signature)
+        - version field is not 1
+
+        This is a hard failure — no partial verification is attempted.
+        A v1 CLI encountering version: 2 MUST fail, not guess.
+      '''
+    }
+  }
+
+}

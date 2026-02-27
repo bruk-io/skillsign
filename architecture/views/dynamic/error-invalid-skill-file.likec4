@@ -1,0 +1,41 @@
+views {
+
+  dynamic view errorInvalidSkillFile {
+    title 'Flows / Skill Author / INVALID_SKILL_FILE — Invalid SKILL.md'
+    description 'Signing fails because the SKILL.md file is too large, contains invalid UTF-8, or has null bytes (Section 5.1)'
+    variant sequence
+
+    skillAuthor -> skillsign.cli.signingEngine {
+      title 'Runs: skillsign sign ./SKILL.md'
+      navigateTo signingFlow
+      notes '''
+        Manifest reads and sidecar check succeed.
+        Click to see full signing flow.
+      '''
+    }
+
+    skillsign.cli.signingEngine -> skillsign.cli.manifestReader 'Reads and validates manifest'
+    skillsign.cli.manifestReader -> skillsign.skillFiles 'Reads skillsign.yaml — OK'
+
+    skillsign.cli.signingEngine -> skillsign.cli.sidecarManager 'Checks for existing sidecar'
+    skillsign.cli.sidecarManager -> skillsign.skillFiles 'No existing sidecar found — OK'
+
+    skillsign.cli.signingEngine -> skillsign.cli.canonicalProcessor 'Requests canonical form and digest'
+
+    skillsign.cli.canonicalProcessor -> skillsign.skillFiles 'Reads SKILL.md file'
+
+    skillsign.cli.signingEngine -> skillAuthor {
+      title 'Canonical form normalization fails — exit code 10'
+      notes '''
+        Fails if:
+        - File exceeds 1MB (1,048,576 bytes) — prevents DoS via oversized input
+        - File contains invalid UTF-8 byte sequences
+        - Canonical form contains null bytes (\x00) after normalization
+
+        Note: an empty file (zero bytes or whitespace-only) normalizes
+        to a single \n byte and is valid — it MAY be signed.
+      '''
+    }
+  }
+
+}

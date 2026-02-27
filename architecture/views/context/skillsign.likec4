@@ -1,0 +1,20 @@
+views {
+
+  view index of skillsign {
+    title 'Context / System Context'
+    description 'Who uses SkillSign and which external services it depends on for cryptographic identity'
+
+    include
+      skillsign,
+      skillAuthor,
+      skillConsumer,
+      claudeCode,
+      github,
+      fulcio,
+      rekor,
+      tuf
+
+    autoLayout TopBottom
+  }
+
+}

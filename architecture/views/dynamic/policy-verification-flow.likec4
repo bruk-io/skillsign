@@ -1,0 +1,64 @@
+views {
+
+  dynamic view policyVerificationFlow {
+    title 'Flows / Skill Consumer / Policy Verification'
+    description 'Verification with --strict mode and trust policy enforcement (Sections 8.2 + 10)'
+    variant sequence
+
+    skillConsumer -> skillsign.cli.verificationEngine 'Runs: skillsign verify --policy .skillsign-policy.yaml --strict ./SKILL.md'
+
+    skillsign.cli.verificationEngine -> skillsign.cli.verificationEngine {
+      title 'Completes full cryptographic verification'
+      navigateTo verificationFlow
+      notes '''
+        Same verification as the base flow: sidecar parsing,
+        canonical form, digest comparison, ECDSA signature,
+        cert chain, SAN match, EKU, SET temporal binding,
+        and SKILL_ID_MISMATCH owner-path check.
+        Click to see full verification steps.
+      '''
+    }
+
+    skillsign.cli.verificationEngine -> rekor {
+      title 'Confirms rekor_log_id exists, digest matches, and timestamp valid (--strict mode)'
+      notes '''
+        In strict mode, the CLI queries Rekor live to confirm the log entry
+        exists as a hashedrekord/v0.0.1, the entry digest matches, and the
+        rekor_timestamp falls within the certificate notBefore/notAfter window.
+        Provides a public audit trail guarantee beyond SET verification.
+        Note: --strict and --offline are mutually exclusive (exit code 10).
+      '''
+    }
+
+    skillsign.cli.verificationEngine -> skillsign.cli.policyEngine 'Passes verified signer identity, rekor_timestamp, and skill_id'
+
+    skillsign.cli.policyEngine -> skillsign.skillFiles {
+      title 'Reads .skillsign-policy.yaml trust policy'
+      notes '''
+        Callers may use --policy-digest <sha256:hex> to pin the policy file.
+        The CLI computes the policy file SHA-256 before parsing and rejects
+        mismatches, mitigating unsigned policy file tampering (Section 9.1, Section 11).
+      '''
+    }
+
+    skillsign.cli.policyEngine -> skillsign.cli.verificationEngine {
+      title 'Returns policy evaluation result'
+      notes '''
+        Policy evaluation (Section 10):
+        1. Validate policy: version must be 1, default is required, reject unknown fields
+        2. If SKILL_ID_MISMATCH flagged by verification engine and
+           require_signer_id_match is not false, fail with SKILL_ID_MISMATCH (exit 1)
+        3. Evaluate rules in declaration order (first-match-wins)
+        4. Each rule: signer and/or signer_org and/or max_age_days (AND semantics)
+        5. signer_org: extract first path segment, lowercase, compare
+           (matches GitHub Actions signers only, not individuals)
+        6. max_age_days: must be a positive integer (0 rejected at parse time, exit 10);
+           auto-enables strict mode, verifies rekor_timestamp
+        7. If no rule matches, apply default action (allow or deny)
+      '''
+    }
+
+    skillsign.cli.verificationEngine -> skillConsumer 'Returns VERIFIED (0), POLICY_FAIL (3), or verification failure (1)'
+  }
+
+}

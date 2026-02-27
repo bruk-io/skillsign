@@ -1,0 +1,38 @@
+views {
+
+  dynamic view errorIdentityMismatch {
+    title 'Flows / Skill Consumer / IDENTITY_MISMATCH — Certificate SAN Does Not Match Signer'
+    description 'The certificate Subject Alternative Name does not match the signer field in the sidecar (Section 8.2 step 8)'
+    variant sequence
+
+    skillConsumer -> skillsign.cli.verificationEngine {
+      title 'Runs: skillsign verify ./SKILL.md — crypto checks pass'
+      navigateTo verificationFlow
+      notes '''
+        Sidecar parsing, canonical form, digest comparison, and ECDSA
+        signature verification all pass. Certificate chain validates
+        against Fulcio root and EKU is present.
+        Click to see full verification flow.
+      '''
+    }
+
+    skillsign.cli.verificationEngine -> skillsign.cli.verificationEngine {
+      title 'SAN identity match fails'
+      notes '''
+        Verification step 8 (Section 8.2):
+        The certificate's Subject Alternative Name (SAN) is compared against
+        the signer field in the sidecar. Matching is case-sensitive and exact.
+
+        Example: sidecar says signer is "https://github.com/alice"
+        but certificate SAN is "https://github.com/eve" — the certificate
+        was issued to a different identity than the one claimed in the sidecar.
+
+        This indicates the sidecar was tampered with or the signature was
+        produced by a different identity than the one recorded.
+      '''
+    }
+
+    skillsign.cli.verificationEngine -> skillConsumer 'IDENTITY_MISMATCH — exit code 1'
+  }
+
+}

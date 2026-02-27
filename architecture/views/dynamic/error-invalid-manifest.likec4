@@ -1,0 +1,42 @@
+views {
+
+  dynamic view errorInvalidManifest {
+    title 'Flows / Skill Author / INVALID_MANIFEST — Invalid Manifest'
+    description 'Signing fails because skillsign.yaml is missing, malformed, or contains invalid skill_id/skill_version (Section 7.2.1 steps 1-2, Section 7.3)'
+    variant sequence
+
+    skillAuthor -> skillsign.cli.signingEngine {
+      title 'Runs: skillsign sign ./SKILL.md'
+      navigateTo signingFlow
+      notes '''
+        Click to see full signing flow.
+      '''
+    }
+
+    skillsign.cli.signingEngine -> skillsign.cli.manifestReader 'Reads and validates manifest'
+
+    skillsign.cli.manifestReader -> skillsign.skillFiles {
+      title 'Reads skillsign.yaml — fails'
+      notes '''
+        Fails if:
+        - skillsign.yaml not found in same directory as SKILL.md
+        - Invalid YAML syntax
+        - Violates strict YAML parsing (duplicate keys, anchors, aliases, tags, multi-doc, >64KB)
+        - skill_id missing or invalid:
+          - Not exactly 3 slash-separated segments ({host}/{owner}/{name})
+          - Segments don't match [a-zA-Z0-9._-]+
+          - Segment is ".." or "."
+          - host has no "." (e.g., "localhost/org/name")
+          - Non-ASCII characters
+          - Exceeds 255 characters
+        - skill_version missing or invalid:
+          - Empty after trimming
+          - Contains non-printable ASCII, null bytes, newlines, or control chars
+          - Exceeds 255 characters
+      '''
+    }
+
+    skillsign.cli.signingEngine -> skillAuthor 'CLI error — exit code 10'
+  }
+
+}

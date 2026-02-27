@@ -1,0 +1,23 @@
+views {
+
+  view skillsignContainers of skillsign {
+    title 'Containers / SkillSign Containers'
+    description 'The CLI binary and its local data stores, with actors and external dependencies'
+
+    include
+      skillsign,
+      skillsign.cli,
+      skillsign.skillFiles,
+      skillsign.tufCache,
+      skillAuthor,
+      skillConsumer,
+      claudeCode,
+      github,
+      fulcio,
+      rekor,
+      tuf
+
+    autoLayout TopBottom
+  }
+
+}

@@ -1,0 +1,42 @@
+views {
+
+  dynamic view errorSkillIdMismatch {
+    title 'Flows / Skill Consumer / SKILL_ID_MISMATCH — Owner Path Inconsistency'
+    description 'The skill_id owner does not match the signer owner, indicating possible namespace squatting (Section 8.2 step 11, Section 8.3)'
+    variant sequence
+
+    skillConsumer -> skillsign.cli.verificationEngine {
+      title 'Runs: skillsign verify ./SKILL.md — all crypto checks pass'
+      navigateTo verificationFlow
+      notes '''
+        Sidecar parsing, canonical form, digest comparison, ECDSA signature,
+        cert chain, SAN match, EKU, and SET temporal binding all pass.
+        The signature is cryptographically valid.
+        Click to see full verification steps.
+      '''
+    }
+
+    skillsign.cli.verificationEngine -> skillsign.cli.verificationEngine {
+      title 'Owner-path consistency check fails'
+      notes '''
+        Comparison algorithm (Section 8.3):
+        1. From skill_id, extract {host}/{owner} (e.g., github.com/anthropic)
+        2. From signer URL, extract {host}/{first-path-segment}
+           (percent-decode path first to prevent %2F bypass)
+        3. Compare case-insensitively after lowercasing both owner segments
+
+        Example: skill_id "github.com/anthropic/linter" signed by
+        "https://github.com/random-user" — owners don't match.
+
+        Hard failure (exit 1) by default. Downgrade to warning via:
+        - CLI flag: --allow-id-mismatch
+        - Policy file: require_signer_id_match: false
+
+        Legitimate use case: third-party auditor signing another org's skill.
+      '''
+    }
+
+    skillsign.cli.verificationEngine -> skillConsumer 'SKILL_ID_MISMATCH — exit code 1'
+  }
+
+}

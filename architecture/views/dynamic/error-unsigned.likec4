@@ -1,0 +1,32 @@
+views {
+
+  dynamic view errorUnsigned {
+    title 'Flows / Skill Consumer / UNSIGNED — No Sidecar Found'
+    description 'Verification finds no .skillsign sidecar adjacent to the SKILL.md file (Section 8.2 step 1)'
+    variant sequence
+
+    skillConsumer -> skillsign.cli.verificationEngine {
+      title 'Runs: skillsign verify ./SKILL.md'
+      navigateTo verificationFlow
+      notes '''
+        Click to see full verification flow.
+      '''
+    }
+
+    skillsign.cli.verificationEngine -> skillsign.cli.sidecarManager 'Reads and parses sidecar'
+
+    skillsign.cli.sidecarManager -> skillsign.skillFiles {
+      title 'Looks for SKILL.md.skillsign — file not found'
+      notes '''
+        The CLI looks for a sidecar file at the exact path: <filename>.md.skillsign
+        If the sidecar does not exist, verification cannot proceed.
+        This is NOT a hard failure by default — consumers who require
+        verification must enforce it via policy (default: deny) or
+        by treating exit code 2 as a failure in their pipelines.
+      '''
+    }
+
+    skillsign.cli.verificationEngine -> skillConsumer 'UNSIGNED — exit code 2'
+  }
+
+}

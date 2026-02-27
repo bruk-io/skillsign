@@ -1,0 +1,86 @@
+views {
+
+  dynamic view signingFlow {
+    title 'Flows / Skill Author / Signing'
+    description 'How a skill author signs a SKILL.md file using the SkillSign CLI (Section 7.2)'
+    variant sequence
+
+    skillAuthor -> skillsign.cli.signingEngine 'Runs: skillsign sign ./SKILL.md'
+
+    skillsign.cli.signingEngine -> skillsign.cli.manifestReader {
+      title 'Reads and validates manifest'
+      notes '''
+        1. Reads skillsign.yaml for skill_id and skill_version
+        2. Validates skill_id format (3 segments, ASCII only, max 255 chars)
+        3. Validates skill_version (non-empty, printable ASCII, max 255 chars)
+      '''
+    }
+
+    skillsign.cli.manifestReader -> skillsign.skillFiles 'Reads skillsign.yaml manifest'
+
+    skillsign.cli.signingEngine -> skillsign.cli.sidecarManager {
+      title 'Checks for existing sidecar (step 3)'
+      notes '''
+        If a .skillsign sidecar already exists for this skill_id
+        and skill_version, fail with exit code 10 unless --force.
+        Prevents accidental re-signing with a different key.
+      '''
+    }
+
+    skillsign.cli.sidecarManager -> skillsign.skillFiles 'Checks filesystem for existing .skillsign file'
+
+    skillsign.cli.signingEngine -> skillsign.cli.canonicalProcessor {
+      title 'Requests canonical form and digest (steps 4-5)'
+      notes '''
+        Canonical form: strip BOM, normalize line endings,
+        strip trailing whitespace per line, single trailing newline.
+        Digest over: "skillsign:v1" + \0 + canonical + \0 + skill_id + \0 + skill_version
+      '''
+    }
+
+    skillsign.cli.canonicalProcessor -> skillsign.skillFiles 'Reads SKILL.md file'
+
+    skillsign.cli.signingEngine -> skillsign.cli.authHandler 'Requests OIDC authentication (step 6)'
+    skillsign.cli.authHandler -> github {
+      title 'OIDC authentication with GitHub'
+      notes '''
+        Two modes:
+        - Interactive: opens browser for GitHub OIDC login (developer workstation)
+        - CI: uses ambient OIDC token from GitHub Actions runner (no browser)
+        In CI, the certificate SAN encodes the full workflow URL
+        (e.g., https://github.com/{org}/{repo}/.github/workflows/{workflow}.yml@refs/heads/main)
+        rather than a personal GitHub username, enabling signer_org policy matching.
+      '''
+    }
+
+    skillsign.cli.signingEngine -> fulcio {
+      title 'Submits OIDC token and ephemeral public key (step 7)'
+      notes '''
+        The CLI generates the ephemeral ECDSA P-256 keypair locally.
+        Fulcio binds the public key to the verified GitHub identity
+        in a short-lived certificate (~10 min validity).
+      '''
+    }
+
+    skillsign.cli.signingEngine -> skillsign.cli.signingEngine {
+      title 'Signs digest with ephemeral ECDSA P-256 key (step 8)'
+      notes '''
+        The 32-byte SHA-256 digest is signed using the ephemeral
+        private key (ECDSA P-256). The private key exists only
+        in memory and is discarded after sidecar assembly.
+      '''
+    }
+
+    skillsign.cli.signingEngine -> rekor {
+      title 'Submits signature, certificate, and digest as hashedrekord/v0.0.1 entry (step 9)'
+      notes '''
+        Sidecar MUST NOT be written until Rekor confirms the log entry.
+        Rekor returns: log entry UUID, timestamp, and Signed Entry Timestamp (SET).
+      '''
+    }
+
+    skillsign.cli.signingEngine -> skillsign.cli.sidecarManager 'Assembles sidecar with Fulcio and Rekor response fields (step 10)'
+    skillsign.cli.sidecarManager -> skillsign.skillFiles 'Writes SKILL.md.skillsign sidecar, ephemeral key discarded (step 11)'
+  }
+
+}

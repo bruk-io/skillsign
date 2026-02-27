@@ -1,0 +1,48 @@
+model {
+
+  // Actors
+  actor skillAuthor 'Skill Author' {
+    description 'A developer who creates and signs SKILL.md files for distribution'
+  }
+
+  actor skillConsumer 'Skill Consumer' {
+    description 'A developer who installs and uses signed skills in Claude Code'
+  }
+
+  // System in scope
+  system skillsign 'SkillSign' {
+    description 'Cryptographic signing and verification system for Claude Code SKILL.md files using Sigstore keyless signing'
+  }
+
+  // External systems
+  externalSystem claudeCode 'Claude Code' {
+    description 'Anthropic CLI that loads and executes SKILL.md files as instructions'
+  }
+
+  externalSystem github 'GitHub OIDC' {
+    description 'Identity provider for signer authentication via OpenID Connect'
+  }
+
+  externalSystem fulcio 'Fulcio CA' {
+    description 'Sigstore certificate authority that issues short-lived certificates binding a verified GitHub identity to a signer-generated ephemeral public key'
+  }
+
+  externalSystem rekor 'Rekor Transparency Log' {
+    description 'Append-only, publicly auditable log recording signatures, certificates, and digests'
+  }
+
+  externalSystem tuf 'TUF Root' {
+    description 'The Update Framework root of trust distributing Sigstore public keys'
+  }
+
+  // System-level relationships (stakeholder-friendly labels)
+  // Component-level relationships in components.likec4 provide technical detail.
+  skillAuthor -> skillsign 'Signs skill files for distribution'
+  skillConsumer -> skillsign 'Verifies skill file authenticity'
+  claudeCode -> skillsign 'Verifies skills before loading'
+  skillsign -> github 'Authenticates skill authors'
+  skillsign -> fulcio 'Obtains signing certificates'
+  skillsign -> rekor 'Records and queries signed artifacts'
+  skillsign -> tuf 'Retrieves trusted signing keys'
+
+}

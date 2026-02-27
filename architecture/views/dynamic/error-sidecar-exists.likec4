@@ -1,0 +1,33 @@
+views {
+
+  dynamic view errorSidecarExists {
+    title 'Flows / Skill Author / SIDECAR_EXISTS — Sidecar Already Exists'
+    description 'Signing fails because a sidecar already exists for this skill_id and skill_version (Section 7.2.1 step 3)'
+    variant sequence
+
+    skillAuthor -> skillsign.cli.signingEngine {
+      title 'Runs: skillsign sign ./SKILL.md'
+      navigateTo signingFlow
+      notes '''
+        Click to see full signing flow.
+      '''
+    }
+
+    skillsign.cli.signingEngine -> skillsign.cli.manifestReader 'Reads and validates manifest'
+    skillsign.cli.manifestReader -> skillsign.skillFiles 'Reads skillsign.yaml — OK'
+
+    skillsign.cli.signingEngine -> skillsign.cli.sidecarManager 'Checks for existing sidecar'
+
+    skillsign.cli.sidecarManager -> skillsign.skillFiles 'Finds existing SKILL.md.skillsign for same skill_id and skill_version'
+
+    skillsign.cli.signingEngine -> skillAuthor {
+      title 'Sidecar already exists — exit code 10'
+      notes '''
+        Prevents accidental re-signing of the same version with a different key,
+        which would produce a confusingly different but valid sidecar.
+        Use --force to explicitly overwrite.
+      '''
+    }
+  }
+
+}

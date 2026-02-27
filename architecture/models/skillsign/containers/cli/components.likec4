@@ -1,0 +1,76 @@
+model {
+
+  extend skillsign.cli {
+
+    component authHandler 'Auth Handler' {
+      technology 'OIDC'
+      description 'Authenticates signers with GitHub via OpenID Connect token exchange'
+    }
+
+    component canonicalProcessor 'Canonical Form Processor' {
+      technology 'UTF-8, SHA-256'
+      description 'Normalizes SKILL.md files (BOM stripping, line ending normalization, whitespace trimming) and computes the signed input digest per Section 5'
+    }
+
+    component signingEngine 'Signing Engine' {
+      technology 'ECDSA P-256, X.509'
+      description 'Orchestrates the signing protocol: generates ephemeral keypair locally, obtains Fulcio certificate, signs digest, submits to Rekor'
+    }
+
+    component verificationEngine 'Verification Engine' {
+      technology 'ECDSA P-256, X.509'
+      description 'Orchestrates verification: cert chain validation against Fulcio root, ECDSA signature check, EKU code-signing OID check, SAN identity match, SET cryptographic signature verification against Rekor public key, temporal binding, and SKILL_ID_MISMATCH owner-path consistency check'
+    }
+
+    component policyEngine 'Policy Engine' {
+      technology 'YAML 1.2'
+      description 'Evaluates trust policies with first-match-wins rule evaluation, signer_org matching with lowercase normalization, and max_age_days enforcement against verified rekor_timestamp'
+    }
+
+    component sidecarManager 'Sidecar Manager' {
+      technology 'YAML 1.2'
+      description 'Reads and writes .skillsign sidecar files with strict YAML 1.2 parsing restrictions: no duplicate keys, no anchors/aliases, no tags, no multi-document streams, max 64KB'
+    }
+
+    component manifestReader 'Manifest Reader' {
+      technology 'YAML 1.2'
+      description 'Reads skillsign.yaml to extract skill_id and skill_version at signing time, with same strict YAML parsing restrictions as the sidecar (Section 7.3)'
+    }
+
+    component tufClient 'TUF Client' {
+      technology 'TUF, HTTPS'
+      description 'Fetches and validates Sigstore TUF root metadata, Fulcio root certificates, and Rekor public key. In --offline mode, falls back to bundled cache and Rekor is not consulted. --offline and --strict are mutually exclusive (exit code 10)'
+    }
+
+    // Signing path
+    signingEngine -> authHandler 'Gets OIDC identity token from'
+    signingEngine -> canonicalProcessor 'Gets SHA-256 digest from'
+    signingEngine -> sidecarManager 'Checks for existing sidecar and writes assembled sidecar via'
+    signingEngine -> manifestReader 'Reads skill_id and skill_version from'
+
+    // Verification path
+    verificationEngine -> canonicalProcessor 'Recomputes digest via'
+    verificationEngine -> sidecarManager 'Reads sidecar fields via'
+    verificationEngine -> tufClient 'Gets trusted Fulcio root certificates and Rekor public key from'
+    verificationEngine -> policyEngine 'Passes verified signer identity, rekor_timestamp, and skill_id for policy evaluation'
+
+  }
+
+  // Actor and external system relationships
+  skillAuthor -> skillsign.cli.signingEngine 'Signs SKILL.md files via CLI'
+  skillConsumer -> skillsign.cli.verificationEngine 'Verifies skill signatures via CLI'
+  claudeCode -> skillsign.cli.verificationEngine 'Invokes verification before loading skills'
+
+  // Component-to-external relationships
+  skillsign.cli.authHandler -> github 'Authenticates via OIDC, receives identity token'
+  skillsign.cli.signingEngine -> fulcio 'Submits ephemeral public key and OIDC token, receives short-lived certificate'
+  skillsign.cli.signingEngine -> rekor 'Submits signature, certificate, and digest as hashedrekord/v0.0.1 entry'
+  skillsign.cli.verificationEngine -> rekor 'Confirms log entry exists and digest matches in --strict mode'
+  skillsign.cli.tufClient -> tuf 'Fetches current TUF root metadata via HTTPS'
+  skillsign.cli.tufClient -> skillsign.tufCache 'Reads and writes cached TUF metadata via local filesystem'
+  skillsign.cli.sidecarManager -> skillsign.skillFiles 'Reads and writes .skillsign sidecar files'
+  skillsign.cli.manifestReader -> skillsign.skillFiles 'Reads skillsign.yaml manifests'
+  skillsign.cli.canonicalProcessor -> skillsign.skillFiles 'Reads SKILL.md files for normalization'
+  skillsign.cli.policyEngine -> skillsign.skillFiles 'Reads .skillsign-policy.yaml trust policies'
+
+}

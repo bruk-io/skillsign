@@ -1,0 +1,38 @@
+specification {
+
+  element actor {
+    style {
+      shape person
+      color amber
+    }
+  }
+
+  element system {
+    style {
+      shape rectangle
+      color sky
+    }
+  }
+
+  element externalSystem {
+    style {
+      shape rectangle
+      color slate
+    }
+  }
+
+  element container {
+    style {
+      shape rectangle
+      color blue
+    }
+  }
+
+  element component {
+    style {
+      shape rectangle
+      color indigo
+    }
+  }
+
+}

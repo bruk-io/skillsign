@@ -1,0 +1,41 @@
+model {
+
+  extend skillsign {
+
+    container cli 'SkillSign CLI' {
+      technology 'Python, Click'
+      description 'Command-line tool for signing and verifying SKILL.md files. Also provides auth status, inspect, and unsign subcommands (Section 9.1)'
+    }
+
+    container skillFiles 'Skill File Store' {
+      technology 'Local File System'
+      description 'SKILL.md files, skillsign.yaml manifests, .skillsign sidecars, and .skillsign-policy.yaml trust policies on disk'
+      style {
+        shape storage
+      }
+    }
+
+    container tufCache 'TUF Root Cache' {
+      technology 'Local File System'
+      description 'Local cache of bundled and fetched Sigstore TUF root metadata and Fulcio root certificates'
+      style {
+        shape storage
+      }
+    }
+
+  }
+
+  // Container-level relationships
+  // Component-level relationships in components.likec4 provide further detail.
+  skillAuthor -> skillsign.cli 'Signs SKILL.md files via CLI'
+  skillConsumer -> skillsign.cli 'Verifies skill signatures via CLI'
+  claudeCode -> skillsign.cli 'Invokes verification before loading skills'
+
+  skillsign.cli -> skillsign.skillFiles 'Reads and writes SKILL.md files, manifests, sidecars, and policies'
+  skillsign.cli -> skillsign.tufCache 'Reads and writes cached TUF metadata'
+  skillsign.cli -> github 'Authenticates via OIDC'
+  skillsign.cli -> fulcio 'Obtains short-lived signing certificates via HTTPS'
+  skillsign.cli -> rekor 'Submits and queries transparency log entries via HTTPS'
+  skillsign.cli -> tuf 'Fetches TUF root metadata via HTTPS'
+
+}

@@ -1,0 +1,42 @@
+views {
+
+  dynamic view errorTampered {
+    title 'Flows / Skill Consumer / TAMPERED — File Modified After Signing'
+    description 'Verification detects that SKILL.md was modified after signing (Section 8.2 steps 3-5)'
+    variant sequence
+
+    skillConsumer -> skillsign.cli.verificationEngine {
+      title 'Runs: skillsign verify ./SKILL.md'
+      navigateTo verificationFlow
+      notes '''
+        Click to see full verification flow.
+      '''
+    }
+
+    skillsign.cli.verificationEngine -> skillsign.cli.sidecarManager {
+      title 'Reads and parses sidecar — OK'
+      notes '''
+        Sidecar parsing succeeds (valid YAML, all required fields present,
+        version is 1). Same steps as the base verification flow.
+      '''
+    }
+
+    skillsign.cli.sidecarManager -> skillsign.skillFiles 'Reads .skillsign sidecar'
+
+    skillsign.cli.verificationEngine -> skillsign.cli.canonicalProcessor 'Recomputes canonical form and digest'
+
+    skillsign.cli.canonicalProcessor -> skillsign.skillFiles 'Reads SKILL.md file'
+
+    skillsign.cli.verificationEngine -> skillConsumer {
+      title 'TAMPERED — exit code 1'
+      notes '''
+        The canonical form of the modified file produces a different
+        SHA-256 digest than what was recorded in the sidecar at signing time.
+        Any change to content, headings, or code blocks invalidates the signature.
+        Whitespace-only changes (trailing spaces, line endings) are absorbed
+        by normalization and do NOT cause a mismatch.
+      '''
+    }
+  }
+
+}
