@@ -42,8 +42,6 @@ def canonicalize(raw: bytes) -> bytes:
 
     # Step 8: Reject null bytes
     if b"\x00" in result:
-        raise SkillSignError(
-            "Canonical form contains null bytes", exit_code=10
-        )
+        raise SkillSignError("Canonical form contains null bytes", exit_code=10)
 
     return result

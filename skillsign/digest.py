@@ -78,9 +78,7 @@ def validate_skill_version(skill_version: str) -> str:
     trimmed = skill_version.strip(" \t")
 
     if not trimmed:
-        raise SkillSignError(
-            "skill_version must not be empty", exit_code=10
-        )
+        raise SkillSignError("skill_version must not be empty", exit_code=10)
 
     if len(trimmed) > _MAX_SKILL_VERSION_LENGTH:
         raise SkillSignError(
@@ -100,9 +98,7 @@ def validate_skill_version(skill_version: str) -> str:
     return trimmed
 
 
-def compute_digest(
-    canonical_bytes: bytes, skill_id: str, skill_version: str
-) -> bytes:
+def compute_digest(canonical_bytes: bytes, skill_id: str, skill_version: str) -> bytes:
     """Compute SHA-256 digest over domain-separated input per Section 5.2.
 
     Returns the 32-byte digest.
@@ -110,9 +106,7 @@ def compute_digest(
     """
     # Defensive: reject null bytes in canonical input
     if b"\x00" in canonical_bytes:
-        raise SkillSignError(
-            "canonical bytes contain null bytes", exit_code=10
-        )
+        raise SkillSignError("canonical bytes contain null bytes", exit_code=10)
 
     # Validate and trim skill_id
     skill_id_trimmed = validate_skill_id(skill_id)

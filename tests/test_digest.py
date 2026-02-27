@@ -224,9 +224,7 @@ def test_case_sensitive_skill_id() -> None:
 
 def test_canonical_bytes_null_byte_rejected() -> None:
     with pytest.raises(SkillSignError, match="null") as exc_info:
-        compute_digest(
-            b"content\x00\n", "github.com/org/skill", "1.0.0"
-        )
+        compute_digest(b"content\x00\n", "github.com/org/skill", "1.0.0")
     assert exc_info.value.exit_code == 10
 
 

@@ -63,6 +63,30 @@ The C4 model lives in `architecture/` and covers:
 
 Validate with: `npx likec4 validate`
 
+## Knowhere Marketplace Skills
+
+The [knowhere](file:///Users/brukhabtu/Documents/src/github.com/bruk-io/knowhere) repo contains reusable plugins with Copier templates. **Use these instead of writing boilerplate by hand.** Available skills relevant to this project:
+
+| Skill | Plugin | What it does |
+|---|---|---|
+| `github:ci` | `knowhere/plugins/github/` | Generate GitHub Actions CI workflow (Python/Node/Go/Rust). Uses Copier templates. |
+| `github:pages` | `knowhere/plugins/github/` | Generate GitHub Pages deployment workflow |
+| `containers:dockerfile` | `knowhere/plugins/containers/` | Generate multi-target Dockerfiles (Python/Node/Go/Rust) |
+| `python:pyproject` | `knowhere/plugins/python/` | Scaffold Python project (pyproject.toml, flat layout, Click CLI) |
+| `likec4:likec4-dsl` | `knowhere/plugins/likec4/` | LikeC4 DSL syntax reference for architecture modeling |
+| `likec4:c4-methodology` | `knowhere/plugins/likec4/` | C4 methodology guidance (abstraction levels, decomposition) |
+| `mkdocs:docs` | `knowhere/plugins/mkdocs/` | Scaffold MkDocs documentation site |
+
+**How to use Copier templates** (example for CI):
+```bash
+uvx copier copy --trust --defaults \
+  --data language="python" \
+  --data package_name="skillsign" \
+  /path/to/knowhere/plugins/github/skills/ci/templates/ci/ .
+```
+
+When creating new infrastructure (CI, Dockerfile, docs site), check knowhere first.
+
 ## Spec Quick Reference
 
 - **Signing:** Section 7 — canonical form → digest → OIDC → Fulcio cert → ECDSA sign → Rekor log → sidecar
