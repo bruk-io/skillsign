@@ -525,6 +525,7 @@ The following are acknowledged design gaps that are acceptable for v0.1 and flag
 
 **Unicode normalization in content (M12)**: SKILL.md content is signed as-is after whitespace normalization. If the same logical content is represented in different Unicode normalization forms (NFC vs NFD), the digests will differ. Authors and tooling should use consistent Unicode normalization. NFC normalization as a preprocessing step is under consideration for v0.2.
 
+---
 
 ## 13. Versioning
 
