@@ -8,7 +8,9 @@ Cryptographic signing and verification for Claude Code SKILL.md files using Sigs
 |---|---|---|
 | Specification | `docs/spec.md` | v0.1 draft — the source of truth for all behavior |
 | Roadmap | `docs/roadmap.md` | 4 phases, 45 deliverables, milestone-based |
-| Workflow | `docs/workflow.md` | Inner/outer development loops, agent roster, batch plan |
+| Scrum Plugin | `plugins/scrum/` | 6 skills: sprint planning, execution, review, integration, retrospective, evolution |
+| Security Plugin | `plugins/security/` | 6 agents + 7 skills for spec security review |
+| Product Mgmt Plugin | `plugins/product-management/` | 1 agent + 1 skill for roadmap and issue management |
 | Architecture | `architecture/` | C4 model in LikeC4 DSL (21 files, 17 views) |
 
 ## Project Conventions
@@ -23,7 +25,7 @@ Cryptographic signing and verification for Claude Code SKILL.md files using Sigs
 
 ## Agent Roster
 
-Agents are defined in `.claude/agents/`. Each has an explicit `model` in its frontmatter.
+Agents are defined in their respective plugins. Each has an explicit `model` in its frontmatter.
 
 | Agent | Model | Purpose |
 |---|---|---|
@@ -37,10 +39,14 @@ Agents are defined in `.claude/agents/`. Each has an explicit `model` in its fro
 
 ## How Work Gets Done
 
-See `docs/workflow.md` for the full process. Summary:
+Development follows a 6-phase scrum cycle, mechanized as skills in the `scrum/` plugin:
 
-1. **Inner loop** (agent-level): receive task → plan → implement in worktree → self-verify → report
-2. **Outer loop** (team-level): PLAN → EXECUTE → VERIFY → INTEGRATE → RETRO → EVOLVE → human checkpoint
+1. **`sprint-planning`** — PM selects 3-5 issues, decomposes into tasks with dependencies
+2. **`sprint-execution`** — Agents claim tasks, implement in worktrees, self-verify, report
+3. **`sprint-review`** — Dispatch reviewers based on what changed (code, crypto, identity, etc.)
+4. **`sprint-integration`** — Merge passing work, flag failures, verify integrated codebase
+5. **`sprint-retrospective`** — Reflect, detect patterns, produce concrete changes
+6. **`sprint-evolution`** — Apply retro outputs, human checkpoint before next cycle
 
 Model assignment:
 - **Opus** — Judgment, architecture, security review, retro synthesis
