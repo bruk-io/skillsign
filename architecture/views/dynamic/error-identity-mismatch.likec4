@@ -10,8 +10,8 @@ views {
       navigateTo verificationFlow
       notes '''
         Sidecar parsing, canonical form, digest comparison, and ECDSA
-        signature verification all pass. Certificate chain validates
-        against Fulcio root and EKU is present.
+        signature verification all pass. EKU is present.
+        Certificate chain validation against Fulcio root is Phase 2.
         Click to see full verification flow.
       '''
     }

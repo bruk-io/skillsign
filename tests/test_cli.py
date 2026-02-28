@@ -156,16 +156,86 @@ def test_exit_10_for_not_implemented_unsign(
     assert result.exit_code == 10
 
 
-def test_exit_10_for_not_implemented_auth_login(runner: CliRunner) -> None:
-    """auth login exits 10 (not yet implemented)."""
-    result = runner.invoke(cli, ["auth", "login"])
-    assert result.exit_code == 10
+def test_auth_login_success(runner: CliRunner) -> None:
+    """auth login with mocked OIDC flow exits 0 and shows identity."""
+    from unittest.mock import MagicMock, patch
+
+    mock_token = MagicMock()
+    mock_token.identity = "https://github.com/testuser"
+    mock_token.federated_issuer = "https://accounts.google.com"
+
+    with patch("skillsign.auth.get_identity_token", return_value=mock_token):
+        result = runner.invoke(cli, ["auth", "login"])
+    assert result.exit_code == 0
+    assert "https://github.com/testuser" in result.output
+    assert "Authenticated as:" in result.output
 
 
-def test_exit_10_for_not_implemented_auth_status(runner: CliRunner) -> None:
-    """auth status exits 10 (not yet implemented)."""
-    result = runner.invoke(cli, ["auth", "status"])
+def test_auth_login_failure(runner: CliRunner) -> None:
+    """auth login exits 10 when OIDC fails."""
+    from unittest.mock import patch
+
+    from skillsign.errors import SkillSignError
+
+    with patch(
+        "skillsign.auth.get_identity_token",
+        side_effect=SkillSignError("OIDC failed", exit_code=10),
+    ):
+        result = runner.invoke(cli, ["auth", "login"])
     assert result.exit_code == 10
+    assert "OIDC failed" in result.output
+
+
+def test_auth_status_no_ambient(runner: CliRunner) -> None:
+    """auth status with no ambient credentials exits 0 and shows not authenticated."""
+    from unittest.mock import patch
+
+    with patch("skillsign.auth._detect_ambient_credential", return_value=None):
+        result = runner.invoke(cli, ["auth", "status"])
+    assert result.exit_code == 0
+    assert "Not authenticated" in result.output
+
+
+def test_auth_status_with_ambient(runner: CliRunner) -> None:
+    """auth status with ambient credentials exits 0 and shows identity."""
+    from unittest.mock import MagicMock, patch
+
+    mock_token = MagicMock()
+    mock_token.identity = (
+        "https://github.com/org/repo/.github/workflows/ci.yml@refs/heads/main"
+    )
+    mock_token.federated_issuer = "https://token.actions.githubusercontent.com"
+    mock_token.in_validity_period.return_value = True
+
+    with (
+        patch(
+            "skillsign.auth._detect_ambient_credential",
+            return_value="fake.jwt.token",
+        ),
+        patch("sigstore.oidc.IdentityToken", return_value=mock_token),
+    ):
+        result = runner.invoke(cli, ["auth", "status"])
+    assert result.exit_code == 0
+    assert "Authenticated as:" in result.output
+
+
+def test_auth_status_expired_token(runner: CliRunner) -> None:
+    """auth status with expired ambient token shows expired message."""
+    from unittest.mock import MagicMock, patch
+
+    mock_token = MagicMock()
+    mock_token.in_validity_period.return_value = False
+
+    with (
+        patch(
+            "skillsign.auth._detect_ambient_credential",
+            return_value="fake.jwt.token",
+        ),
+        patch("sigstore.oidc.IdentityToken", return_value=mock_token),
+    ):
+        result = runner.invoke(cli, ["auth", "status"])
+    assert result.exit_code == 0
+    assert "Token expired" in result.output
 
 
 # ---------------------------------------------------------------------------

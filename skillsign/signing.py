@@ -182,6 +182,6 @@ def _extract_cert_chain(bundle: Any) -> str | None:
                     cert = x509.load_der_x509_certificate(cert_entry.raw_bytes)
                     chain_pem += cert.public_bytes(Encoding.PEM).decode("ascii")
                 return chain_pem
-    except (AttributeError, TypeError):
+    except AttributeError, TypeError:
         pass
     return None

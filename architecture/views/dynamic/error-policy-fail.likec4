@@ -16,9 +16,9 @@ views {
       '''
     }
 
-    skillsign.cli.verificationEngine -> skillsign.cli.policyEngine 'Passes verified signer identity, rekor_timestamp, and skill_id'
+    skillsign.cli.verificationEngine -> skillsign.cli.policyEngine 'Passes verified signer identity, rekor_timestamp, and skill_id [Phase 2]'
 
-    skillsign.cli.policyEngine -> skillsign.skillFiles 'Reads .skillsign-policy.yaml trust policy'
+    skillsign.cli.policyEngine -> skillsign.skillFiles 'Reads .skillsign-policy.yaml trust policy [Phase 2]'
 
     skillsign.cli.policyEngine -> skillsign.cli.verificationEngine {
       title 'Returns deny result'

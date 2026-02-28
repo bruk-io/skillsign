@@ -70,13 +70,45 @@ def auth() -> None:
 @auth.command()
 def login() -> None:
     """Authenticate with GitHub via OIDC."""
-    _not_implemented()
+    from skillsign.auth import get_identity_token
+
+    try:
+        token = get_identity_token()
+    except SkillSignError as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(e.exit_code)
+
+    click.echo(f"Authenticated as: {token.identity}")
+    click.echo(f"Issuer: {token.federated_issuer}")
 
 
 @auth.command()
 def status() -> None:
     """Show current authentication state."""
-    _not_implemented()
+    from skillsign.auth import _detect_ambient_credential
+
+    raw_token = _detect_ambient_credential()
+    if raw_token is None:
+        click.echo("Not authenticated.")
+        click.echo("Run 'skillsign auth login' to authenticate.")
+        return
+
+    from sigstore.oidc import IdentityToken
+
+    from skillsign.auth import _SIGSTORE_CLIENT_ID
+
+    try:
+        token = IdentityToken(raw_token, client_id=_SIGSTORE_CLIENT_ID)
+    except Exception as e:
+        click.echo(f"Error: failed to process ambient token: {e}", err=True)
+        sys.exit(EXIT_CLI_ERROR)
+
+    if token.in_validity_period():
+        click.echo(f"Authenticated as: {token.identity}")
+        click.echo(f"Issuer: {token.federated_issuer}")
+    else:
+        click.echo("Token expired.")
+        click.echo("Run 'skillsign auth login' to re-authenticate.")
 
 
 @cli.command()

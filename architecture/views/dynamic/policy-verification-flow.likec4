@@ -30,7 +30,7 @@ views {
       '''
     }
 
-    skillsign.cli.verificationEngine -> skillsign.cli.policyEngine 'Passes verified signer identity, rekor_timestamp, and skill_id'
+    skillsign.cli.verificationEngine -> skillsign.cli.policyEngine 'Passes verified signer identity, rekor_timestamp, and skill_id [Phase 2]'
 
     skillsign.cli.policyEngine -> skillsign.skillFiles {
       title 'Reads .skillsign-policy.yaml trust policy'

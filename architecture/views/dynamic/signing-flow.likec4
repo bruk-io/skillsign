@@ -91,6 +91,14 @@ views {
     }
 
     skillsign.cli.sidecarManager -> skillsign.skillFiles 'Writes SKILL.md.skillsign sidecar atomically via temp file rename (step 11)'
+
+    skillsign.cli.signingEngine -> skillAuthor {
+      title 'Signing complete — exit code 0'
+      notes '''
+        All 11 steps succeeded. The sidecar file is written and the
+        Rekor transparency log entry is confirmed. The skill is now signed.
+      '''
+    }
   }
 
 }

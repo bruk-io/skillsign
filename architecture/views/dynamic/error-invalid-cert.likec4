@@ -30,11 +30,20 @@ views {
       '''
     }
 
-    skillsign.cli.verificationEngine -> skillsign.cli.tufClient 'Requests trusted Fulcio root certificates and Rekor public key'
+    skillsign.cli.verificationEngine -> skillsign.cli.tufClient 'Requests trusted Fulcio root certificates and Rekor public key [Phase 2]'
 
     parallel {
-      skillsign.cli.tufClient -> tuf 'Fetches current TUF root metadata'
-      skillsign.cli.tufClient -> skillsign.tufCache 'Reads/writes cached TUF metadata'
+      skillsign.cli.tufClient -> tuf 'Fetches current TUF root metadata [Phase 2]'
+      skillsign.cli.tufClient -> skillsign.tufCache 'Reads/writes cached TUF metadata [Phase 2]'
+    }
+
+    skillsign.cli.verificationEngine -> skillsign.cli.verificationEngine {
+      title 'SET verification and temporal binding (step 9) [Phase 2]'
+      notes '''
+        Verify SET cryptographic signature against Rekor public key (via TUF).
+        Confirm SET timestamp falls within certificate notBefore/notAfter window.
+        Currently a TODO in verify.py — planned for Phase 2 hardening.
+      '''
     }
 
     skillsign.cli.verificationEngine -> skillConsumer {

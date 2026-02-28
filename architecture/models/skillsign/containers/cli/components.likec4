@@ -75,6 +75,6 @@ model {
   skillsign.cli.sidecarManager -> skillsign.skillFiles 'Reads and writes .skillsign sidecar files'
   skillsign.cli.manifestReader -> skillsign.skillFiles 'Reads skillsign.yaml manifests'
   skillsign.cli.canonicalProcessor -> skillsign.skillFiles 'Reads SKILL.md files for normalization'
-  skillsign.cli.policyEngine -> skillsign.skillFiles 'Reads .skillsign-policy.yaml trust policies'
+  skillsign.cli.policyEngine -> skillsign.skillFiles 'Reads .skillsign-policy.yaml trust policies [Phase 2]'
 
 }
