@@ -18,16 +18,14 @@ views {
 
     skillsign.cli.manifestReader -> skillsign.skillFiles 'Reads skillsign.yaml manifest'
 
-    skillsign.cli.signingEngine -> skillsign.cli.sidecarManager {
+    skillsign.cli.signingEngine -> skillsign.skillFiles {
       title 'Checks for existing sidecar (step 3)'
       notes '''
-        If a .skillsign sidecar already exists for this skill_id
-        and skill_version, fail with exit code 10 unless --force.
+        signing.py checks sidecar_path.exists() directly on the filesystem.
+        If a .skillsign sidecar already exists, fail with exit code 10 unless --force.
         Prevents accidental re-signing with a different key.
       '''
     }
-
-    skillsign.cli.sidecarManager -> skillsign.skillFiles 'Checks filesystem for existing .skillsign file'
 
     skillsign.cli.signingEngine -> skillsign.cli.canonicalProcessor {
       title 'Requests canonical form and digest (steps 4-5)'
@@ -54,33 +52,45 @@ views {
     }
 
     skillsign.cli.signingEngine -> fulcio {
-      title 'Submits OIDC token and ephemeral public key (step 7)'
+      title 'Submits OIDC token and ephemeral public key via Sigstore SDK (steps 7-8)'
       notes '''
-        The CLI generates the ephemeral ECDSA P-256 keypair locally.
-        Fulcio binds the public key to the verified GitHub identity
-        in a short-lived certificate (~10 min validity).
+        signing.py calls SigningContext.from_trust_config() and ctx.signer(identity_token).
+        The Sigstore SDK internally: generates ephemeral ECDSA P-256 keypair,
+        submits OIDC token + public key to Fulcio, receives short-lived X.509 certificate
+        (~10 min validity) binding the public key to the verified GitHub identity.
       '''
     }
 
     skillsign.cli.signingEngine -> skillsign.cli.signingEngine {
-      title 'Signs digest with ephemeral ECDSA P-256 key (step 8)'
+      title 'Signs digest with ephemeral ECDSA P-256 key (step 8, inside SDK)'
       notes '''
-        The 32-byte SHA-256 digest is signed using the ephemeral
-        private key (ECDSA P-256). The private key exists only
-        in memory and is discarded after sidecar assembly.
+        The Sigstore SDK signs the 32-byte SHA-256 digest via signer.sign_artifact(Hashed).
+        The ephemeral private key is created and discarded within the SDK context manager.
       '''
     }
 
     skillsign.cli.signingEngine -> rekor {
-      title 'Submits signature, certificate, and digest as hashedrekord/v0.0.1 entry (step 9)'
+      title 'Submits signature, certificate, and digest as hashedrekord/v0.0.1 entry via Sigstore SDK (step 9)'
       notes '''
+        The Sigstore SDK submits to Rekor internally during sign_artifact().
+        Rekor returns: log entry UUID, integrated_time, and Signed Entry Timestamp (SET).
+        signing.py extracts these from bundle.log_entry._inner after sign_artifact() returns.
         Sidecar MUST NOT be written until Rekor confirms the log entry.
-        Rekor returns: log entry UUID, timestamp, and Signed Entry Timestamp (SET).
       '''
     }
 
-    skillsign.cli.signingEngine -> skillsign.cli.sidecarManager 'Assembles sidecar with Fulcio and Rekor response fields (step 10)'
-    skillsign.cli.sidecarManager -> skillsign.skillFiles 'Writes SKILL.md.skillsign sidecar, ephemeral key discarded (step 11)'
+    skillsign.cli.signingEngine -> skillsign.cli.signingEngine {
+      title 'Assembles sidecar dict from Sigstore Bundle fields (step 10)'
+      notes '''
+        signing.py calls _assemble_sidecar() which extracts: signature (DER Base64),
+        certificate (PEM), signer (SAN URI from cert), digest (sha256:hex),
+        rekor_log_id (hex of key_id), rekor_timestamp (ISO 8601 UTC),
+        rekor_set (already-base64 SET from inclusion_promise).
+        Returns dict — does NOT write file; sidecar writing is done by CLI.
+      '''
+    }
+
+    skillsign.cli.sidecarManager -> skillsign.skillFiles 'Writes SKILL.md.skillsign sidecar atomically via temp file rename (step 11)'
   }
 
 }

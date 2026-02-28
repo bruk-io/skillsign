@@ -30,30 +30,33 @@ views {
 
     skillsign.cli.canonicalProcessor -> skillsign.skillFiles 'Reads SKILL.md file'
 
-    skillsign.cli.verificationEngine -> skillsign.cli.tufClient 'Requests trusted Fulcio root certificates and Rekor public key (step 7)'
-
-    parallel {
-      skillsign.cli.tufClient -> tuf 'Fetches current TUF root metadata'
-      skillsign.cli.tufClient -> skillsign.tufCache 'Reads/writes cached TUF metadata'
-    }
-
     skillsign.cli.verificationEngine -> skillsign.cli.verificationEngine {
-      title 'Cryptographic verification (steps 6-8)'
+      title 'Cryptographic verification (steps 6, 8 — implemented)'
       notes '''
-        1. Verify ECDSA P-256 signature over digest using certificate public key
-        2. Verify certificate chain against Fulcio root (via TUF)
-        3. Verify certificate SAN matches signer field (exact, case-sensitive)
-        4. Verify EKU extension contains id-kp-codeSigning (OID 1.3.6.1.5.5.7.3.3)
+        1. Verify ECDSA P-256 signature over digest using certificate public key (step 6)
+        2. Verify certificate SAN matches signer field (exact, case-sensitive) (step 8)
+        3. Verify EKU extension contains id-kp-codeSigning (OID 1.3.6.1.5.5.7.3.3) (step 8)
+        Note: cert chain validation (step 7) and SET verification (step 9) are
+        Phase 2 items — currently stubbed with TODO comments in verify.py.
       '''
     }
 
+    // Phase 2: TUF-based cert chain validation (step 7) and SET verification (step 9)
+    skillsign.cli.verificationEngine -> skillsign.cli.tufClient 'Requests trusted Fulcio root certificates and Rekor public key (step 7) [Phase 2]'
+
+    parallel {
+      skillsign.cli.tufClient -> tuf 'Fetches current TUF root metadata [Phase 2]'
+      skillsign.cli.tufClient -> skillsign.tufCache 'Reads/writes cached TUF metadata [Phase 2]'
+    }
+
     skillsign.cli.verificationEngine -> skillsign.cli.verificationEngine {
-      title 'SET verification and temporal binding (step 9)'
+      title 'SET verification and temporal binding (step 9) [Phase 2]'
       notes '''
         1. Verify SET cryptographic signature against Rekor public key (via TUF)
         2. Confirm SET timestamp falls within certificate notBefore/notAfter window
         This proves the signature was created while the certificate was valid,
         without requiring live Rekor access (unless --strict).
+        Currently a TODO in verify.py — planned for Phase 2 hardening.
       '''
     }
 

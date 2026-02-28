@@ -3,33 +3,33 @@ model {
   extend skillsign.cli {
 
     component authHandler 'Auth Handler' {
-      technology 'OIDC, Sigstore SDK'
-      description 'Detects ambient OIDC credentials (GitHub Actions) or runs interactive browser flow, returning a Sigstore IdentityToken for use by the signing engine'
+      technology 'OIDC'
+      description 'Obtains OIDC identity token for signing. Detects ambient CI credentials first (GitHub Actions OIDC via detect_credential). Falls back to interactive browser-based flow via Sigstore OAuth issuer (oauth2.sigstore.dev/auth). Returns IdentityToken for use with Sigstore SigningContext.'
     }
 
     component canonicalProcessor 'Canonical Form Processor' {
       technology 'UTF-8, SHA-256'
-      description 'Normalizes SKILL.md files (BOM stripping, line ending normalization, whitespace trimming) and computes the signed input digest per Section 5'
+      description 'Implemented across canonical.py and digest.py. canonical.py: 8-step normalization (BOM strip, CRLF normalization, trailing whitespace trim, single trailing newline, UTF-8 encode, null-byte rejection). digest.py: domain-separated SHA-256 over "skillsign:v1" + \x00 + canonical + \x00 + skill_id + \x00 + skill_version. Also validates skill_id and skill_version format.'
     }
 
     component signingEngine 'Signing Engine' {
-      technology 'ECDSA P-256, X.509, Sigstore SDK'
-      description 'Orchestrates the 11-step signing protocol via the Sigstore SDK: reads manifest, computes canonical digest, delegates key generation and Fulcio/Rekor interaction to the SDK, assembles sidecar data'
+      technology 'ECDSA P-256, X.509'
+      description 'Orchestrates the signing protocol via Sigstore SDK: reads manifest, canonicalizes SKILL.md, computes digest, obtains OIDC identity token, invokes SigningContext.signer() which generates ephemeral keypair, obtains Fulcio certificate, signs digest, and submits to Rekor. Returns assembled sidecar dict; sidecar writing is delegated to the CLI layer.'
     }
 
     component verificationEngine 'Verification Engine' {
       technology 'ECDSA P-256, X.509'
-      description 'Orchestrates verification: cert chain validation against Fulcio root, ECDSA signature check, EKU code-signing OID check, SAN identity match, SET cryptographic signature verification against Rekor public key, temporal binding, and SKILL_ID_MISMATCH owner-path consistency check'
+      description 'Orchestrates verification: reads sidecar via SidecarManager, recomputes digest, verifies ECDSA P-256 signature using certificate public key, checks EKU id-kp-codeSigning OID, verifies SAN identity match, and checks SKILL_ID_MISMATCH owner-path consistency. Phase 2: cert chain validation against TUF Fulcio root and SET cryptographic verification against Rekor public key.'
     }
 
     component policyEngine 'Policy Engine' {
       technology 'YAML 1.2'
-      description 'Evaluates trust policies with first-match-wins rule evaluation, signer_org matching with lowercase normalization, and max_age_days enforcement against verified rekor_timestamp'
+      description '[Phase 2, not yet implemented] Evaluates trust policies with first-match-wins rule evaluation, signer_org matching with lowercase normalization, and max_age_days enforcement against verified rekor_timestamp'
     }
 
     component sidecarManager 'Sidecar Manager' {
       technology 'YAML 1.2'
-      description 'Reads and writes .skillsign sidecar files with strict YAML 1.2 parsing restrictions: no duplicate keys, no anchors/aliases, no tags, no multi-document streams, max 64KB'
+      description 'Implemented as a single sidecar.py module combining reader and writer. Writer: assembles canonical field-ordered YAML (PEM fields as literal block scalars) and writes atomically via temp file rename. Reader: parses with strictyaml (enforces no duplicates/anchors/aliases/tags), validates all fields (digest sha256:hex, signer https://github.com URL, base64 SET, PEM cert), max 64KB.'
     }
 
     component manifestReader 'Manifest Reader' {
@@ -39,20 +39,24 @@ model {
 
     component tufClient 'TUF Client' {
       technology 'TUF, HTTPS'
-      description 'Fetches and validates Sigstore TUF root metadata, Fulcio root certificates, and Rekor public key. In --offline mode, falls back to bundled cache and Rekor is not consulted. --offline and --strict are mutually exclusive (exit code 10)'
+      description '[Phase 2, not yet implemented] Fetches and validates Sigstore TUF root metadata, Fulcio root certificates, and Rekor public key. In --offline mode, falls back to bundled cache and Rekor is not consulted. --offline and --strict are mutually exclusive (exit code 10)'
     }
 
     // Signing path
-    signingEngine -> authHandler 'Obtains Sigstore IdentityToken from'
+    signingEngine -> authHandler 'Gets OIDC identity token from'
     signingEngine -> canonicalProcessor 'Gets SHA-256 digest from'
-    signingEngine -> sidecarManager 'Checks for existing sidecar and writes assembled sidecar via'
     signingEngine -> manifestReader 'Reads skill_id and skill_version from'
+    signingEngine -> skillsign.skillFiles 'Checks for existing .skillsign sidecar before signing'
+    // Note: signing.py returns a sidecar dict; cli.py calls write_sidecar() (sidecarManager) directly.
+    // The CLI entry point bridges signingEngine and sidecarManager — no direct code dependency between them.
 
     // Verification path
     verificationEngine -> canonicalProcessor 'Recomputes digest via'
     verificationEngine -> sidecarManager 'Reads sidecar fields via'
-    verificationEngine -> tufClient 'Gets trusted Fulcio root certificates and Rekor public key from'
-    verificationEngine -> policyEngine 'Passes verified signer identity, rekor_timestamp, and skill_id for policy evaluation'
+    // Phase 2: cert chain validation and SET verification (steps 7+9 are TODOs in verify.py)
+    verificationEngine -> tufClient 'Gets trusted Fulcio root certificates and Rekor public key from [Phase 2]'
+    // Phase 2: policy evaluation (no policy.py yet)
+    verificationEngine -> policyEngine 'Passes verified signer identity, rekor_timestamp, and skill_id for policy evaluation [Phase 2]'
 
   }
 
@@ -63,8 +67,8 @@ model {
 
   // Component-to-external relationships
   skillsign.cli.authHandler -> github 'Authenticates via OIDC, receives identity token'
-  skillsign.cli.signingEngine -> fulcio 'Delegates ephemeral key generation and certificate issuance via Sigstore SDK'
-  skillsign.cli.signingEngine -> rekor 'Delegates log entry submission via Sigstore SDK as hashedrekord/v0.0.1 entry'
+  skillsign.cli.signingEngine -> fulcio 'Submits ephemeral public key and OIDC token via Sigstore SDK, receives short-lived X.509 certificate'
+  skillsign.cli.signingEngine -> rekor 'Submits signature, certificate, and digest as hashedrekord/v0.0.1 entry via Sigstore SDK'
   skillsign.cli.verificationEngine -> rekor 'Confirms log entry exists and digest matches in --strict mode'
   skillsign.cli.tufClient -> tuf 'Fetches current TUF root metadata via HTTPS'
   skillsign.cli.tufClient -> skillsign.tufCache 'Reads and writes cached TUF metadata via local filesystem'

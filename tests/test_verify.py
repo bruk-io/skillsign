@@ -4,7 +4,9 @@ import base64
 import datetime
 from pathlib import Path
 from typing import Any
+from unittest.mock import MagicMock, patch
 
+import pytest
 from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.ec import ECDSA
@@ -15,7 +17,14 @@ from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
 
 from skillsign.canonical import canonicalize
 from skillsign.digest import compute_digest
-from skillsign.verify import VerificationResult, exit_code_for, verify_skill
+from skillsign.verify import (
+    VerificationResult,
+    _reconstruct_hashedrekord_body,
+    _verify_cert_chain,
+    _verify_set_temporal_window,
+    exit_code_for,
+    verify_skill,
+)
 
 # ---------------------------------------------------------------------------
 # Test fixtures
@@ -24,6 +33,10 @@ from skillsign.verify import VerificationResult, exit_code_for, verify_skill
 _SKILL_ID = "github.com/test-org/my-skill"
 _SKILL_VERSION = "1.0.0"
 _SIGNER_URL = "https://github.com/test-org/repo"
+
+# ISO timestamp that falls within the cert's validity window.
+# _make_cert uses [now - 1h, now + 1h] so any recent timestamp works.
+_VALID_REKOR_TS = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _make_cert(
@@ -67,6 +80,7 @@ def _make_sidecar(
     include_code_signing_eku: bool = True,
     corrupt_signature: bool = False,
     override_signer_in_sidecar: str | None = None,
+    rekor_timestamp: str = _VALID_REKOR_TS,
 ) -> tuple[dict[str, Any], ec.EllipticCurvePrivateKey]:
     """Build a valid sidecar dict for the given skill content.
 
@@ -99,7 +113,7 @@ def _make_sidecar(
         "timestamp": "2026-01-01T00:00:00Z",
         "digest": digest_hex,
         "rekor_log_id": "a" * 64,
-        "rekor_timestamp": "2026-01-01T00:00:01Z",
+        "rekor_timestamp": rekor_timestamp,
         "rekor_set": base64.b64encode(b"fake-rekor-set-data").decode(),
         "certificate": cert_pem,
         "signature": sig_b64,
@@ -144,11 +158,27 @@ def _setup_files(
 
 
 # ---------------------------------------------------------------------------
+# Helper: patch _get_trusted_root to skip cert chain (unit test isolation)
+# ---------------------------------------------------------------------------
+
+# In unit tests, we use self-signed certificates that will never validate
+# against the Sigstore Fulcio root. We patch _verify_cert_chain to return None
+# (pass), skipping chain validation entirely. This is intentional: unit tests
+# exercise all other logic. Integration / E2E tests cover the live TUF +
+# chain validation path.
+_SKIP_CHAIN = patch(
+    "skillsign.verify._verify_cert_chain",
+    return_value=None,
+)
+
+
+# ---------------------------------------------------------------------------
 # Test cases
 # ---------------------------------------------------------------------------
 
 
-def test_verified_happy_path(tmp_path: Path) -> None:
+@_SKIP_CHAIN
+def test_verified_happy_path(mock_tuf: MagicMock, tmp_path: Path) -> None:
     """A valid sidecar with matching content and signature returns VERIFIED."""
     skill_path, _ = _setup_files(tmp_path)
     result, meta = verify_skill(skill_path)
@@ -159,7 +189,8 @@ def test_verified_happy_path(tmp_path: Path) -> None:
     assert "error" not in meta
 
 
-def test_unsigned_no_sidecar(tmp_path: Path) -> None:
+@_SKIP_CHAIN
+def test_unsigned_no_sidecar(mock_tuf: MagicMock, tmp_path: Path) -> None:
     """Missing sidecar returns UNSIGNED with empty metadata."""
     skill_path = tmp_path / "SKILL.md"
     skill_path.write_bytes(b"# Unsigned\n")
@@ -168,7 +199,8 @@ def test_unsigned_no_sidecar(tmp_path: Path) -> None:
     assert meta == {}
 
 
-def test_malformed_sidecar_corrupt_yaml(tmp_path: Path) -> None:
+@_SKIP_CHAIN
+def test_malformed_sidecar_corrupt_yaml(mock_tuf: MagicMock, tmp_path: Path) -> None:
     """A sidecar that is not valid YAML returns MALFORMED_SIDECAR."""
     skill_path = tmp_path / "SKILL.md"
     skill_path.write_bytes(b"# Hello\n")
@@ -182,7 +214,10 @@ def test_malformed_sidecar_corrupt_yaml(tmp_path: Path) -> None:
     assert "error" in meta
 
 
-def test_malformed_sidecar_missing_required_field(tmp_path: Path) -> None:
+@_SKIP_CHAIN
+def test_malformed_sidecar_missing_required_field(
+    mock_tuf: MagicMock, tmp_path: Path
+) -> None:
     """A sidecar missing required fields returns MALFORMED_SIDECAR."""
     skill_path = tmp_path / "SKILL.md"
     skill_path.write_bytes(b"# Hello\n")
@@ -195,7 +230,8 @@ def test_malformed_sidecar_missing_required_field(tmp_path: Path) -> None:
     assert "error" in meta
 
 
-def test_tampered_digest_mismatch(tmp_path: Path) -> None:
+@_SKIP_CHAIN
+def test_tampered_digest_mismatch(mock_tuf: MagicMock, tmp_path: Path) -> None:
     """Modifying skill file content after signing causes TAMPERED (digest mismatch)."""
     skill_path, _ = _setup_files(tmp_path, skill_content=b"# Original\n")
     # Modify the skill file after signing
@@ -207,7 +243,8 @@ def test_tampered_digest_mismatch(tmp_path: Path) -> None:
     assert "mismatch" in meta["error"].lower() or "tamper" in meta["error"].lower()
 
 
-def test_tampered_corrupt_signature(tmp_path: Path) -> None:
+@_SKIP_CHAIN
+def test_tampered_corrupt_signature(mock_tuf: MagicMock, tmp_path: Path) -> None:
     """A signature that does not verify against the cert returns TAMPERED."""
     skill_path, _ = _setup_files(tmp_path, corrupt_signature=True)
 
@@ -216,7 +253,10 @@ def test_tampered_corrupt_signature(tmp_path: Path) -> None:
     assert "error" in meta
 
 
-def test_identity_mismatch_san_does_not_match_signer(tmp_path: Path) -> None:
+@_SKIP_CHAIN
+def test_identity_mismatch_san_does_not_match_signer(
+    mock_tuf: MagicMock, tmp_path: Path
+) -> None:
     """Sidecar signer field mismatch with cert SAN returns IDENTITY_MISMATCH."""
     # The cert has signer_url = _SIGNER_URL but sidecar claims a different signer
     skill_content = b"# Skill\n"
@@ -236,7 +276,8 @@ def test_identity_mismatch_san_does_not_match_signer(tmp_path: Path) -> None:
     assert "error" in meta
 
 
-def test_invalid_cert_missing_eku(tmp_path: Path) -> None:
+@_SKIP_CHAIN
+def test_invalid_cert_missing_eku(mock_tuf: MagicMock, tmp_path: Path) -> None:
     """A certificate without the codeSigning EKU returns INVALID_CERT."""
     skill_path, _ = _setup_files(tmp_path, include_code_signing_eku=False)
 
@@ -245,7 +286,8 @@ def test_invalid_cert_missing_eku(tmp_path: Path) -> None:
     assert "error" in meta
 
 
-def test_skill_id_mismatch_different_owner(tmp_path: Path) -> None:
+@_SKIP_CHAIN
+def test_skill_id_mismatch_different_owner(mock_tuf: MagicMock, tmp_path: Path) -> None:
     """Signer at org-a signing skill_id for org-b returns SKILL_ID_MISMATCH."""
     skill_content = b"# Skill\n"
     skill_path = tmp_path / "SKILL.md"
@@ -266,7 +308,8 @@ def test_skill_id_mismatch_different_owner(tmp_path: Path) -> None:
     assert "mismatch" in meta["error"].lower()
 
 
-def test_skill_id_match_same_owner(tmp_path: Path) -> None:
+@_SKIP_CHAIN
+def test_skill_id_match_same_owner(mock_tuf: MagicMock, tmp_path: Path) -> None:
     """Signer and skill_id with same owner passes SKILL_ID_MISMATCH check."""
     skill_path, _ = _setup_files(
         tmp_path,
@@ -277,7 +320,10 @@ def test_skill_id_match_same_owner(tmp_path: Path) -> None:
     assert result == VerificationResult.VERIFIED
 
 
-def test_skill_id_mismatch_case_insensitive(tmp_path: Path) -> None:
+@_SKIP_CHAIN
+def test_skill_id_mismatch_case_insensitive(
+    mock_tuf: MagicMock, tmp_path: Path
+) -> None:
     """Owner comparison is case-insensitive per spec."""
     skill_path, _ = _setup_files(
         tmp_path,
@@ -288,7 +334,8 @@ def test_skill_id_mismatch_case_insensitive(tmp_path: Path) -> None:
     assert result == VerificationResult.VERIFIED
 
 
-def test_tampered_wrong_key_signature(tmp_path: Path) -> None:
+@_SKIP_CHAIN
+def test_tampered_wrong_key_signature(mock_tuf: MagicMock, tmp_path: Path) -> None:
     """A valid DER ECDSA signature from a different key returns TAMPERED."""
     skill_content = b"# My Skill\n\nDoes stuff.\n"
     skill_path = tmp_path / "SKILL.md"
@@ -312,10 +359,11 @@ def test_tampered_wrong_key_signature(tmp_path: Path) -> None:
     assert "error" in meta
 
 
-def test_unreadable_skill_file_raises_error(tmp_path: Path) -> None:
+@_SKIP_CHAIN
+def test_unreadable_skill_file_raises_error(
+    mock_tuf: MagicMock, tmp_path: Path
+) -> None:
     """An unreadable skill file raises SkillSignError (exit code 10), not TAMPERED."""
-    import pytest
-
     from skillsign.errors import SkillSignError
 
     skill_path, _ = _setup_files(tmp_path)
@@ -325,6 +373,336 @@ def test_unreadable_skill_file_raises_error(tmp_path: Path) -> None:
     with pytest.raises(SkillSignError) as exc_info:
         verify_skill(skill_path)
     assert exc_info.value.exit_code == 10
+
+
+# ---------------------------------------------------------------------------
+# Step 7: Certificate chain validation
+# ---------------------------------------------------------------------------
+
+
+def test_cert_chain_fails_closed_when_tuf_unavailable(tmp_path: Path) -> None:
+    """When TUF root is unavailable, cert chain check fails closed (INVALID_CERT)."""
+    key = ec.generate_private_key(ec.SECP256R1())
+    cert = _make_cert(key, _SIGNER_URL)
+    meta: dict[str, Any] = {"signer": _SIGNER_URL}
+    sidecar: dict[str, Any] = {"rekor_timestamp": _VALID_REKOR_TS}
+
+    with patch("skillsign.verify._get_trusted_root", return_value=None):
+        result = _verify_cert_chain(cert, meta, sidecar)
+    assert result is not None
+    result_code, result_meta = result
+    assert result_code == VerificationResult.INVALID_CERT
+    assert "unavailable" in result_meta["error"].lower()
+
+
+def test_cert_chain_fails_for_self_signed_with_real_tuf(tmp_path: Path) -> None:
+    """A self-signed cert fails chain validation when Fulcio certs are available."""
+    # Build a mock TrustedRoot that returns a Fulcio cert that is NOT the
+    # self-signed test cert's issuer. This simulates the real Sigstore scenario
+    # where a test cert is not signed by a Fulcio CA.
+    key = ec.generate_private_key(ec.SECP256R1())
+    fulcio_key = ec.generate_private_key(ec.SECP256R1())
+
+    # Generate a "Fulcio CA" cert (also self-signed, different key)
+    fulcio_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Fake Fulcio CA")])
+    fulcio_cert = (
+        x509.CertificateBuilder()
+        .subject_name(fulcio_name)
+        .issuer_name(fulcio_name)
+        .public_key(fulcio_key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(
+            datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=1)
+        )
+        .not_valid_after(
+            datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=1)
+        )
+        .add_extension(
+            x509.BasicConstraints(ca=True, path_length=None),
+            critical=True,
+        )
+        .sign(fulcio_key, SHA256())
+    )
+
+    # The leaf cert is signed by a different key (not fulcio_key)
+    leaf_cert = _make_cert(key, _SIGNER_URL)
+
+    mock_trusted_root = MagicMock()
+    mock_trusted_root.get_fulcio_certs.return_value = [fulcio_cert]
+    meta: dict[str, Any] = {"signer": _SIGNER_URL}
+
+    sidecar: dict[str, Any] = {"rekor_timestamp": _VALID_REKOR_TS}
+    with patch("skillsign.verify._get_trusted_root", return_value=mock_trusted_root):
+        result = _verify_cert_chain(leaf_cert, meta, sidecar)
+
+    assert result is not None
+    result_code, result_meta = result
+    assert result_code == VerificationResult.INVALID_CERT
+    err = result_meta["error"].lower()
+    assert "chain" in err or "certificate" in err
+
+
+def test_cert_chain_passes_when_signed_by_fulcio_ca(tmp_path: Path) -> None:
+    """A cert properly signed by a Fulcio CA passes chain validation."""
+    # Generate a CA key and cert (acts as the Fulcio CA)
+    ca_key = ec.generate_private_key(ec.SECP256R1())
+    ca_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Fake Fulcio CA")])
+    ca_cert = (
+        x509.CertificateBuilder()
+        .subject_name(ca_name)
+        .issuer_name(ca_name)
+        .public_key(ca_key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(
+            datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=2)
+        )
+        .not_valid_after(
+            datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=24)
+        )
+        .add_extension(
+            x509.BasicConstraints(ca=True, path_length=None),
+            critical=True,
+        )
+        .add_extension(
+            x509.KeyUsage(
+                digital_signature=True,
+                key_cert_sign=True,
+                crl_sign=True,
+                content_commitment=False,
+                key_encipherment=False,
+                data_encipherment=False,
+                key_agreement=False,
+                encipher_only=False,
+                decipher_only=False,
+            ),
+            critical=True,
+        )
+        .add_extension(
+            x509.SubjectKeyIdentifier.from_public_key(ca_key.public_key()),
+            critical=False,
+        )
+        .sign(ca_key, SHA256())
+    )
+
+    # Generate a leaf cert signed by the CA, with required extensions
+    leaf_key = ec.generate_private_key(ec.SECP256R1())
+    leaf_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Leaf Cert")])
+    leaf_cert = (
+        x509.CertificateBuilder()
+        .subject_name(leaf_name)
+        .issuer_name(ca_name)  # Issued by the CA
+        .public_key(leaf_key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(
+            datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=1)
+        )
+        .not_valid_after(
+            datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=1)
+        )
+        .add_extension(
+            x509.SubjectAlternativeName([x509.UniformResourceIdentifier(_SIGNER_URL)]),
+            critical=False,
+        )
+        .add_extension(
+            x509.ExtendedKeyUsage([ExtendedKeyUsageOID.CODE_SIGNING]),
+            critical=False,
+        )
+        .add_extension(
+            x509.SubjectKeyIdentifier.from_public_key(leaf_key.public_key()),
+            critical=False,
+        )
+        .add_extension(
+            x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_key.public_key()),
+            critical=False,
+        )
+        .sign(ca_key, SHA256())  # Signed by the CA key
+    )
+
+    mock_trusted_root = MagicMock()
+    mock_trusted_root.get_fulcio_certs.return_value = [ca_cert]
+    meta: dict[str, Any] = {"signer": _SIGNER_URL}
+
+    sidecar: dict[str, Any] = {"rekor_timestamp": _VALID_REKOR_TS}
+    with patch("skillsign.verify._get_trusted_root", return_value=mock_trusted_root):
+        result = _verify_cert_chain(leaf_cert, meta, sidecar)
+
+    assert result is None  # None = chain validation passed
+
+
+# ---------------------------------------------------------------------------
+# Step 9: SET temporal window verification
+# ---------------------------------------------------------------------------
+
+
+def test_set_temporal_window_timestamp_within_cert_validity(tmp_path: Path) -> None:
+    """A rekor_timestamp within the cert's validity window passes step 9."""
+    key = ec.generate_private_key(ec.SECP256R1())
+    cert = _make_cert(key, _SIGNER_URL)
+    meta: dict[str, Any] = {"signer": _SIGNER_URL}
+
+    # Timestamp is "now" which is within [now-1h, now+1h]
+    ts = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    result = _verify_set_temporal_window(cert, ts, meta)
+    assert result is None  # None = temporal check passed
+
+
+def test_set_temporal_window_timestamp_before_cert_validity(tmp_path: Path) -> None:
+    """A rekor_timestamp before the cert's notBefore fails with INVALID_CERT."""
+    key = ec.generate_private_key(ec.SECP256R1())
+    cert = _make_cert(key, _SIGNER_URL)
+    meta: dict[str, Any] = {"signer": _SIGNER_URL}
+
+    # Timestamp is 2 hours ago — before not_valid_before (which is 1h ago)
+    ts_early = (
+        datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=2)
+    ).strftime("%Y-%m-%dT%H:%M:%SZ")
+    result = _verify_set_temporal_window(cert, ts_early, meta)
+    assert result is not None
+    result_code, result_meta = result
+    assert result_code == VerificationResult.INVALID_CERT
+    assert "outside" in result_meta["error"].lower()
+
+
+def test_set_temporal_window_timestamp_after_cert_expiry(tmp_path: Path) -> None:
+    """A rekor_timestamp after the cert's notAfter fails with INVALID_CERT."""
+    key = ec.generate_private_key(ec.SECP256R1())
+    cert = _make_cert(key, _SIGNER_URL)
+    meta: dict[str, Any] = {"signer": _SIGNER_URL}
+
+    # Timestamp is 2 hours in the future — after not_valid_after (which is 1h from now)
+    ts_future = (
+        datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=2)
+    ).strftime("%Y-%m-%dT%H:%M:%SZ")
+    result = _verify_set_temporal_window(cert, ts_future, meta)
+    assert result is not None
+    result_code, result_meta = result
+    assert result_code == VerificationResult.INVALID_CERT
+    assert "outside" in result_meta["error"].lower()
+
+
+def test_set_temporal_window_rejects_non_z_suffix(tmp_path: Path) -> None:
+    """A rekor_timestamp with non-Z timezone offset is rejected per spec Section 6.2."""
+    key = ec.generate_private_key(ec.SECP256R1())
+    cert = _make_cert(key, _SIGNER_URL)
+    meta: dict[str, Any] = {"signer": _SIGNER_URL}
+
+    result = _verify_set_temporal_window(cert, "2025-03-01T14:22:03+05:00", meta)
+    assert result is not None
+    result_code, result_meta = result
+    assert result_code == VerificationResult.INVALID_CERT
+    assert "Z suffix" in result_meta["error"]
+
+
+def test_set_temporal_window_invalid_timestamp_format(tmp_path: Path) -> None:
+    """An unparseable rekor_timestamp fails with INVALID_CERT."""
+    key = ec.generate_private_key(ec.SECP256R1())
+    cert = _make_cert(key, _SIGNER_URL)
+    meta: dict[str, Any] = {"signer": _SIGNER_URL}
+
+    result = _verify_set_temporal_window(cert, "not-a-timestamp", meta)
+    assert result is not None
+    result_code, _ = result
+    assert result_code == VerificationResult.INVALID_CERT
+
+
+@_SKIP_CHAIN
+def test_rekor_timestamp_outside_cert_window_returns_invalid_cert(
+    mock_tuf: MagicMock, tmp_path: Path
+) -> None:
+    """Full verify_skill returns INVALID_CERT when rekor_timestamp is out of range."""
+    # Create a cert with validity [1h ago, +1h], but set rekor_timestamp to 2h ago
+    # so the timestamp is before not_valid_before.
+    ts_before_cert = (
+        datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=2)
+    ).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    skill_path, _ = _setup_files(tmp_path, rekor_timestamp=ts_before_cert)
+    result, meta = verify_skill(skill_path)
+    assert result == VerificationResult.INVALID_CERT
+    assert "error" in meta
+    assert "outside" in meta["error"].lower()
+
+
+# ---------------------------------------------------------------------------
+# Step 7+9 integration: cert chain failure takes priority over SET check
+# ---------------------------------------------------------------------------
+
+
+def test_cert_chain_failure_before_set_check(tmp_path: Path) -> None:
+    """A cert chain failure (step 7) is reported before the SET check (step 9)."""
+    # Provide a mock TUF root with a Fulcio CA that is NOT the test cert's issuer.
+    fulcio_key = ec.generate_private_key(ec.SECP256R1())
+    fulcio_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Fake Fulcio CA")])
+    fake_fulcio_cert = (
+        x509.CertificateBuilder()
+        .subject_name(fulcio_name)
+        .issuer_name(fulcio_name)
+        .public_key(fulcio_key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(
+            datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=1)
+        )
+        .not_valid_after(
+            datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=1)
+        )
+        .add_extension(
+            x509.BasicConstraints(ca=True, path_length=None),
+            critical=True,
+        )
+        .sign(fulcio_key, SHA256())
+    )
+
+    mock_trusted_root = MagicMock()
+    mock_trusted_root.get_fulcio_certs.return_value = [fake_fulcio_cert]
+
+    skill_path, _ = _setup_files(tmp_path)
+
+    with patch("skillsign.verify._get_trusted_root", return_value=mock_trusted_root):
+        result, meta = verify_skill(skill_path)
+
+    assert result == VerificationResult.INVALID_CERT
+    assert "chain" in meta["error"].lower() or "fulcio" in meta["error"].lower()
+
+
+# ---------------------------------------------------------------------------
+# _reconstruct_hashedrekord_body unit tests
+# ---------------------------------------------------------------------------
+
+
+def test_reconstruct_hashedrekord_body_structure() -> None:
+    """_reconstruct_hashedrekord_body produces valid JSON with expected keys."""
+    import json
+
+    cert_pem = "-----BEGIN CERTIFICATE-----\nfakedata\n-----END CERTIFICATE-----\n"
+    sig_b64 = base64.b64encode(b"\xde\xad\xbe\xef").decode()
+    digest_hex = "sha256:" + "ab" * 32
+
+    body_bytes = _reconstruct_hashedrekord_body(cert_pem, sig_b64, digest_hex)
+    body = json.loads(body_bytes)
+
+    assert body["kind"] == "hashedrekord"
+    assert body["apiVersion"] == "0.0.1"
+    assert body["spec"]["data"]["hash"]["algorithm"] == "sha256"
+    assert body["spec"]["data"]["hash"]["value"] == "ab" * 32
+    assert body["spec"]["signature"]["content"] == sig_b64
+    # cert content should be base64 of the PEM bytes
+    expected_cert_b64 = base64.b64encode(cert_pem.encode("ascii")).decode("ascii")
+    assert body["spec"]["signature"]["publicKey"]["content"] == expected_cert_b64
+
+
+def test_reconstruct_hashedrekord_body_strips_sha256_prefix() -> None:
+    """Digest field with sha256: prefix is stripped in the body."""
+    import json
+
+    body_bytes = _reconstruct_hashedrekord_body(
+        "-----BEGIN CERTIFICATE-----\nAA==\n-----END CERTIFICATE-----\n",
+        base64.b64encode(b"sig").decode(),
+        "sha256:" + "cc" * 32,
+    )
+    body = json.loads(body_bytes)
+    # Value should NOT include the sha256: prefix
+    assert body["spec"]["data"]["hash"]["value"] == "cc" * 32
+    assert not body["spec"]["data"]["hash"]["value"].startswith("sha256:")
 
 
 # ---------------------------------------------------------------------------

@@ -1,21 +1,62 @@
 """SkillSign CLI entry point."""
 
+from __future__ import annotations
+
 import sys
+from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 import click
 
 from skillsign import __version__
 from skillsign.errors import SkillSignError
+from skillsign.exit_codes import EXIT_CLI_ERROR
+
+
+class _SkillSignGroup(click.Group):
+    """Custom group that remaps Click's UsageError exit code (2) to 10.
+
+    Spec Section 9.3 maps all CLI/usage errors to exit code 10.
+    Click uses exit code 2 for UsageError (bad arguments, missing files, etc.),
+    so we run in non-standalone mode and handle exceptions ourselves, mapping
+    UsageError to exit code 10 while preserving legitimate exit code 2 (UNSIGNED).
+    """
+
+    def main(
+        self,
+        args: Sequence[str] | None = None,
+        prog_name: str | None = None,
+        complete_var: str | None = None,
+        standalone_mode: bool = True,
+        **extra: Any,
+    ) -> Any:
+        try:
+            return super().main(
+                args=args,
+                prog_name=prog_name,
+                complete_var=complete_var,
+                standalone_mode=False,
+                **extra,
+            )
+        except click.UsageError as exc:
+            exc.show()
+            sys.exit(EXIT_CLI_ERROR)
+        except click.exceptions.Exit as exc:
+            sys.exit(exc.exit_code)
+        except SystemExit:
+            raise
+        except click.Abort:
+            sys.exit(EXIT_CLI_ERROR)
 
 
 def _not_implemented() -> None:
     """Exit with code 10 for unimplemented commands."""
     click.echo("Not yet implemented.", err=True)
-    sys.exit(10)
+    sys.exit(EXIT_CLI_ERROR)
 
 
-@click.group()
+@click.group(cls=_SkillSignGroup)
 @click.version_option(version=__version__, prog_name="skillsign")
 def cli() -> None:
     """Cryptographic signing and verification for Claude Code SKILL.md files."""
