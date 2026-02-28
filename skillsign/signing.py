@@ -26,11 +26,15 @@ from skillsign.manifest import read_manifest
 _SIDECAR_VERSION = 1
 
 
-def sign_skill(skill_file: Path) -> dict[str, Any]:
+def sign_skill(skill_file: Path, *, force: bool = False) -> dict[str, Any]:
     """Execute the full signing algorithm per Section 7.2.1.
 
     Returns a dict containing all sidecar fields (Section 6.2).
     Does NOT write the sidecar file — that is the sidecar writer's job.
+
+    When force=False (the default), raises SkillSignError if a sidecar
+    already exists (Section 7.2.1 step 3). When force=True, the existing
+    sidecar check is skipped and the caller is responsible for overwriting.
 
     Raises SkillSignError with exit_code=10 on any failure.
     """
@@ -40,9 +44,9 @@ def sign_skill(skill_file: Path) -> dict[str, Any]:
 
     # Step 2: (validation done by read_manifest)
 
-    # Step 3: Check for existing sidecar
+    # Step 3: Check for existing sidecar (skipped when --force is set)
     sidecar_path = Path(str(skill_file) + ".skillsign")
-    if sidecar_path.exists():
+    if not force and sidecar_path.exists():
         raise SkillSignError(
             f"Sidecar already exists: {sidecar_path} (use --force to overwrite)",
             exit_code=10,
