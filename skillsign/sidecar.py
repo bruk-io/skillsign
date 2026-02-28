@@ -153,14 +153,38 @@ def _malformed(message: str) -> SkillSignError:
 
 
 def _validate_signer(signer: str) -> None:
-    """Validate the signer URL per Section 6.2.
+    """Validate the signer field per Section 6.2.
 
-    Must be a https://github.com/... URL, case-sensitive, no query params,
-    fragments, userinfo, or port. Must not exceed 2048 characters.
+    The signer is the exact SAN value from the Fulcio certificate:
+    - For URI SANs (GitHub Actions OIDC): must be a https://github.com/... URL
+      with no query params, fragments, userinfo, or port.
+    - For email SANs (personal OAuth via Dex): must be a valid email address.
+
+    Must not exceed 2048 characters.
     """
     if len(signer) > _MAX_SIGNER_URL_LENGTH:
-        raise _malformed(f"signer URL exceeds {_MAX_SIGNER_URL_LENGTH} characters")
+        raise _malformed(f"signer exceeds {_MAX_SIGNER_URL_LENGTH} characters")
 
+    # Email SAN: contains @ and no URL scheme
+    if "@" in signer and "://" not in signer:
+        _validate_signer_email(signer)
+        return
+
+    # URI SAN: URL validation
+    _validate_signer_url(signer)
+
+
+def _validate_signer_email(email: str) -> None:
+    """Validate an email SAN signer value."""
+    if not email or email.count("@") != 1:
+        raise _malformed(f"signer email is invalid: {email!r}")
+    local, domain = email.split("@")
+    if not local or not domain or "." not in domain:
+        raise _malformed(f"signer email is invalid: {email!r}")
+
+
+def _validate_signer_url(signer: str) -> None:
+    """Validate a URI SAN signer value (https://github.com/... URL)."""
     try:
         parsed = urlparse(signer)
     except ValueError as e:

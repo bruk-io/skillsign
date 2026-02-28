@@ -19,6 +19,9 @@ views {
     skillsign.cli.verificationEngine -> skillsign.cli.verificationEngine {
       title 'Owner-path consistency check fails'
       notes '''
+        This check only applies to URI signers (CI path).
+        Email signers skip this check entirely — see verification flow step 11.
+
         Comparison algorithm (Section 8.3):
         1. From skill_id, extract {host}/{owner} (e.g., github.com/anthropic)
         2. From signer URL, extract {host}/{first-path-segment}

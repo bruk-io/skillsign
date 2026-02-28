@@ -19,8 +19,12 @@ model {
     description 'Anthropic CLI that loads and executes SKILL.md files as instructions'
   }
 
-  externalSystem github 'GitHub OIDC' {
-    description 'Identity provider for signer authentication via OpenID Connect'
+  externalSystem github 'GitHub Actions OIDC' {
+    description 'CI identity provider: GitHub Actions runtime issues OIDC tokens encoding the exact repo, workflow, and branch. Fulcio verifies these tokens and issues certificates with URI SANs (e.g., https://github.com/{org}/{repo}/.github/workflows/...). The signer cannot forge the token — only code running in the actual workflow receives it.'
+  }
+
+  externalSystem sigstoreDex 'Sigstore Dex (OAuth)' {
+    description 'Interactive identity provider: Sigstore-hosted Dex instance (oauth2.sigstore.dev/auth) that federates to Google, GitHub, and Microsoft OAuth. Fulcio verifies the Dex-issued token and issues certificates with email SANs (e.g., user@gmail.com). The email proves account ownership but says nothing about which repo or org the signer belongs to.'
   }
 
   externalSystem fulcio 'Fulcio CA' {
@@ -40,7 +44,8 @@ model {
   skillAuthor -> skillsign 'Signs skill files for distribution'
   skillConsumer -> skillsign 'Verifies skill file authenticity'
   claudeCode -> skillsign 'Verifies skills before loading'
-  skillsign -> github 'Authenticates skill authors'
+  skillsign -> github 'Authenticates CI workflows via OIDC tokens'
+  skillsign -> sigstoreDex 'Authenticates developers via browser-based OAuth'
   skillsign -> fulcio 'Obtains signing certificates'
   skillsign -> rekor 'Records and queries signed artifacts'
   skillsign -> tuf 'Retrieves trusted signing keys'

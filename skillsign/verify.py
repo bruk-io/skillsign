@@ -492,15 +492,24 @@ def _verify_san_and_eku(
 ) -> tuple[VerificationResult, dict[str, Any]] | None:
     """Verify the certificate SAN and EKU per Section 8.2 step 8.
 
+    Extracts the SAN from the certificate — tries URI first, then email.
+    Compares against the expected signer (case-sensitive exact match).
+
     Returns None if checks pass. Returns a failure tuple otherwise.
     """
-    # Extract SAN URI
+    # Extract SAN: try URI first, then email (RFC822Name)
+    cert_san: str | None = None
     try:
         san_ext = cert.extensions.get_extension_for_class(x509.SubjectAlternativeName)
         uris = san_ext.value.get_values_for_type(x509.UniformResourceIdentifier)
-        cert_san = uris[0] if uris else None
+        if uris:
+            cert_san = uris[0]
+        else:
+            emails = san_ext.value.get_values_for_type(x509.RFC822Name)
+            if emails:
+                cert_san = emails[0]
     except x509.ExtensionNotFound:
-        cert_san = None
+        pass
 
     # Case-sensitive exact match per spec Section 8.2 step 8
     if cert_san != expected_signer:
@@ -539,6 +548,11 @@ def _verify_san_and_eku(
     return None
 
 
+def _is_email_signer(signer: str) -> bool:
+    """Return True if the signer is an email address (not a URL)."""
+    return "@" in signer and "://" not in signer
+
+
 def _verify_skill_id_owner(
     skill_id: str,
     signer: str,
@@ -550,8 +564,15 @@ def _verify_skill_id_owner(
     from signer URL. Compares case-insensitively after percent-decoding
     the signer path to prevent %2F bypass.
 
+    Email signers skip this check — there is no URL to extract an owner
+    path from. The policy engine's ``signer`` rule handles email matching.
+
     Returns None if check passes. Returns SKILL_ID_MISMATCH tuple otherwise.
     """
+    # Email signers cannot be owner-path checked (Section 8.3)
+    if _is_email_signer(signer):
+        return None
+
     # Extract owner from skill_id: "{host}/{owner}/{name}"
     id_parts = skill_id.split("/")
     if len(id_parts) < 2:

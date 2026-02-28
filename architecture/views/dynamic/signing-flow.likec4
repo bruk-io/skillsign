@@ -39,15 +39,56 @@ views {
     skillsign.cli.canonicalProcessor -> skillsign.skillFiles 'Reads SKILL.md file'
 
     skillsign.cli.signingEngine -> skillsign.cli.authHandler 'Requests OIDC authentication (step 6)'
-    skillsign.cli.authHandler -> github {
-      title 'OIDC authentication with GitHub'
+
+    skillsign.cli.authHandler -> skillsign.cli.authHandler {
+      title 'Detects authentication mode'
       notes '''
-        Two modes:
-        - Interactive: opens browser for GitHub OIDC login (developer workstation)
-        - CI: uses ambient OIDC token from GitHub Actions runner (no browser)
-        In CI, the certificate SAN encodes the full workflow URL
-        (e.g., https://github.com/{org}/{repo}/.github/workflows/{workflow}.yml@refs/heads/main)
-        rather than a personal GitHub username, enabling signer_org policy matching.
+        auth.py tries ambient credential detection first (detect_credential("sigstore")).
+        If an ambient OIDC token is found (CI environment), uses it directly.
+        Otherwise, falls back to interactive browser-based OAuth.
+        The mode determines the SAN type on the resulting Fulcio certificate
+        and therefore the trust properties of the signature.
+      '''
+    }
+
+    skillsign.cli.authHandler -> github {
+      title 'CI path: ambient OIDC token from GitHub Actions'
+      notes '''
+        GitHub Actions runtime generates a JWT signed by GitHub's private key.
+        Claims include: repository, workflow, ref, sha, run_id.
+        The signer cannot forge this token — only code running inside
+        the actual GitHub Actions workflow receives it.
+
+        Fulcio verifies the JWT against GitHub's public OIDC keys and issues
+        a certificate with a URI SAN encoding the exact workflow identity:
+        https://github.com/{org}/{repo}/.github/workflows/{workflow}.yml@refs/heads/{branch}
+
+        Trust properties:
+        - Identity is scoped to a specific repo, workflow, and branch
+        - No human credentials involved — ephemeral, per-run
+        - Enables signer_org policy matching (extract org from URL path)
+        - Attacker must compromise repo write access AND trigger CI to abuse
+      '''
+    }
+
+    skillsign.cli.authHandler -> sigstoreDex {
+      title 'Interactive path: browser-based OAuth via Sigstore Dex'
+      notes '''
+        Opens browser to oauth2.sigstore.dev/auth (Dex instance).
+        User picks an identity provider: Google, GitHub, or Microsoft.
+        Dex verifies the OAuth flow and issues a JWT to Fulcio.
+
+        Fulcio verifies the Dex JWT and issues a certificate with an
+        email SAN (RFC822Name) — the email from the chosen OAuth provider
+        (e.g., user@gmail.com).
+
+        Trust properties:
+        - Identity is a person (email), not scoped to any repo or org
+        - Proves email ownership only — says nothing about authorization
+        - Cannot match signer_org policy (no URL to extract org from)
+        - SKILL_ID_MISMATCH owner-path check is skipped for email signers
+        - Attacker only needs the email account credentials to sign as this identity
+        - Suitable for development; CI signing preferred for production trust
       '''
     }
 
@@ -57,7 +98,14 @@ views {
         signing.py calls SigningContext.from_trust_config() and ctx.signer(identity_token).
         The Sigstore SDK internally: generates ephemeral ECDSA P-256 keypair,
         submits OIDC token + public key to Fulcio, receives short-lived X.509 certificate
-        (~10 min validity) binding the public key to the verified GitHub identity.
+        (~10 min validity) binding the public key to the verified identity.
+
+        Fulcio verifies the OIDC token signature against the issuer's public keys.
+        The certificate SAN type depends on the OIDC provider:
+        - GitHub Actions OIDC → URI SAN (workflow URL)
+        - Sigstore Dex (Google/GitHub/Microsoft OAuth) → Email SAN (RFC822Name)
+        Fulcio never trusts the caller's claims — it builds the SAN from
+        the verified OIDC token claims only.
       '''
     }
 
@@ -83,7 +131,7 @@ views {
       title 'Assembles sidecar dict from Sigstore Bundle fields (step 10)'
       notes '''
         signing.py calls _assemble_sidecar() which extracts: signature (DER Base64),
-        certificate (PEM), signer (SAN URI from cert), digest (sha256:hex),
+        certificate (PEM), signer (URI SAN or email SAN from cert), digest (sha256:hex),
         rekor_log_id (hex of key_id), rekor_timestamp (ISO 8601 UTC),
         rekor_set (already-base64 SET from inclusion_promise).
         Returns dict — does NOT write file; sidecar writing is done by CLI.

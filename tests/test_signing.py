@@ -16,10 +16,18 @@ from skillsign.errors import SkillSignError
 from skillsign.signing import sign_skill
 
 
-def _make_test_cert() -> x509.Certificate:
-    """Create a self-signed test certificate with a SAN URI."""
+def _make_test_cert(
+    san_uri: str | None = "https://github.com/test-user",
+    san_email: str | None = None,
+) -> x509.Certificate:
+    """Create a self-signed test certificate with a SAN URI or email."""
     key = ec.generate_private_key(ec.SECP256R1())
     subject = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "test")])
+    san_names: list[x509.GeneralName] = []
+    if san_uri:
+        san_names.append(x509.UniformResourceIdentifier(san_uri))
+    if san_email:
+        san_names.append(x509.RFC822Name(san_email))
     builder = (
         x509.CertificateBuilder()
         .subject_name(subject)
@@ -28,13 +36,12 @@ def _make_test_cert() -> x509.Certificate:
         .serial_number(x509.random_serial_number())
         .not_valid_before(datetime.now(UTC))
         .not_valid_after(datetime.now(UTC) + timedelta(hours=1))
-        .add_extension(
-            x509.SubjectAlternativeName(
-                [x509.UniformResourceIdentifier("https://github.com/test-user")]
-            ),
+    )
+    if san_names:
+        builder = builder.add_extension(
+            x509.SubjectAlternativeName(san_names),
             critical=False,
         )
-    )
     return builder.sign(key, hashes.SHA256())
 
 
@@ -47,11 +54,9 @@ def _make_mock_bundle(cert: x509.Certificate) -> MagicMock:
     # Mock log entry inner object
     log_entry = MagicMock()
     inner = MagicMock()
-    inner.log_id.key_id = base64.b64encode(b"\xaa" * 32)
-    inner.integrated_time = "1709305323"  # 2024-03-01T15:02:03Z
-    inner.inclusion_promise.signed_entry_timestamp = base64.b64encode(
-        b"mock-set-data"
-    ).decode("ascii")
+    inner.log_id.key_id = b"\xaa" * 32
+    inner.integrated_time = 1709305323  # 2024-03-01T15:02:03Z
+    inner.inclusion_promise.signed_entry_timestamp = b"mock-set-data"
     log_entry._inner = inner
     bundle.log_entry = log_entry
 
@@ -307,3 +312,76 @@ def test_invalid_utf8_skill_file(
     with pytest.raises(SkillSignError, match="UTF-8") as exc_info:
         sign_skill(skill_file)
     assert exc_info.value.exit_code == 10
+
+
+# --- Email SAN tests ---
+
+
+@patch("skillsign.signing.get_identity_token")
+@patch("skillsign.signing.ClientTrustConfig")
+@patch("skillsign.signing.SigningContext")
+def test_sign_skill_with_email_san(
+    mock_ctx_cls: MagicMock,
+    mock_trust_cls: MagicMock,
+    mock_get_token: MagicMock,
+    tmp_path: pytest.TempPathFactory,
+) -> None:
+    """Signing with an email SAN certificate extracts email as signer."""
+    skill_file, skill_id, skill_version = _setup_skill_dir(tmp_path)
+
+    cert = _make_test_cert(san_uri=None, san_email="user@gmail.com")
+    mock_bundle = _make_mock_bundle(cert)
+
+    mock_get_token.return_value = MagicMock()
+    mock_signer = MagicMock()
+    mock_signer.sign_artifact.return_value = mock_bundle
+    mock_ctx = MagicMock()
+    mock_ctx.signer.return_value.__enter__ = MagicMock(return_value=mock_signer)
+    mock_ctx.signer.return_value.__exit__ = MagicMock(return_value=False)
+    mock_ctx_cls.from_trust_config.return_value = mock_ctx
+
+    result = sign_skill(skill_file)
+
+    assert result["signer"] == "user@gmail.com"
+    assert result["version"] == 1
+    assert result["digest"].startswith("sha256:")
+
+
+@patch("skillsign.signing.get_identity_token")
+@patch("skillsign.signing.ClientTrustConfig")
+@patch("skillsign.signing.SigningContext")
+def test_sign_skill_uri_san_preferred_over_email(
+    mock_ctx_cls: MagicMock,
+    mock_trust_cls: MagicMock,
+    mock_get_token: MagicMock,
+    tmp_path: pytest.TempPathFactory,
+) -> None:
+    """When both URI and email SANs are present, URI is preferred."""
+    skill_file, _, _ = _setup_skill_dir(tmp_path)
+
+    cert = _make_test_cert(
+        san_uri="https://github.com/test-user",
+        san_email="user@gmail.com",
+    )
+    mock_bundle = _make_mock_bundle(cert)
+
+    mock_get_token.return_value = MagicMock()
+    mock_signer = MagicMock()
+    mock_signer.sign_artifact.return_value = mock_bundle
+    mock_ctx = MagicMock()
+    mock_ctx.signer.return_value.__enter__ = MagicMock(return_value=mock_signer)
+    mock_ctx.signer.return_value.__exit__ = MagicMock(return_value=False)
+    mock_ctx_cls.from_trust_config.return_value = mock_ctx
+
+    result = sign_skill(skill_file)
+
+    assert result["signer"] == "https://github.com/test-user"
+
+
+def test_extract_san_no_san_raises(tmp_path: pytest.TempPathFactory) -> None:
+    """Certificate with no SAN extension raises SkillSignError."""
+    from skillsign.signing import _extract_san
+
+    cert = _make_test_cert(san_uri=None, san_email=None)
+    with pytest.raises(SkillSignError, match="SAN URI or email"):
+        _extract_san(cert)

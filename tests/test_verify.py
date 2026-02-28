@@ -19,6 +19,7 @@ from skillsign.canonical import canonicalize
 from skillsign.digest import compute_digest
 from skillsign.verify import (
     VerificationResult,
+    _is_email_signer,
     _reconstruct_hashedrekord_body,
     _verify_cert_chain,
     _verify_set_temporal_window,
@@ -39,13 +40,23 @@ _SIGNER_URL = "https://github.com/test-org/repo"
 _VALID_REKOR_TS = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+_SIGNER_EMAIL = "testuser@gmail.com"
+
+
 def _make_cert(
     key: ec.EllipticCurvePrivateKey,
     signer_url: str,
     include_code_signing_eku: bool = True,
+    *,
+    san_email: str | None = None,
 ) -> x509.Certificate:
-    """Generate a self-signed ECDSA P-256 certificate with SAN URI and EKU."""
+    """Generate a self-signed ECDSA P-256 certificate with SAN URI/email and EKU."""
     name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "SkillSign Test")])
+    san_names: list[x509.GeneralName] = []
+    if signer_url:
+        san_names.append(x509.UniformResourceIdentifier(signer_url))
+    if san_email:
+        san_names.append(x509.RFC822Name(san_email))
     builder = (
         x509.CertificateBuilder()
         .subject_name(name)
@@ -58,11 +69,12 @@ def _make_cert(
         .not_valid_after(
             datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=1)
         )
-        .add_extension(
-            x509.SubjectAlternativeName([x509.UniformResourceIdentifier(signer_url)]),
+    )
+    if san_names:
+        builder = builder.add_extension(
+            x509.SubjectAlternativeName(san_names),
             critical=False,
         )
-    )
     if include_code_signing_eku:
         builder = builder.add_extension(
             x509.ExtendedKeyUsage([ExtendedKeyUsageOID.CODE_SIGNING]),
@@ -740,3 +752,137 @@ def test_exit_code_skill_id_mismatch() -> None:
 
 def test_exit_code_malformed_sidecar() -> None:
     assert exit_code_for(VerificationResult.MALFORMED_SIDECAR) == 1
+
+
+# ---------------------------------------------------------------------------
+# Email SAN tests
+# ---------------------------------------------------------------------------
+
+
+@_SKIP_CHAIN
+def test_verified_email_san(mock_tuf: MagicMock, tmp_path: Path) -> None:
+    """A valid sidecar with an email SAN signer returns VERIFIED."""
+    skill_content = b"# My Skill\n\nDoes stuff.\n"
+    skill_path = tmp_path / "SKILL.md"
+    skill_path.write_bytes(skill_content)
+
+    sidecar, _ = _make_sidecar(
+        skill_content,
+        signer_url="",
+        override_signer_in_sidecar=_SIGNER_EMAIL,
+        include_code_signing_eku=True,
+    )
+    # Re-create the sidecar with a cert that has an email SAN
+    key = ec.generate_private_key(ec.SECP256R1())
+    cert = _make_cert(key, "", san_email=_SIGNER_EMAIL)
+    cert_pem = cert.public_bytes(Encoding.PEM).decode()
+
+    canonical_bytes = canonicalize(skill_content)
+    digest_bytes = compute_digest(canonical_bytes, _SKILL_ID, _SKILL_VERSION)
+    sig_bytes = key.sign(digest_bytes, ECDSA(Prehashed(SHA256())))
+
+    sidecar["signer"] = _SIGNER_EMAIL
+    sidecar["certificate"] = cert_pem
+    sidecar["signature"] = base64.b64encode(sig_bytes).decode()
+
+    sidecar_path = Path(str(skill_path) + ".skillsign")
+    _write_sidecar_yaml(sidecar, sidecar_path)
+
+    result, meta = verify_skill(skill_path)
+    assert result == VerificationResult.VERIFIED
+    assert meta["signer"] == _SIGNER_EMAIL
+
+
+@_SKIP_CHAIN
+def test_identity_mismatch_email_san(mock_tuf: MagicMock, tmp_path: Path) -> None:
+    """Sidecar claims different email than cert SAN returns IDENTITY_MISMATCH."""
+    skill_content = b"# My Skill\n\nDoes stuff.\n"
+    skill_path = tmp_path / "SKILL.md"
+    skill_path.write_bytes(skill_content)
+
+    key = ec.generate_private_key(ec.SECP256R1())
+    cert = _make_cert(key, "", san_email="real@example.com")
+    cert_pem = cert.public_bytes(Encoding.PEM).decode()
+
+    canonical_bytes = canonicalize(skill_content)
+    digest_bytes = compute_digest(canonical_bytes, _SKILL_ID, _SKILL_VERSION)
+    sig_bytes = key.sign(digest_bytes, ECDSA(Prehashed(SHA256())))
+
+    sidecar: dict[str, Any] = {
+        "version": 1,
+        "skill_id": _SKILL_ID,
+        "skill_version": _SKILL_VERSION,
+        "signer": "fake@example.com",  # Different from cert
+        "timestamp": "2026-01-01T00:00:00Z",
+        "digest": f"sha256:{digest_bytes.hex()}",
+        "rekor_log_id": "a" * 64,
+        "rekor_timestamp": _VALID_REKOR_TS,
+        "rekor_set": base64.b64encode(b"fake-rekor-set-data").decode(),
+        "certificate": cert_pem,
+        "signature": base64.b64encode(sig_bytes).decode(),
+    }
+
+    sidecar_path = Path(str(skill_path) + ".skillsign")
+    _write_sidecar_yaml(sidecar, sidecar_path)
+
+    result, meta = verify_skill(skill_path)
+    assert result == VerificationResult.IDENTITY_MISMATCH
+    assert "error" in meta
+
+
+@_SKIP_CHAIN
+def test_email_signer_skips_skill_id_owner_check(
+    mock_tuf: MagicMock, tmp_path: Path
+) -> None:
+    """Email signers skip SKILL_ID_MISMATCH owner-path check."""
+    # The skill_id is github.com/some-org/skill but signer is an email.
+    # This should NOT return SKILL_ID_MISMATCH — email signers skip the check.
+    skill_content = b"# My Skill\n\nDoes stuff.\n"
+    skill_path = tmp_path / "SKILL.md"
+    skill_path.write_bytes(skill_content)
+
+    key = ec.generate_private_key(ec.SECP256R1())
+    cert = _make_cert(key, "", san_email=_SIGNER_EMAIL)
+    cert_pem = cert.public_bytes(Encoding.PEM).decode()
+
+    canonical_bytes = canonicalize(skill_content)
+    digest_bytes = compute_digest(canonical_bytes, _SKILL_ID, _SKILL_VERSION)
+    sig_bytes = key.sign(digest_bytes, ECDSA(Prehashed(SHA256())))
+
+    sidecar: dict[str, Any] = {
+        "version": 1,
+        "skill_id": _SKILL_ID,
+        "skill_version": _SKILL_VERSION,
+        "signer": _SIGNER_EMAIL,
+        "timestamp": "2026-01-01T00:00:00Z",
+        "digest": f"sha256:{digest_bytes.hex()}",
+        "rekor_log_id": "a" * 64,
+        "rekor_timestamp": _VALID_REKOR_TS,
+        "rekor_set": base64.b64encode(b"fake-rekor-set-data").decode(),
+        "certificate": cert_pem,
+        "signature": base64.b64encode(sig_bytes).decode(),
+    }
+
+    sidecar_path = Path(str(skill_path) + ".skillsign")
+    _write_sidecar_yaml(sidecar, sidecar_path)
+
+    result, meta = verify_skill(skill_path)
+    assert result == VerificationResult.VERIFIED
+
+
+# ---------------------------------------------------------------------------
+# _is_email_signer unit tests
+# ---------------------------------------------------------------------------
+
+
+def test_is_email_signer_true_for_email() -> None:
+    assert _is_email_signer("user@example.com") is True
+
+
+def test_is_email_signer_false_for_url() -> None:
+    assert _is_email_signer("https://github.com/user") is False
+
+
+def test_is_email_signer_false_for_url_with_at() -> None:
+    """A URL with @ in userinfo is not treated as email."""
+    assert _is_email_signer("https://user@github.com/repo") is False

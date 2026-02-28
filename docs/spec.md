@@ -62,12 +62,13 @@ SkillSign uses **keyless signing via Sigstore**. Signers never manage long-lived
 
 ### 4.2 Identity Claims
 
-The certificate Subject Alternative Name (SAN) encodes the signer's GitHub identity:
+The certificate Subject Alternative Name (SAN) encodes the signer's identity. The SAN type depends on the OIDC provider used during signing:
 
-- **Individual**: `https://github.com/{username}`
-- **GitHub Actions**: `https://github.com/{org}/{repo}/.github/workflows/{workflow}.yml@refs/heads/{branch}`
+- **Personal OAuth (via Dex)**: Email SAN (RFC822Name) — the user's email address (e.g., `user@gmail.com`)
+- **Individual (GitHub)**: URI SAN — `https://github.com/{username}`
+- **GitHub Actions**: URI SAN — `https://github.com/{org}/{repo}/.github/workflows/{workflow}.yml@refs/heads/{branch}`
 
-This means skills can be signed by a human developer or automatically signed in CI, both with verifiable identity.
+This means skills can be signed by a human developer (with email or GitHub identity) or automatically signed in CI, all with verifiable identity.
 
 ### 4.3 Revocation
 
@@ -197,7 +198,7 @@ Values above are illustrative. See Section 6.2 for field definitions.
 | `version` | Yes | SkillSign format version. Must be `1` for this spec. |
 | `skill_id` | Yes | Canonical identifier for this skill. ASCII only, format: `{host}/{owner}/{name}`. Case-sensitive. Exactly 3 slash-separated segments. |
 | `skill_version` | Yes | Opaque version string. Non-empty, max 255 chars, printable ASCII only (U+0020–U+007E). Case-sensitive exact match. See Section 6.4. |
-| `signer` | Yes | Full HTTPS URL of the GitHub identity from the certificate SAN (e.g., `https://github.com/example-user`). Case-sensitive. Must match SAN exactly. MUST use `https` scheme, MUST have host `github.com`, MUST NOT contain query parameters, fragments, userinfo, or port. MUST NOT exceed 2048 characters. At signing time, the `signer` field MUST be set to the exact SAN bytes from the Fulcio certificate. |
+| `signer` | Yes | The exact SAN value from the Fulcio certificate. For URI SANs (GitHub Actions OIDC): full HTTPS URL (e.g., `https://github.com/example-user`), MUST use `https` scheme, MUST have host `github.com`, MUST NOT contain query params, fragments, userinfo, or port. For email SANs (personal OAuth via Dex): the raw email address (e.g., `user@gmail.com`). Case-sensitive. Must match SAN exactly. MUST NOT exceed 2048 characters. |
 | `timestamp` | Yes | ISO 8601 UTC timestamp of signing operation with mandatory `Z` suffix: `YYYY-MM-DDTHH:MM:SS[.fff]Z`. Fractional seconds MAY be present. Sourced from the signer's local system clock. Informational only — not used for policy evaluation (see `rekor_timestamp`). |
 | `digest` | Yes | SHA-256 digest of the signed input (as defined in Section 5.2), prefixed with `sha256:`. Hex characters MUST be lowercase. |
 | `rekor_log_id` | Yes | Rekor transparency log entry UUID: a lowercase hex string of exactly 64 characters, as returned by the Rekor `/api/v1/log/entries` endpoint. |
@@ -314,7 +315,7 @@ skillsign verify --strict ./SKILL.md
 5. Verify digest matches the `digest` field in the sidecar (lowercase hex comparison)
 6. Verify the cryptographic signature (ECDSA P-256) against the certificate's public key, over the freshly-computed 32-byte SHA-256 digest from step 4 (not the `digest` field from the sidecar)
 7. Verify the certificate was issued by Fulcio by validating its chain against the pinned Sigstore TUF root. The CLI bundles the Sigstore TUF root metadata and uses it to fetch the current trusted Fulcio root certificate, following the [Sigstore TUF repository](https://tuf-repo-cdn.sigstore.dev). This handles root key rotations without requiring CLI updates. In `--offline` mode, the CLI skips the TUF network fetch and falls back to its bundled TUF root metadata and Fulcio root certificate. This means offline verification may not reflect recent Sigstore root key rotations.
-8. Verify the certificate's SAN matches the `signer` field in the sidecar. Matching is case-sensitive and exact. Additionally, verify the certificate contains the Extended Key Usage (EKU) extension `id-kp-codeSigning` (OID 1.3.6.1.5.5.7.3.3), which is present in Fulcio-issued certificates. Fail with `INVALID_CERT` if the EKU is absent.
+8. Verify the certificate's SAN matches the `signer` field in the sidecar. Extract the SAN value from the certificate — try URI SAN first, then email SAN (RFC822Name). Matching is case-sensitive and exact. Additionally, verify the certificate contains the Extended Key Usage (EKU) extension `id-kp-codeSigning` (OID 1.3.6.1.5.5.7.3.3), which is present in Fulcio-issued certificates. Fail with `INVALID_CERT` if the EKU is absent.
 9. **Verify certificate temporal validity**: First, verify the cryptographic signature of the `rekor_set` field (the Rekor Signed Entry Timestamp) against Rekor's public key, obtained via the Sigstore TUF root (or the bundled copy in `--offline` mode). If the SET signature is invalid, fail with `INVALID_CERT`. Then confirm the SET's embedded timestamp falls within the certificate's `notBefore`/`notAfter` window. The SET proves the signing occurred during the certificate's validity period without requiring a live Rekor query, and is valid in both default and `--offline` modes. In `--strict` mode, additionally confirm via live Rekor query that `rekor_log_id` exists and its `rekor_timestamp` falls within the certificate window.
 10. In `--strict` mode: confirm the `rekor_log_id` exists in Rekor as a `hashedrekord/v0.0.1` entry and the entry's digest matches the `digest` field in the sidecar
 11. Perform owner-path consistency check: compare the `skill_id` owner path against the `signer` owner path using the `SKILL_ID_MISMATCH` algorithm (Section 8.3). By default, a mismatch is a hard failure (exit code `1`). This can be downgraded to a warning via `--allow-id-mismatch` or `require_signer_id_match: false` in a policy file.
@@ -332,7 +333,7 @@ skillsign verify --strict ./SKILL.md
 | `IDENTITY_MISMATCH` | Certificate SAN does not match claimed signer |
 | `UNSIGNED` | No sidecar file found |
 | `POLICY_FAIL` | Signature is valid but does not meet caller's trust policy |
-| `SKILL_ID_MISMATCH` | Hard failure (exit code `1`) by default: `skill_id` owner path does not match `signer` owner path. The comparison algorithm is: (1) from `skill_id`, extract the first two segments as `{host}/{owner}`; (2) from `signer`, parse as URL, extract `{host}/{first-path-segment}` (percent-decoding the path first); (3) compare case-insensitively after lowercasing both owner segments. This check is always performed during verification (step 11 in Section 8.2), regardless of whether a policy file is provided. It can be downgraded to an advisory warning by passing `--allow-id-mismatch` or by setting `require_signer_id_match: false` in a policy file. |
+| `SKILL_ID_MISMATCH` | Hard failure (exit code `1`) by default: `skill_id` owner path does not match `signer` owner path. The comparison algorithm is: (1) from `skill_id`, extract the first two segments as `{host}/{owner}`; (2) from `signer`, parse as URL, extract `{host}/{first-path-segment}` (percent-decoding the path first); (3) compare case-insensitively after lowercasing both owner segments. **Email signers** (RFC822Name SANs) skip this check entirely — there is no URL to extract an owner path from; the policy engine's `signer` rule handles email identity matching. This check is always performed during verification (step 11 in Section 8.2) for URI signers, regardless of whether a policy file is provided. It can be downgraded to an advisory warning by passing `--allow-id-mismatch` or by setting `require_signer_id_match: false` in a policy file. |
 | `MALFORMED_SIDECAR` | Sidecar file is present but cannot be parsed (invalid YAML, missing required fields, or unknown version value). This is a hard verification failure, not a best-effort parse. A v1 CLI encountering `version: 2` must fail with this result rather than attempt partial verification |
 
 ---
@@ -443,6 +444,7 @@ The `signer_org` policy field matches against the GitHub organization extracted 
 4. The first non-empty path segment is the owner segment
 
 Matching rules:
+- For **email signers** (RFC822Name SAN, e.g., `user@gmail.com`): `signer_org` rules CANNOT match. Email signers have no URL to extract an org from and must be matched using the `signer` rule with their exact email address.
 - For **individual signers** (SAN format: `https://github.com/{username}`, one path segment): `signer_org` rules CANNOT match. Individual signers must be matched using the `signer` rule with their full URL. This is intentional — `signer_org` is designed for CI/org-level trust, not individuals.
 - For **GitHub Actions signers** (SAN format: `https://github.com/{org}/{repo}/.github/workflows/...`, multiple path segments): `signer_org` matches if the extracted first path segment (after lowercase normalization) equals the rule's `signer_org` value.
 

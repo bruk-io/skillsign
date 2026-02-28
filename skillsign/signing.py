@@ -117,9 +117,9 @@ def _assemble_sidecar(
     # Rekor fields from log entry inner object
     inner = log_entry._inner  # noqa: SLF001
 
-    # rekor_log_id: lowercase hex of key_id
-    log_id_bytes = base64.b64decode(inner.log_id.key_id)
-    rekor_log_id = log_id_bytes.hex()
+    # rekor_log_id: lowercase hex of key_id.
+    # ProtoBytes deserializes base64 on input, so key_id is already raw bytes.
+    rekor_log_id = inner.log_id.key_id.hex()
 
     # rekor_timestamp: from integrated_time (unix timestamp) to ISO 8601 UTC
     integrated_time = int(inner.integrated_time)
@@ -127,8 +127,12 @@ def _assemble_sidecar(
         "%Y-%m-%dT%H:%M:%SZ"
     )
 
-    # rekor_set: Signed Entry Timestamp (already base64)
-    rekor_set = inner.inclusion_promise.signed_entry_timestamp
+    # rekor_set: Signed Entry Timestamp.
+    # ProtoBytes deserializes base64 on input, so signed_entry_timestamp
+    # is raw bytes at runtime — encode to base64 for the sidecar.
+    rekor_set = base64.b64encode(
+        inner.inclusion_promise.signed_entry_timestamp
+    ).decode("ascii")
 
     # Signing timestamp: local system clock, informational only
     timestamp = datetime.now(tz=UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -154,16 +158,25 @@ def _assemble_sidecar(
 
 
 def _extract_san(cert: x509.Certificate) -> str:
-    """Extract the Subject Alternative Name URI from a Fulcio certificate."""
+    """Extract the Subject Alternative Name from a Fulcio certificate.
+
+    Tries URI SAN first (GitHub Actions OIDC), then email SAN (personal
+    OAuth via Dex). Raises if neither is found.
+    """
     try:
         san_ext = cert.extensions.get_extension_for_class(x509.SubjectAlternativeName)
         uris = san_ext.value.get_values_for_type(x509.UniformResourceIdentifier)
         if uris:
             return uris[0]
+        emails = san_ext.value.get_values_for_type(x509.RFC822Name)
+        if emails:
+            return emails[0]
     except x509.ExtensionNotFound:
         pass
 
-    raise SkillSignError("Certificate does not contain a SAN URI", exit_code=10)
+    raise SkillSignError(
+        "Certificate does not contain a SAN URI or email", exit_code=10
+    )
 
 
 def _extract_cert_chain(bundle: Any) -> str | None:

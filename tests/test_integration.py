@@ -34,12 +34,22 @@ _SKILL_VERSION = "1.0.0"
 _SIGNER_URL = "https://github.com/test-org/repo"
 
 
+_SIGNER_EMAIL = "testuser@gmail.com"
+
+
 def _make_cert_and_key(
     signer_url: str = _SIGNER_URL,
+    *,
+    san_email: str | None = None,
 ) -> tuple[x509.Certificate, ec.EllipticCurvePrivateKey]:
-    """Create a self-signed test cert with SAN URI and code signing EKU."""
+    """Create a self-signed test cert with SAN URI/email and code signing EKU."""
     key = ec.generate_private_key(ec.SECP256R1())
     subject = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "test")])
+    san_names: list[x509.GeneralName] = []
+    if signer_url:
+        san_names.append(x509.UniformResourceIdentifier(signer_url))
+    if san_email:
+        san_names.append(x509.RFC822Name(san_email))
     cert = (
         x509.CertificateBuilder()
         .subject_name(subject)
@@ -49,7 +59,7 @@ def _make_cert_and_key(
         .not_valid_before(datetime.now(UTC) - timedelta(hours=1))
         .not_valid_after(datetime.now(UTC) + timedelta(hours=1))
         .add_extension(
-            x509.SubjectAlternativeName([x509.UniformResourceIdentifier(signer_url)]),
+            x509.SubjectAlternativeName(san_names),
             critical=False,
         )
         .add_extension(
@@ -76,11 +86,9 @@ def _make_mock_bundle(
     # Mock log entry
     log_entry = MagicMock()
     inner = MagicMock()
-    inner.log_id.key_id = base64.b64encode(b"\xaa" * 32)
-    inner.integrated_time = str(int(datetime.now(UTC).timestamp()))
-    inner.inclusion_promise.signed_entry_timestamp = base64.b64encode(
-        b"mock-set-data"
-    ).decode("ascii")
+    inner.log_id.key_id = b"\xaa" * 32
+    inner.integrated_time = int(datetime.now(UTC).timestamp())
+    inner.inclusion_promise.signed_entry_timestamp = b"mock-set-data"
     log_entry._inner = inner
     bundle.log_entry = log_entry
 
@@ -105,12 +113,15 @@ def _setup_skill_dir(tmp_path: Path) -> Path:
     return skill_file
 
 
-def _patch_sigstore(skill_file: Path):
+def _patch_sigstore(skill_file: Path, *, san_email: str | None = None):
     """Create patches for Sigstore SDK with a real ECDSA signature.
 
     Returns a context manager stack and the mock bundle for assertions.
     """
-    cert, key = _make_cert_and_key()
+    cert, key = _make_cert_and_key(
+        signer_url="" if san_email else _SIGNER_URL,
+        san_email=san_email,
+    )
 
     # Compute the real digest so the signature is valid
     raw = skill_file.read_bytes()
@@ -233,3 +244,29 @@ def test_verify_no_sidecar_returns_unsigned(tmp_path: Path) -> None:
 
     assert result.exit_code == 2, result.output
     assert "UNSIGNED" in result.output
+
+
+# ---------------------------------------------------------------------------
+# Integration: email SAN sign → verify → VERIFIED
+# ---------------------------------------------------------------------------
+
+
+def test_sign_then_verify_email_san(tmp_path: Path) -> None:
+    """Sign with email SAN cert, then verify — should return VERIFIED exit 0."""
+    skill_file = _setup_skill_dir(tmp_path)
+
+    p1, p2, p3 = _patch_sigstore(skill_file, san_email=_SIGNER_EMAIL)
+    runner = CliRunner()
+
+    # Sign
+    with p1, p2, p3:
+        sign_result = runner.invoke(cli, ["sign", str(skill_file)])
+    assert sign_result.exit_code == 0, sign_result.output
+    assert _SIGNER_EMAIL in sign_result.output
+
+    # Verify (with cert chain validation skipped — no real Fulcio CA)
+    with patch("skillsign.verify._verify_cert_chain", return_value=None):
+        verify_result = runner.invoke(cli, ["verify", str(skill_file)])
+
+    assert verify_result.exit_code == 0, verify_result.output
+    assert "VERIFIED" in verify_result.output

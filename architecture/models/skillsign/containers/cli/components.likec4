@@ -14,12 +14,12 @@ model {
 
     component signingEngine 'Signing Engine' {
       technology 'ECDSA P-256, X.509'
-      description 'Orchestrates the signing protocol via Sigstore SDK: reads manifest, canonicalizes SKILL.md, computes digest, obtains OIDC identity token, invokes SigningContext.signer() which generates ephemeral keypair, obtains Fulcio certificate, signs digest, and submits to Rekor. Returns assembled sidecar dict; sidecar writing is delegated to the CLI layer.'
+      description 'Orchestrates the signing protocol via Sigstore SDK: reads manifest, canonicalizes SKILL.md, computes digest, obtains OIDC identity token, invokes SigningContext.signer() which generates ephemeral keypair, obtains Fulcio certificate, signs digest, and submits to Rekor. Extracts signer identity from certificate SAN (URI for GitHub Actions OIDC, email for personal OAuth via Dex). Returns assembled sidecar dict; sidecar writing is delegated to the CLI layer.'
     }
 
     component verificationEngine 'Verification Engine' {
       technology 'ECDSA P-256, X.509'
-      description 'Orchestrates verification: reads sidecar via SidecarManager, recomputes digest, verifies ECDSA P-256 signature using certificate public key, checks EKU id-kp-codeSigning OID, verifies SAN identity match, and checks SKILL_ID_MISMATCH owner-path consistency. Phase 2: cert chain validation against TUF Fulcio root and SET cryptographic verification against Rekor public key.'
+      description 'Orchestrates verification: reads sidecar via SidecarManager, recomputes digest, verifies ECDSA P-256 signature using certificate public key, checks EKU id-kp-codeSigning OID, verifies SAN identity match (URI or email), and checks SKILL_ID_MISMATCH owner-path consistency (skipped for email signers). Phase 2: cert chain validation against TUF Fulcio root and SET cryptographic verification against Rekor public key.'
     }
 
     component policyEngine 'Policy Engine' {
@@ -29,7 +29,7 @@ model {
 
     component sidecarManager 'Sidecar Manager' {
       technology 'YAML 1.2'
-      description 'Implemented as a single sidecar.py module combining reader and writer. Writer: assembles canonical field-ordered YAML (PEM fields as literal block scalars) and writes atomically via temp file rename. Reader: parses with strictyaml (enforces no duplicates/anchors/aliases/tags), validates all fields (digest sha256:hex, signer https://github.com URL, base64 SET, PEM cert), max 64KB.'
+      description 'Implemented as a single sidecar.py module combining reader and writer. Writer: assembles canonical field-ordered YAML (PEM fields as literal block scalars) and writes atomically via temp file rename. Reader: parses with strictyaml (enforces no duplicates/anchors/aliases/tags), validates all fields (digest sha256:hex, signer as URL or email, base64 SET, PEM cert), max 64KB.'
     }
 
     component manifestReader 'Manifest Reader' {
@@ -66,7 +66,8 @@ model {
   claudeCode -> skillsign.cli.verificationEngine 'Invokes verification before loading skills'
 
   // Component-to-external relationships
-  skillsign.cli.authHandler -> github 'Authenticates via OIDC, receives identity token'
+  skillsign.cli.authHandler -> github 'Detects ambient OIDC token from GitHub Actions runtime (CI path)'
+  skillsign.cli.authHandler -> sigstoreDex 'Opens browser for OAuth login via Dex — user picks Google, GitHub, or Microsoft (interactive path)'
   skillsign.cli.signingEngine -> fulcio 'Submits ephemeral public key and OIDC token via Sigstore SDK, receives short-lived X.509 certificate'
   skillsign.cli.signingEngine -> rekor 'Submits signature, certificate, and digest as hashedrekord/v0.0.1 entry via Sigstore SDK'
   skillsign.cli.verificationEngine -> rekor 'Confirms log entry exists and digest matches in --strict mode'
