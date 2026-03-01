@@ -5,7 +5,6 @@ external dependencies (Sigstore SDK). They cover the CLI-level
 sign and verify flows end-to-end.
 """
 
-import base64
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, patch

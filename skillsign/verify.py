@@ -123,6 +123,7 @@ def _verify_cert_chain(
     meta: dict[str, Any],
     sidecar: dict[str, Any],
     offline: bool = False,
+    trusted_root: Any = None,
 ) -> tuple[VerificationResult, dict[str, Any]] | None:
     """Verify the leaf certificate chains to the Sigstore Fulcio root (step 7).
 
@@ -137,11 +138,14 @@ def _verify_cert_chain(
     offline TUF cache. If neither succeeds, skips chain validation and logs a
     warning rather than failing hard — preserving the MVP behaviour for
     environments without Sigstore network access.
+
+    If trusted_root is provided it is used directly, bypassing TUF I/O.
     """
-    trusted_root = _get_trusted_root(offline=offline)
-    if trusted_root is None and not offline:
-        # Retry with offline TUF cache
-        trusted_root = _get_trusted_root(offline=True)
+    if trusted_root is None:
+        trusted_root = _get_trusted_root(offline=offline)
+        if trusted_root is None and not offline:
+            # Retry with offline TUF cache
+            trusted_root = _get_trusted_root(offline=True)
 
     if trusted_root is None:
         return (
@@ -318,71 +322,32 @@ def _reconstruct_hashedrekord_body(
     return json.dumps(body, separators=(",", ":")).encode("ascii")
 
 
-def verify_skill(
-    skill_file: Path,
-    *,
-    offline: bool = False,
+def _verify_parsed_inputs(
+    canonical_bytes: bytes,
+    sidecar: dict[str, Any],
+    cert: x509.Certificate | None,
+    trusted_root: Any,
+    offline: bool,
 ) -> tuple[VerificationResult, dict[str, Any]]:
-    """Verify a SKILL.md file against its sidecar per Section 8.2.
+    """Pure verification given all pre-read inputs. No I/O.
 
-    Returns (result_code, metadata_dict). The metadata dict always contains
-    whatever fields could be extracted before the failure, and an 'error' key
-    if the result is not VERIFIED.
+    Implements steps 3-11 of Section 8.2. All inputs are pre-computed by the
+    caller; this function performs only cryptographic and policy checks with
+    zero filesystem or network access.
 
-    Steps implemented:
-      1. Locate sidecar: <filename>.md.skillsign
-      2. Parse sidecar via read_sidecar()
-      3. Compute canonical form of skill file
-      4. Compute digest (domain-separated SHA-256)
-      5. Compare digest against sidecar["digest"]
-      6. Verify ECDSA signature against certificate public key (P-256)
-      7. Verify certificate chain against Sigstore TUF Fulcio root
-      8. Verify SAN matches signer field; verify EKU id-kp-codeSigning
-      9. Verify rekor_timestamp falls within certificate validity window
-      11. SKILL_ID_MISMATCH owner-path check (Section 8.3)
-
-    The offline parameter controls TUF refresh behaviour for step 7.
+    canonical_bytes: canonicalized skill file content (step 3 output)
+    sidecar: validated sidecar dict from read_sidecar()
+    cert: parsed leaf certificate, or None to parse from sidecar["certificate"]
+    trusted_root: Sigstore TrustedRoot for chain validation, or None
+    offline: passed through to _verify_cert_chain fallback logic
     """
-    # Step 1: Locate sidecar
-    sidecar_path = Path(str(skill_file) + ".skillsign")
-    if not sidecar_path.exists():
-        return (VerificationResult.UNSIGNED, {})
-
-    # Step 2: Parse sidecar
-    try:
-        sidecar = read_sidecar(sidecar_path)
-    except SkillSignError as e:
-        if e.exit_code == 10:
-            # We already confirmed the sidecar exists (line above), so an
-            # exit_code=10 here means a permission or I/O error — not "unsigned".
-            # Let it propagate as a CLI error per spec Section 9.3.
-            raise
-        # exit_code == 1: MALFORMED_SIDECAR
-        return (VerificationResult.MALFORMED_SIDECAR, {"error": str(e)})
-
-    # Build base metadata from sidecar fields
     meta: dict[str, Any] = {
         "signer": sidecar["signer"],
         "skill_id": sidecar["skill_id"],
         "skill_version": sidecar["skill_version"],
     }
 
-    # Step 3: Read skill file and compute canonical form
-    try:
-        raw = skill_file.read_bytes()
-    except OSError as e:
-        raise SkillSignError(f"Cannot read skill file: {e}", exit_code=10) from e
-
-    # canonicalize() raises SkillSignError(exit_code=10) for precondition
-    # failures (>1MB, invalid UTF-8, null bytes). Let it propagate — these
-    # are CLI errors, not content integrity failures (spec Section 5.1).
-    canonical_bytes = canonicalize(raw)
-
     # Step 4: Compute digest
-    # compute_digest() raises SkillSignError(exit_code=10) for null bytes in
-    # skill_id/skill_version. In practice, read_sidecar() already validates
-    # these fields, so this is unreachable — but let it propagate for spec
-    # compliance (Section 5.2).
     digest_bytes = compute_digest(
         canonical_bytes, sidecar["skill_id"], sidecar["skill_version"]
     )
@@ -402,20 +367,17 @@ def verify_skill(
         )
 
     # Step 6: Verify ECDSA signature against the certificate's public key.
-    # Per spec Section 5.3: signature is over the 32-byte digest bytes.
-    # We use ECDSA with Prehashed(SHA256) so the library treats digest_bytes
-    # as already-hashed input (no double-hashing).
-    try:
-        cert = x509.load_pem_x509_certificate(sidecar["certificate"].encode())
-    except Exception as e:
-        return (
-            VerificationResult.INVALID_CERT,
-            {**meta, "error": f"Cannot parse certificate PEM: {e}"},
-        )
+    if cert is None:
+        try:
+            cert = x509.load_pem_x509_certificate(sidecar["certificate"].encode())
+        except Exception as e:
+            return (
+                VerificationResult.INVALID_CERT,
+                {**meta, "error": f"Cannot parse certificate PEM: {e}"},
+            )
 
     public_key = cert.public_key()
 
-    # Verify key is ECDSA P-256 per spec Section 5.3 (no algorithm agility in v0.1)
     if not isinstance(public_key, EllipticCurvePublicKey):
         return (
             VerificationResult.INVALID_CERT,
@@ -447,12 +409,10 @@ def verify_skill(
             {**meta, "error": f"Signature verification error: {e}"},
         )
 
-    # Step 7: Verify certificate chain against Sigstore TUF Fulcio root.
-    # Uses ClientTrustConfig.production() to obtain the current Fulcio CA
-    # certificates via TUF, then validates the leaf cert's chain with
-    # pyOpenSSL's X509StoreContext. Catches revoked or mis-issued certificates
-    # that pass raw ECDSA verification.
-    chain_result = _verify_cert_chain(cert, meta, sidecar, offline=offline)
+    # Step 7: Verify certificate chain.
+    chain_result = _verify_cert_chain(
+        cert, meta, sidecar, offline=offline, trusted_root=trusted_root
+    )
     if chain_result is not None:
         return chain_result
 
@@ -462,27 +422,64 @@ def verify_skill(
         return san_result
 
     # Step 9: Verify Rekor timestamp falls within certificate validity window.
-    # LIMITATION: Full SET cryptographic verification (ECDSA against Rekor
-    # public key over RFC-8785 canonical JSON) is not possible from sidecar
-    # fields alone — the SET payload includes log_index and canonicalized_body,
-    # which are not stored in the sidecar. In default mode, temporal binding
-    # is verified by confirming rekor_timestamp falls within the certificate's
-    # validity window. The rekor_timestamp is self-asserted (from the sidecar)
-    # and NOT cryptographically verified in this mode.
-    # In strict mode (future: --strict), a live Rekor query would fetch the
-    # full entry and enable full SET cryptographic verification.
     set_result = _verify_set_temporal_window(cert, sidecar["rekor_timestamp"], meta)
     if set_result is not None:
         return set_result
 
     # Step 11: SKILL_ID_MISMATCH owner-path check.
-    # Compare skill_id owner path against signer owner path (case-insensitive).
-    # Percent-decode the signer URL path to prevent %2F bypass.
     id_mismatch = _verify_skill_id_owner(sidecar["skill_id"], sidecar["signer"], meta)
     if id_mismatch is not None:
         return id_mismatch
 
     return (VerificationResult.VERIFIED, meta)
+
+
+def verify_skill(
+    skill_file: Path,
+    *,
+    offline: bool = False,
+) -> tuple[VerificationResult, dict[str, Any]]:
+    """Verify a SKILL.md file against its sidecar per Section 8.2.
+
+    Returns (result_code, metadata_dict). The metadata dict always contains
+    whatever fields could be extracted before the failure, and an 'error' key
+    if the result is not VERIFIED.
+
+    Steps implemented:
+      1. Locate sidecar: <filename>.md.skillsign
+      2. Parse sidecar via read_sidecar()
+      3. Read skill file and compute canonical form
+      4-11. Delegate to _verify_parsed_inputs() (pure, no I/O)
+
+    The offline parameter controls TUF refresh behaviour for step 7.
+    """
+    # Step 1: Locate sidecar
+    sidecar_path = Path(str(skill_file) + ".skillsign")
+    if not sidecar_path.exists():
+        return (VerificationResult.UNSIGNED, {})
+
+    # Step 2: Parse sidecar
+    try:
+        sidecar = read_sidecar(sidecar_path)
+    except SkillSignError as e:
+        if e.exit_code == 10:
+            raise
+        return (VerificationResult.MALFORMED_SIDECAR, {"error": str(e)})
+
+    # Step 3: Read skill file and compute canonical form
+    try:
+        raw = skill_file.read_bytes()
+    except OSError as e:
+        raise SkillSignError(f"Cannot read skill file: {e}", exit_code=10) from e
+
+    canonical_bytes = canonicalize(raw)
+
+    # Steps 4-11: Pure verification — no more I/O after this point.
+    trusted_root = _get_trusted_root(offline=offline)
+    if trusted_root is None and not offline:
+        trusted_root = _get_trusted_root(offline=True)
+
+    return _verify_parsed_inputs(canonical_bytes, sidecar, None, trusted_root, offline)
 
 
 def _verify_san_and_eku(

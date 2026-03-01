@@ -22,6 +22,7 @@ from skillsign.verify import (
     _is_email_signer,
     _reconstruct_hashedrekord_body,
     _verify_cert_chain,
+    _verify_parsed_inputs,
     _verify_set_temporal_window,
     exit_code_for,
     verify_skill,
@@ -886,3 +887,174 @@ def test_is_email_signer_false_for_url() -> None:
 def test_is_email_signer_false_for_url_with_at() -> None:
     """A URL with @ in userinfo is not treated as email."""
     assert _is_email_signer("https://user@github.com/repo") is False
+
+
+# ---------------------------------------------------------------------------
+# _verify_parsed_inputs unit tests — pure function, no file I/O
+# ---------------------------------------------------------------------------
+
+_SKIP_CHAIN_PURE = patch(
+    "skillsign.verify._verify_cert_chain",
+    return_value=None,
+)
+
+
+def _make_sidecar_dict(
+    skill_content: bytes,
+    *,
+    skill_id: str = _SKILL_ID,
+    skill_version: str = _SKILL_VERSION,
+    signer: str = _SIGNER_URL,
+    include_code_signing_eku: bool = True,
+    corrupt_signature: bool = False,
+    override_signer_in_sidecar: str | None = None,
+    rekor_timestamp: str = _VALID_REKOR_TS,
+) -> tuple[dict[str, Any], ec.EllipticCurvePrivateKey, x509.Certificate]:
+    """Build a sidecar dict and cert object for _verify_parsed_inputs tests."""
+    key = ec.generate_private_key(ec.SECP256R1())
+    san_uri = signer if signer and "://" in signer else None
+    san_email = signer if signer and "@" in signer and "://" not in signer else None
+    cert = _make_cert(key, san_uri or "", include_code_signing_eku, san_email=san_email)
+    cert_pem = cert.public_bytes(Encoding.PEM).decode()
+
+    canonical_bytes = canonicalize(skill_content)
+    digest_bytes = compute_digest(canonical_bytes, skill_id, skill_version)
+    digest_hex = f"sha256:{digest_bytes.hex()}"
+
+    if corrupt_signature:
+        sig_bytes = b"\x00" * 64
+    else:
+        sig_bytes = key.sign(digest_bytes, ECDSA(Prehashed(SHA256())))
+    sig_b64 = base64.b64encode(sig_bytes).decode()
+
+    effective_signer = (
+        override_signer_in_sidecar if override_signer_in_sidecar is not None else signer
+    )
+
+    sidecar: dict[str, Any] = {
+        "version": 1,
+        "skill_id": skill_id,
+        "skill_version": skill_version,
+        "signer": effective_signer,
+        "timestamp": "2026-01-01T00:00:00Z",
+        "digest": digest_hex,
+        "rekor_log_id": "a" * 64,
+        "rekor_timestamp": rekor_timestamp,
+        "rekor_set": base64.b64encode(b"fake-rekor-set-data").decode(),
+        "certificate": cert_pem,
+        "signature": sig_b64,
+    }
+    return sidecar, key, cert
+
+
+@_SKIP_CHAIN_PURE
+def test_verify_parsed_inputs_verified_happy_path(mock_chain: MagicMock) -> None:
+    """_verify_parsed_inputs returns VERIFIED for valid inputs."""
+    skill_content = b"# My Skill\n\nDoes stuff.\n"
+    sidecar, _, cert = _make_sidecar_dict(skill_content)
+    canonical_bytes = canonicalize(skill_content)
+
+    result, meta = _verify_parsed_inputs(canonical_bytes, sidecar, cert, None, False)
+    assert result == VerificationResult.VERIFIED
+    assert meta["signer"] == _SIGNER_URL
+    assert meta["skill_id"] == _SKILL_ID
+    assert meta["skill_version"] == _SKILL_VERSION
+    assert "error" not in meta
+
+
+@_SKIP_CHAIN_PURE
+def test_verify_parsed_inputs_tampered_digest(mock_chain: MagicMock) -> None:
+    """_verify_parsed_inputs returns TAMPERED when canonical_bytes mismatch digest."""
+    skill_content = b"# My Skill\n\nDoes stuff.\n"
+    sidecar, _, cert = _make_sidecar_dict(skill_content)
+    tampered_bytes = canonicalize(b"# TAMPERED\n")
+
+    result, meta = _verify_parsed_inputs(tampered_bytes, sidecar, cert, None, False)
+    assert result == VerificationResult.TAMPERED
+    assert "error" in meta
+
+
+@_SKIP_CHAIN_PURE
+def test_verify_parsed_inputs_corrupt_signature(mock_chain: MagicMock) -> None:
+    """_verify_parsed_inputs returns TAMPERED for a corrupt signature."""
+    skill_content = b"# My Skill\n\nDoes stuff.\n"
+    sidecar, _, cert = _make_sidecar_dict(skill_content, corrupt_signature=True)
+    canonical_bytes = canonicalize(skill_content)
+
+    result, meta = _verify_parsed_inputs(canonical_bytes, sidecar, cert, None, False)
+    assert result == VerificationResult.TAMPERED
+    assert "error" in meta
+
+
+@_SKIP_CHAIN_PURE
+def test_verify_parsed_inputs_identity_mismatch(mock_chain: MagicMock) -> None:
+    """_verify_parsed_inputs returns IDENTITY_MISMATCH on signer/SAN mismatch."""
+    skill_content = b"# My Skill\n\nDoes stuff.\n"
+    sidecar, _, cert = _make_sidecar_dict(
+        skill_content,
+        override_signer_in_sidecar="https://github.com/attacker/evil",
+    )
+    canonical_bytes = canonicalize(skill_content)
+
+    result, meta = _verify_parsed_inputs(canonical_bytes, sidecar, cert, None, False)
+    assert result == VerificationResult.IDENTITY_MISMATCH
+    assert "error" in meta
+
+
+@_SKIP_CHAIN_PURE
+def test_verify_parsed_inputs_missing_eku(mock_chain: MagicMock) -> None:
+    """_verify_parsed_inputs returns INVALID_CERT when cert lacks codeSigning EKU."""
+    skill_content = b"# My Skill\n\nDoes stuff.\n"
+    sidecar, _, cert = _make_sidecar_dict(skill_content, include_code_signing_eku=False)
+    canonical_bytes = canonicalize(skill_content)
+
+    result, meta = _verify_parsed_inputs(canonical_bytes, sidecar, cert, None, False)
+    assert result == VerificationResult.INVALID_CERT
+    assert "error" in meta
+
+
+@_SKIP_CHAIN_PURE
+def test_verify_parsed_inputs_skill_id_mismatch(mock_chain: MagicMock) -> None:
+    """_verify_parsed_inputs returns SKILL_ID_MISMATCH when owners differ."""
+    skill_content = b"# My Skill\n\nDoes stuff.\n"
+    sidecar, _, cert = _make_sidecar_dict(
+        skill_content,
+        skill_id="github.com/other-org/my-skill",
+        signer=_SIGNER_URL,
+    )
+    canonical_bytes = canonicalize(skill_content)
+
+    result, meta = _verify_parsed_inputs(canonical_bytes, sidecar, cert, None, False)
+    assert result == VerificationResult.SKILL_ID_MISMATCH
+    assert "error" in meta
+    assert "mismatch" in meta["error"].lower()
+
+
+@_SKIP_CHAIN_PURE
+def test_verify_parsed_inputs_cert_parsed_from_pem_when_none(
+    mock_chain: MagicMock,
+) -> None:
+    """_verify_parsed_inputs parses cert from sidecar when cert arg is None."""
+    skill_content = b"# My Skill\n\nDoes stuff.\n"
+    sidecar, _, _ = _make_sidecar_dict(skill_content)
+    canonical_bytes = canonicalize(skill_content)
+
+    result, meta = _verify_parsed_inputs(canonical_bytes, sidecar, None, None, False)
+    assert result == VerificationResult.VERIFIED
+
+
+@_SKIP_CHAIN_PURE
+def test_verify_parsed_inputs_invalid_cert_pem_when_none(mock_chain: MagicMock) -> None:
+    """_verify_parsed_inputs returns INVALID_CERT when cert is None and PEM is bad."""
+    skill_content = b"# My Skill\n\nDoes stuff.\n"
+    sidecar, _, _ = _make_sidecar_dict(skill_content)
+    canonical_bytes = canonicalize(skill_content)
+
+    bad_sidecar = dict(sidecar)
+    bad_sidecar["certificate"] = "not-a-valid-pem"
+
+    result, meta = _verify_parsed_inputs(
+        canonical_bytes, bad_sidecar, None, None, False
+    )
+    assert result == VerificationResult.INVALID_CERT
+    assert "error" in meta

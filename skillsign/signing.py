@@ -94,6 +94,7 @@ def _assemble_sidecar(
     skill_id: str,
     skill_version: str,
     digest_bytes: bytes,
+    timestamp: str | None = None,
 ) -> dict[str, Any]:
     """Extract sidecar fields from a Sigstore Bundle per Section 6.2."""
     cert = bundle.signing_certificate
@@ -130,12 +131,13 @@ def _assemble_sidecar(
     # rekor_set: Signed Entry Timestamp.
     # ProtoBytes deserializes base64 on input, so signed_entry_timestamp
     # is raw bytes at runtime — encode to base64 for the sidecar.
-    rekor_set = base64.b64encode(
-        inner.inclusion_promise.signed_entry_timestamp
-    ).decode("ascii")
+    rekor_set = base64.b64encode(inner.inclusion_promise.signed_entry_timestamp).decode(
+        "ascii"
+    )
 
     # Signing timestamp: local system clock, informational only
-    timestamp = datetime.now(tz=UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    if timestamp is None:
+        timestamp = datetime.now(tz=UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     sidecar: dict[str, Any] = {
         "version": _SIDECAR_VERSION,
