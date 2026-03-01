@@ -128,16 +128,39 @@ def sign(file: str, *, force: bool = False) -> None:
         click.echo(f"Error: {e}", err=True)
         sys.exit(e.exit_code)
 
-    click.echo(f"Signed: {skill_path}")
-    click.echo(f"Sidecar: {sidecar_path}")
-    click.echo(f"Signer: {sidecar_data['signer']}")
+    click.echo(
+        _format_sign_output(str(skill_path), str(sidecar_path), sidecar_data["signer"])
+    )
+
+
+def _format_verification_output(
+    file: str, result_value: str, meta: dict[str, Any]
+) -> str:
+    """Format a single file's verification result for display."""
+    if result_value == "VERIFIED":
+        return (
+            f"{file}: VERIFIED\n"
+            f"  Signer: {meta['signer']}\n"
+            f"  Skill:  {meta['skill_id']} v{meta['skill_version']}"
+        )
+    if result_value == "UNSIGNED":
+        return f"{file}: UNSIGNED (no sidecar found)"
+    lines = [f"{file}: {result_value}"]
+    if "error" in meta:
+        lines.append(f"  {meta['error']}")
+    return "\n".join(lines)
+
+
+def _format_sign_output(skill_path: str, sidecar_path: str, signer: str) -> str:
+    """Format sign command output for display."""
+    return f"Signed: {skill_path}\nSidecar: {sidecar_path}\nSigner: {signer}"
 
 
 @cli.command()
 @click.argument("files", nargs=-1, required=True, type=click.Path(exists=True))
 def verify(files: tuple[str, ...]) -> None:
     """Verify one or more SKILL.md files against their sidecars."""
-    from skillsign.verify import VerificationResult, exit_code_for, verify_skill
+    from skillsign.verify import exit_code_for, verify_skill
 
     worst_exit = 0
 
@@ -152,17 +175,7 @@ def verify(files: tuple[str, ...]) -> None:
 
         code = exit_code_for(result)
         worst_exit = max(worst_exit, code)
-
-        if result == VerificationResult.VERIFIED:
-            click.echo(f"{file}: VERIFIED")
-            click.echo(f"  Signer: {meta['signer']}")
-            click.echo(f"  Skill:  {meta['skill_id']} v{meta['skill_version']}")
-        elif result == VerificationResult.UNSIGNED:
-            click.echo(f"{file}: UNSIGNED (no sidecar found)")
-        else:
-            click.echo(f"{file}: {result.value}")
-            if "error" in meta:
-                click.echo(f"  {meta['error']}")
+        click.echo(_format_verification_output(file, result.value, meta))
 
     sys.exit(worst_exit)
 

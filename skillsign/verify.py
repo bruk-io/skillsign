@@ -219,6 +219,15 @@ def _verify_cert_chain(
     return None
 
 
+def _is_timestamp_in_window(
+    ts: datetime.datetime,
+    not_before: datetime.datetime,
+    not_after: datetime.datetime,
+) -> bool:
+    """Return True if timestamp falls within [not_before, not_after]."""
+    return not_before <= ts <= not_after
+
+
 def _verify_set_temporal_window(
     cert: x509.Certificate,
     rekor_timestamp_iso: str,
@@ -265,7 +274,7 @@ def _verify_set_temporal_window(
     not_before = cert.not_valid_before_utc
     not_after = cert.not_valid_after_utc
 
-    if not (not_before <= rekor_ts <= not_after):
+    if not _is_timestamp_in_window(rekor_ts, not_before, not_after):
         return (
             VerificationResult.INVALID_CERT,
             {
