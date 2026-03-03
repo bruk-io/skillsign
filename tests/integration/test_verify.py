@@ -2,6 +2,7 @@
 
 import base64
 import datetime
+import json
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -339,6 +340,57 @@ def test_identity_mismatch_email_san(mock_tuf: MagicMock, tmp_path: Path) -> Non
     result, meta = verify_skill(skill_path)
     assert result == VerificationResult.IDENTITY_MISMATCH
     assert "error" in meta
+
+
+# ---------------------------------------------------------------------------
+# Strict mode integration tests (file I/O + mocked Rekor API)
+# ---------------------------------------------------------------------------
+
+
+@_SKIP_CHAIN
+def test_strict_verified_happy_path(mock_tuf: MagicMock, tmp_path: Path) -> None:
+    skill_path, _ = setup_files(tmp_path)
+
+    # Read back the sidecar to get the digest for the mock entry
+    from skillsign.sidecar import read_sidecar
+
+    sidecar_data = read_sidecar(Path(str(skill_path) + ".skillsign"))
+    digest_hex = sidecar_data["digest"].removeprefix("sha256:")
+
+    # Build a matching Rekor entry
+    body = {
+        "kind": "hashedrekord",
+        "apiVersion": "0.0.1",
+        "spec": {
+            "data": {"hash": {"algorithm": "sha256", "value": digest_hex}},
+            "signature": {"content": "fake", "publicKey": {"content": "fake"}},
+        },
+    }
+    entry = {
+        "body": base64.b64encode(json.dumps(body).encode()).decode(),
+        "integratedTime": int(datetime.datetime.now(datetime.UTC).timestamp()),
+    }
+
+    with patch("skillsign.verify.query_rekor_entry", return_value=entry):
+        result, meta = verify_skill(skill_path, strict=True)
+    assert result == VerificationResult.VERIFIED
+
+
+@_SKIP_CHAIN
+def test_strict_rekor_failure_returns_invalid_cert(
+    mock_tuf: MagicMock, tmp_path: Path
+) -> None:
+    from skillsign.errors import SkillSignError
+
+    skill_path, _ = setup_files(tmp_path)
+
+    with patch(
+        "skillsign.verify.query_rekor_entry",
+        side_effect=SkillSignError("Connection refused"),
+    ):
+        result, meta = verify_skill(skill_path, strict=True)
+    assert result == VerificationResult.INVALID_CERT
+    assert "failed" in meta["error"].lower()
 
 
 @_SKIP_CHAIN

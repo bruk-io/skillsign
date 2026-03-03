@@ -19,7 +19,7 @@ model {
 
     component verificationEngine 'Verification Engine' {
       technology 'ECDSA P-256, X.509'
-      description 'Orchestrates verification: reads sidecar via SidecarManager, recomputes digest, verifies ECDSA P-256 signature using certificate public key, checks EKU id-kp-codeSigning OID, verifies SAN identity match (URI or email), and checks SKILL_ID_MISMATCH owner-path consistency (skipped for email signers). Phase 2: cert chain validation against TUF Fulcio root and SET cryptographic verification against Rekor public key.'
+      description 'Orchestrates verification: reads sidecar via SidecarManager, recomputes digest, verifies ECDSA P-256 signature using certificate public key, validates cert chain against Fulcio root via TUF TrustedRoot and pyOpenSSL, checks EKU id-kp-codeSigning OID, verifies SAN identity match (URI or email), checks temporal binding (rekor_timestamp within cert validity), and checks SKILL_ID_MISMATCH owner-path consistency (skipped for email signers). Phase 2: SET cryptographic verification against Rekor public key.'
     }
 
     component policyEngine 'Policy Engine' {
@@ -39,7 +39,7 @@ model {
 
     component tufClient 'TUF Client' {
       technology 'TUF, HTTPS'
-      description '[Phase 2, not yet implemented] Fetches and validates Sigstore TUF root metadata, Fulcio root certificates, and Rekor public key. In --offline mode, falls back to bundled cache and Rekor is not consulted. --offline and --strict are mutually exclusive (exit code 10)'
+      description 'Wraps Sigstore SDK TrustedRoot via infra/tuf.py. Fetches production TUF root metadata including Fulcio root certificates and Rekor public key. Falls back to cached metadata when offline. Used by verification engine for cert chain validation.'
     }
 
     // Signing path
@@ -47,14 +47,12 @@ model {
     signingEngine -> canonicalProcessor 'Gets SHA-256 digest from'
     signingEngine -> manifestReader 'Reads skill_id and skill_version from'
     signingEngine -> skillsign.skillFiles 'Checks for existing .skillsign sidecar before signing'
-    // Note: signing.py returns a sidecar dict; cli.py calls write_sidecar() (sidecarManager) directly.
-    // The CLI entry point bridges signingEngine and sidecarManager — no direct code dependency between them.
+    // signingEngine returns sidecar dict; cli.py calls sidecarManager.write_sidecar() — no direct code dependency
 
     // Verification path
     verificationEngine -> canonicalProcessor 'Recomputes digest via'
     verificationEngine -> sidecarManager 'Reads sidecar fields via'
-    // Phase 2: cert chain validation and SET verification (steps 7+9 are TODOs in verify.py)
-    verificationEngine -> tufClient 'Gets trusted Fulcio root certificates and Rekor public key from [Phase 2]'
+    verificationEngine -> tufClient 'Gets trusted Fulcio root certificates and Rekor public key from'
     // Phase 2: policy evaluation (no policy.py yet)
     verificationEngine -> policyEngine 'Passes verified signer identity, rekor_timestamp, and skill_id for policy evaluation [Phase 2]'
 
@@ -75,7 +73,7 @@ model {
   skillsign.cli.tufClient -> skillsign.tufCache 'Reads and writes cached TUF metadata via local filesystem'
   skillsign.cli.sidecarManager -> skillsign.skillFiles 'Reads and writes .skillsign sidecar files'
   skillsign.cli.manifestReader -> skillsign.skillFiles 'Reads skillsign.yaml manifests'
-  skillsign.cli.canonicalProcessor -> skillsign.skillFiles 'Reads SKILL.md files for normalization'
+  // canonicalProcessor is pure (takes bytes, returns bytes) — no direct file I/O
   skillsign.cli.policyEngine -> skillsign.skillFiles 'Reads .skillsign-policy.yaml trust policies [Phase 2]'
 
 }

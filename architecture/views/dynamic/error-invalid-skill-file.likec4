@@ -22,7 +22,7 @@ views {
 
     skillsign.cli.signingEngine -> skillsign.cli.canonicalProcessor 'Requests canonical form and digest'
 
-    skillsign.cli.canonicalProcessor -> skillsign.skillFiles 'Reads SKILL.md file'
+    skillsign.cli.signingEngine -> skillsign.skillFiles 'Reads SKILL.md file bytes'
 
     skillsign.cli.signingEngine -> skillAuthor {
       title 'Canonical form normalization fails — exit code 10'

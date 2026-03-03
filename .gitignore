@@ -21,3 +21,6 @@ htmlcov/
 
 # ruff
 .ruff_cache/
+
+# Claude Code worktrees (duplicate architecture files cause likec4 validate failures)
+.claude/worktrees/

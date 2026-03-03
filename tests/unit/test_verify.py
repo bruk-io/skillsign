@@ -18,6 +18,7 @@ from skillsign.verify import (
     _verify_cert_chain,
     _verify_parsed_inputs,
     _verify_set_temporal_window,
+    _verify_strict_rekor,
     exit_code_for,
 )
 from tests.conftest import make_test_cert
@@ -440,3 +441,147 @@ def test_verify_parsed_inputs_invalid_cert_pem_when_none(
     )
     assert result == VerificationResult.INVALID_CERT
     assert "error" in meta
+
+
+# ---------------------------------------------------------------------------
+# _verify_strict_rekor (mocked HTTP — no real Rekor queries)
+# ---------------------------------------------------------------------------
+
+
+def _make_rekor_entry(
+    *,
+    kind: str = "hashedrekord",
+    api_version: str = "0.0.1",
+    digest_algo: str = "sha256",
+    digest_value: str = "ab" * 32,
+    integrated_time: int | None = None,
+) -> dict[str, Any]:
+    """Build a mock Rekor entry dict as returned by query_rekor_entry."""
+    import json
+
+    if integrated_time is None:
+        integrated_time = int(datetime.datetime.now(datetime.UTC).timestamp())
+
+    body = {
+        "kind": kind,
+        "apiVersion": api_version,
+        "spec": {
+            "data": {
+                "hash": {
+                    "algorithm": digest_algo,
+                    "value": digest_value,
+                }
+            },
+            "signature": {"content": "fake", "publicKey": {"content": "fake"}},
+        },
+    }
+    return {
+        "body": base64.b64encode(json.dumps(body).encode()).decode(),
+        "integratedTime": integrated_time,
+    }
+
+
+def test_strict_rekor_success() -> None:
+    cert, _ = make_test_cert(san_uri=SIGNER_URL)
+    digest_hex = "ab" * 32
+    sidecar: dict[str, Any] = {
+        "rekor_log_id": "a" * 64,
+        "digest": f"sha256:{digest_hex}",
+    }
+    meta: dict[str, Any] = {"signer": SIGNER_URL}
+
+    entry = _make_rekor_entry(digest_value=digest_hex)
+    with patch("skillsign.verify.query_rekor_entry", return_value=entry):
+        result = _verify_strict_rekor(cert, sidecar, meta)
+    assert result is None
+
+
+def test_strict_rekor_wrong_kind() -> None:
+    cert, _ = make_test_cert(san_uri=SIGNER_URL)
+    sidecar: dict[str, Any] = {
+        "rekor_log_id": "a" * 64,
+        "digest": "sha256:" + "ab" * 32,
+    }
+    meta: dict[str, Any] = {"signer": SIGNER_URL}
+
+    entry = _make_rekor_entry(kind="intoto", api_version="0.0.2")
+    with patch("skillsign.verify.query_rekor_entry", return_value=entry):
+        result = _verify_strict_rekor(cert, sidecar, meta)
+    assert result is not None
+    assert result[0] == VerificationResult.INVALID_CERT
+    assert "hashedrekord" in result[1]["error"]
+
+
+def test_strict_rekor_digest_mismatch() -> None:
+    cert, _ = make_test_cert(san_uri=SIGNER_URL)
+    sidecar: dict[str, Any] = {
+        "rekor_log_id": "a" * 64,
+        "digest": "sha256:" + "ab" * 32,
+    }
+    meta: dict[str, Any] = {"signer": SIGNER_URL}
+
+    entry = _make_rekor_entry(digest_value="cc" * 32)
+    with patch("skillsign.verify.query_rekor_entry", return_value=entry):
+        result = _verify_strict_rekor(cert, sidecar, meta)
+    assert result is not None
+    assert result[0] == VerificationResult.INVALID_CERT
+    assert "digest" in result[1]["error"].lower()
+
+
+def test_strict_rekor_integrated_time_outside_cert_window() -> None:
+    cert, _ = make_test_cert(san_uri=SIGNER_URL)
+    digest_hex = "ab" * 32
+    sidecar: dict[str, Any] = {
+        "rekor_log_id": "a" * 64,
+        "digest": f"sha256:{digest_hex}",
+    }
+    meta: dict[str, Any] = {"signer": SIGNER_URL}
+
+    # Two hours in the future — outside cert validity
+    future_ts = int(
+        (datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=2)).timestamp()
+    )
+    entry = _make_rekor_entry(digest_value=digest_hex, integrated_time=future_ts)
+    with patch("skillsign.verify.query_rekor_entry", return_value=entry):
+        result = _verify_strict_rekor(cert, sidecar, meta)
+    assert result is not None
+    assert result[0] == VerificationResult.INVALID_CERT
+    assert "outside" in result[1]["error"].lower()
+
+
+def test_strict_rekor_query_failure() -> None:
+    from skillsign.errors import SkillSignError
+
+    cert, _ = make_test_cert(san_uri=SIGNER_URL)
+    sidecar: dict[str, Any] = {
+        "rekor_log_id": "a" * 64,
+        "digest": "sha256:" + "ab" * 32,
+    }
+    meta: dict[str, Any] = {"signer": SIGNER_URL}
+
+    with patch(
+        "skillsign.verify.query_rekor_entry",
+        side_effect=SkillSignError("Connection refused"),
+    ):
+        result = _verify_strict_rekor(cert, sidecar, meta)
+    assert result is not None
+    assert result[0] == VerificationResult.INVALID_CERT
+    assert "failed" in result[1]["error"].lower()
+
+
+# ---------------------------------------------------------------------------
+# offline + strict mutual exclusion
+# ---------------------------------------------------------------------------
+
+
+def test_verify_skill_rejects_offline_and_strict() -> None:
+    from pathlib import Path
+
+    import pytest
+
+    from skillsign.errors import SkillSignError
+    from skillsign.verify import verify_skill
+
+    with pytest.raises(SkillSignError, match="mutually exclusive") as exc_info:
+        verify_skill(Path("/nonexistent"), offline=True, strict=True)
+    assert exc_info.value.exit_code == 10

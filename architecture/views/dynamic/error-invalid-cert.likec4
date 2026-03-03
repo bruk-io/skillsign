@@ -19,7 +19,7 @@ views {
 
     skillsign.cli.verificationEngine -> skillsign.cli.canonicalProcessor 'Recomputes canonical form and digest — matches'
 
-    skillsign.cli.canonicalProcessor -> skillsign.skillFiles 'Reads SKILL.md file'
+    skillsign.cli.verificationEngine -> skillsign.skillFiles 'Reads SKILL.md file bytes'
 
     skillsign.cli.verificationEngine -> skillsign.cli.verificationEngine {
       title 'ECDSA signature verification passes (step 6)'
@@ -30,11 +30,11 @@ views {
       '''
     }
 
-    skillsign.cli.verificationEngine -> skillsign.cli.tufClient 'Requests trusted Fulcio root certificates and Rekor public key [Phase 2]'
+    skillsign.cli.verificationEngine -> skillsign.cli.tufClient 'Requests trusted Fulcio root certificates and Rekor public key'
 
     parallel {
-      skillsign.cli.tufClient -> tuf 'Fetches current TUF root metadata [Phase 2]'
-      skillsign.cli.tufClient -> skillsign.tufCache 'Reads/writes cached TUF metadata [Phase 2]'
+      skillsign.cli.tufClient -> tuf 'Fetches current TUF root metadata'
+      skillsign.cli.tufClient -> skillsign.tufCache 'Reads/writes cached TUF metadata'
     }
 
     skillsign.cli.verificationEngine -> skillsign.cli.verificationEngine {

@@ -135,3 +135,21 @@ def test_auth_status_expired_token(runner: CliRunner) -> None:
         result = runner.invoke(cli, ["auth", "status"])
     assert result.exit_code == 0
     assert "Token expired" in result.output
+
+
+# ---------------------------------------------------------------------------
+# Verify: --strict flag
+# ---------------------------------------------------------------------------
+
+
+def test_verify_strict_flag_accepted(runner: CliRunner, tmp_skill_file: str) -> None:
+    result = runner.invoke(cli, ["verify", "--strict", tmp_skill_file])
+    # UNSIGNED because no sidecar — but the flag was accepted without error
+    assert result.exit_code == 2
+    assert "UNSIGNED" in result.output
+
+
+def test_verify_strict_help_text(runner: CliRunner) -> None:
+    result = runner.invoke(cli, ["verify", "--help"])
+    assert result.exit_code == 0
+    assert "--strict" in result.output

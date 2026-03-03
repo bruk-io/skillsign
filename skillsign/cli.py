@@ -158,7 +158,8 @@ def _format_sign_output(skill_path: str, sidecar_path: str, signer: str) -> str:
 
 @cli.command()
 @click.argument("files", nargs=-1, required=True, type=click.Path(exists=True))
-def verify(files: tuple[str, ...]) -> None:
+@click.option("--strict", is_flag=True, help="Live Rekor query to confirm log entry.")
+def verify(files: tuple[str, ...], *, strict: bool = False) -> None:
     """Verify one or more SKILL.md files against their sidecars."""
     from skillsign.verify import exit_code_for, verify_skill
 
@@ -167,7 +168,7 @@ def verify(files: tuple[str, ...]) -> None:
     for file in files:
         skill_path = Path(file)
         try:
-            result, meta = verify_skill(skill_path)
+            result, meta = verify_skill(skill_path, strict=strict)
         except SkillSignError as e:
             click.echo(f"{file}: ERROR — {e}", err=True)
             worst_exit = max(worst_exit, e.exit_code)

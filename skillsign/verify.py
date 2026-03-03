@@ -11,9 +11,14 @@ for cert chain validation. Fails closed when TUF is unreachable.
 Step 9 limitation: The sidecar stores the SET (rekor_set) but not the
 log_index or canonicalized_body needed to reconstruct the RFC-8785 canonical
 JSON that Rekor signed. Without these, full SET cryptographic verification
-requires a live Rekor query (future --strict mode). In default mode, step 9
-only verifies that rekor_timestamp falls within the cert's validity window.
-The rekor_timestamp is self-asserted and not cryptographically bound.
+requires a live Rekor query. In default mode, step 9 only verifies that
+rekor_timestamp falls within the cert's validity window. The rekor_timestamp
+is self-asserted and not cryptographically bound.
+
+In --strict mode (steps 9+10), a live Rekor query confirms:
+  - The log entry exists and is hashedrekord/v0.0.1
+  - The entry digest matches the sidecar digest
+  - The integratedTime falls within the cert's validity window
 """
 
 import base64
@@ -45,6 +50,8 @@ from OpenSSL.crypto import (
 from skillsign.canonical import canonicalize
 from skillsign.digest import compute_digest
 from skillsign.errors import SkillSignError
+from skillsign.infra.rekor import query_rekor_entry
+from skillsign.infra.tuf import get_trusted_root as _get_trusted_root
 from skillsign.sidecar import read_sidecar
 
 _logger = logging.getLogger(__name__)
@@ -101,21 +108,6 @@ def exit_code_for(result: VerificationResult) -> int:
     """Return the CLI exit code for a given VerificationResult."""
     return _EXIT_CODES[result]
 
-
-def _get_trusted_root(offline: bool = False) -> Any:
-    """Fetch the Sigstore production TrustedRoot via TUF.
-
-    Returns a sigstore TrustedRoot instance, or None if the SDK is unavailable.
-    Uses offline TUF cache when offline=True.
-    """
-    try:
-        from sigstore.sign import ClientTrustConfig  # type: ignore[attr-defined]
-
-        config = ClientTrustConfig.production(offline=offline)
-        return config.trusted_root
-    except Exception as e:
-        _logger.warning("Sigstore TUF unavailable: %s", e)
-        return None
 
 
 def _verify_cert_chain(
@@ -290,6 +282,109 @@ def _verify_set_temporal_window(
     return None
 
 
+def _verify_strict_rekor(
+    cert: x509.Certificate,
+    sidecar: dict[str, Any],
+    meta: dict[str, Any],
+) -> tuple[VerificationResult, dict[str, Any]] | None:
+    """Live Rekor verification for --strict mode (spec steps 9+10).
+
+    Queries the Rekor transparency log to confirm:
+      - The entry for rekor_log_id exists
+      - The entry kind is hashedrekord/v0.0.1
+      - The entry body digest matches the sidecar digest
+      - The integratedTime falls within the certificate's validity window
+
+    Returns None on success. Returns a failure tuple on any mismatch.
+    """
+    log_id = sidecar["rekor_log_id"]
+
+    try:
+        entry = query_rekor_entry(log_id)
+    except Exception as e:
+        return (
+            VerificationResult.INVALID_CERT,
+            {**meta, "error": f"Rekor strict verification failed: {e}"},
+        )
+
+    # Decode the body from base64
+    body_b64 = entry.get("body", "")
+    try:
+        body = json.loads(base64.b64decode(body_b64))
+    except Exception as e:
+        return (
+            VerificationResult.INVALID_CERT,
+            {**meta, "error": f"Cannot decode Rekor entry body: {e}"},
+        )
+
+    # Verify entry kind is hashedrekord/v0.0.1
+    kind = body.get("kind", "")
+    api_version = body.get("apiVersion", "")
+    if kind != "hashedrekord" or api_version != "0.0.1":
+        return (
+            VerificationResult.INVALID_CERT,
+            {
+                **meta,
+                "error": (
+                    f"Rekor entry is {kind}/{api_version}, expected hashedrekord/0.0.1"
+                ),
+            },
+        )
+
+    # Verify digest matches sidecar
+    entry_hash = body.get("spec", {}).get("data", {}).get("hash", {})
+    entry_algo = entry_hash.get("algorithm", "")
+    entry_value = entry_hash.get("value", "")
+    expected_digest = sidecar["digest"]  # "sha256:<hex>"
+    entry_digest = f"{entry_algo}:{entry_value}"
+    if entry_digest != expected_digest:
+        return (
+            VerificationResult.INVALID_CERT,
+            {
+                **meta,
+                "error": (
+                    f"Rekor entry digest {entry_digest!r} does not match "
+                    f"sidecar digest {expected_digest!r}"
+                ),
+            },
+        )
+
+    # Verify integratedTime within cert validity window
+    integrated_time = entry.get("integratedTime")
+    if integrated_time is None:
+        return (
+            VerificationResult.INVALID_CERT,
+            {**meta, "error": "Rekor entry missing integratedTime"},
+        )
+
+    try:
+        ts_int = int(integrated_time)
+        rekor_ts = datetime.datetime.fromtimestamp(ts_int, tz=datetime.UTC)
+    except (ValueError, OSError) as e:
+        return (
+            VerificationResult.INVALID_CERT,
+            {**meta, "error": f"Cannot parse Rekor integratedTime: {e}"},
+        )
+
+    not_before = cert.not_valid_before_utc
+    not_after = cert.not_valid_after_utc
+
+    if not _is_timestamp_in_window(rekor_ts, not_before, not_after):
+        return (
+            VerificationResult.INVALID_CERT,
+            {
+                **meta,
+                "error": (
+                    f"Rekor integratedTime {rekor_ts.isoformat()} is outside "
+                    f"certificate validity window "
+                    f"[{not_before.isoformat()}, {not_after.isoformat()}]"
+                ),
+            },
+        )
+
+    return None
+
+
 def _reconstruct_hashedrekord_body(
     cert_pem: str,
     signature_b64: str,
@@ -337,18 +432,20 @@ def _verify_parsed_inputs(
     cert: x509.Certificate | None,
     trusted_root: Any,
     offline: bool,
+    strict: bool = False,
 ) -> tuple[VerificationResult, dict[str, Any]]:
-    """Pure verification given all pre-read inputs. No I/O.
+    """Pure verification given all pre-read inputs.
 
-    Implements steps 3-11 of Section 8.2. All inputs are pre-computed by the
-    caller; this function performs only cryptographic and policy checks with
-    zero filesystem or network access.
+    Implements steps 3-11 of Section 8.2. In default mode, all inputs are
+    pre-computed and no I/O occurs. In strict mode, step 9 performs a live
+    Rekor query (the only network call in this function).
 
     canonical_bytes: canonicalized skill file content (step 3 output)
     sidecar: validated sidecar dict from read_sidecar()
     cert: parsed leaf certificate, or None to parse from sidecar["certificate"]
     trusted_root: Sigstore TrustedRoot for chain validation, or None
     offline: passed through to _verify_cert_chain fallback logic
+    strict: when True, perform live Rekor verification (steps 9+10)
     """
     meta: dict[str, Any] = {
         "signer": sidecar["signer"],
@@ -430,10 +527,15 @@ def _verify_parsed_inputs(
     if san_result is not None:
         return san_result
 
-    # Step 9: Verify Rekor timestamp falls within certificate validity window.
-    set_result = _verify_set_temporal_window(cert, sidecar["rekor_timestamp"], meta)
-    if set_result is not None:
-        return set_result
+    # Step 9 (+10 in strict mode): Verify Rekor temporal binding.
+    if strict:
+        strict_result = _verify_strict_rekor(cert, sidecar, meta)
+        if strict_result is not None:
+            return strict_result
+    else:
+        set_result = _verify_set_temporal_window(cert, sidecar["rekor_timestamp"], meta)
+        if set_result is not None:
+            return set_result
 
     # Step 11: SKILL_ID_MISMATCH owner-path check.
     id_mismatch = _verify_skill_id_owner(sidecar["skill_id"], sidecar["signer"], meta)
@@ -447,6 +549,7 @@ def verify_skill(
     skill_file: Path,
     *,
     offline: bool = False,
+    strict: bool = False,
 ) -> tuple[VerificationResult, dict[str, Any]]:
     """Verify a SKILL.md file against its sidecar per Section 8.2.
 
@@ -458,10 +561,17 @@ def verify_skill(
       1. Locate sidecar: <filename>.md.skillsign
       2. Parse sidecar via read_sidecar()
       3. Read skill file and compute canonical form
-      4-11. Delegate to _verify_parsed_inputs() (pure, no I/O)
+      4-11. Delegate to _verify_parsed_inputs()
 
     The offline parameter controls TUF refresh behaviour for step 7.
+    The strict parameter enables live Rekor verification (steps 9+10).
+    Raises SkillSignError if both offline and strict are True.
     """
+    if offline and strict:
+        raise SkillSignError(
+            "--offline and --strict are mutually exclusive", exit_code=10
+        )
+
     # Step 1: Locate sidecar
     sidecar_path = Path(str(skill_file) + ".skillsign")
     if not sidecar_path.exists():
@@ -483,12 +593,14 @@ def verify_skill(
 
     canonical_bytes = canonicalize(raw)
 
-    # Steps 4-11: Pure verification — no more I/O after this point.
+    # Steps 4-11: Verification (strict mode does one Rekor query in step 9).
     trusted_root = _get_trusted_root(offline=offline)
     if trusted_root is None and not offline:
         trusted_root = _get_trusted_root(offline=True)
 
-    return _verify_parsed_inputs(canonical_bytes, sidecar, None, trusted_root, offline)
+    return _verify_parsed_inputs(
+        canonical_bytes, sidecar, None, trusted_root, offline, strict=strict
+    )
 
 
 def _verify_san_and_eku(
