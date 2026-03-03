@@ -1,0 +1,25 @@
+:root {
+  --bh-spacing-0: 0;
+  --bh-spacing-0-5: 0.125rem;
+  --bh-spacing-1: 0.25rem;
+  --bh-spacing-1-5: 0.375rem;
+  --bh-spacing-2: 0.5rem;
+  --bh-spacing-2-5: 0.625rem;
+  --bh-spacing-3: 0.75rem;
+  --bh-spacing-3-5: 0.875rem;
+  --bh-spacing-4: 1rem;
+  --bh-spacing-5: 1.25rem;
+  --bh-spacing-6: 1.5rem;
+  --bh-spacing-7: 1.75rem;
+  --bh-spacing-8: 2rem;
+  --bh-spacing-9: 2.25rem;
+  --bh-spacing-10: 2.5rem;
+  --bh-spacing-11: 2.75rem;
+  --bh-spacing-12: 3rem;
+  --bh-spacing-14: 3.5rem;
+  --bh-spacing-16: 4rem;
+  --bh-spacing-20: 5rem;
+  --bh-spacing-24: 6rem;
+  --bh-spacing-28: 7rem;
+  --bh-spacing-32: 8rem;
+}

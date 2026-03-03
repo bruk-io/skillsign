@@ -36,7 +36,7 @@ views {
       '''
     }
 
-    skillsign.cli.canonicalProcessor -> skillsign.skillFiles 'Reads SKILL.md file'
+    skillsign.cli.signingEngine -> skillsign.skillFiles 'Reads SKILL.md file bytes (step 4)'
 
     skillsign.cli.signingEngine -> skillsign.cli.authHandler 'Requests OIDC authentication (step 6)'
 
@@ -138,7 +138,15 @@ views {
       '''
     }
 
-    skillsign.cli.sidecarManager -> skillsign.skillFiles 'Writes SKILL.md.skillsign sidecar atomically via temp file rename (step 11)'
+    // cli.py bridges signingEngine and sidecarManager: calls write_sidecar() with the dict returned by sign_skill()
+    skillsign.cli.sidecarManager -> skillsign.skillFiles {
+      title 'Writes SKILL.md.skillsign sidecar atomically via temp file rename (step 11)'
+      notes '''
+        The CLI layer (cli.py) calls sidecar.write_sidecar() with the dict
+        returned by signing.sign_skill(). The signing engine does not import
+        sidecar.py — the CLI entry point orchestrates the handoff.
+      '''
+    }
 
     skillsign.cli.signingEngine -> skillAuthor {
       title 'Signing complete — exit code 0'

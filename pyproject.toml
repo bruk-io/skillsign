@@ -32,6 +32,11 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "unit: Fast, isolated tests with no I/O",
+    "integration: Tests multiple components with mocked external dependencies",
+    "e2e: End-to-end tests requiring real Sigstore infrastructure",
+]
 
 [tool.mypy]
 python_version = "3.14"

@@ -13,7 +13,7 @@ from cryptography.x509.oid import NameOID
 
 from skillsign.canonical import canonicalize
 from skillsign.errors import SkillSignError
-from skillsign.signing import sign_skill
+from skillsign.signing import _assemble_sidecar, sign_skill
 
 
 def _make_test_cert(
@@ -385,3 +385,65 @@ def test_extract_san_no_san_raises(tmp_path: pytest.TempPathFactory) -> None:
     cert = _make_test_cert(san_uri=None, san_email=None)
     with pytest.raises(SkillSignError, match="SAN URI or email"):
         _extract_san(cert)
+
+
+# --- _assemble_sidecar determinism ---
+
+
+def test_assemble_sidecar_fixed_timestamp_is_deterministic() -> None:
+    """_assemble_sidecar with a fixed timestamp produces deterministic output."""
+    cert = _make_test_cert()
+    mock_bundle = _make_mock_bundle(cert)
+    digest_bytes = b"\x01" * 32
+
+    fixed_ts = "2024-01-01T00:00:00Z"
+    result1 = _assemble_sidecar(
+        bundle=mock_bundle,
+        skill_id="github.com/org/skill",
+        skill_version="1.0.0",
+        digest_bytes=digest_bytes,
+        timestamp=fixed_ts,
+    )
+    result2 = _assemble_sidecar(
+        bundle=mock_bundle,
+        skill_id="github.com/org/skill",
+        skill_version="1.0.0",
+        digest_bytes=digest_bytes,
+        timestamp=fixed_ts,
+    )
+
+    assert result1["timestamp"] == fixed_ts
+    assert result2["timestamp"] == fixed_ts
+    assert result1 == result2
+
+
+def test_assemble_sidecar_no_timestamp_uses_datetime_now() -> None:
+    """_assemble_sidecar without a timestamp calls datetime.now()."""
+    cert = _make_test_cert()
+    mock_bundle = _make_mock_bundle(cert)
+    digest_bytes = b"\x02" * 32
+
+    fixed_now = "2025-06-15T12:34:56Z"
+
+    class _MockDatetime:
+        @staticmethod
+        def now(tz: object = None) -> object:
+            class _DT:
+                def strftime(self, fmt: str) -> str:
+                    return fixed_now
+
+            return _DT()
+
+        @staticmethod
+        def fromtimestamp(ts: float, tz: object = None) -> object:
+            return datetime.fromtimestamp(ts, tz=UTC)
+
+    with patch("skillsign.signing.datetime", _MockDatetime):
+        result = _assemble_sidecar(
+            bundle=mock_bundle,
+            skill_id="github.com/org/skill",
+            skill_version="1.0.0",
+            digest_bytes=digest_bytes,
+        )
+
+    assert result["timestamp"] == fixed_now

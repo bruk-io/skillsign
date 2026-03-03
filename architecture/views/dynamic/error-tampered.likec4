@@ -25,7 +25,7 @@ views {
 
     skillsign.cli.verificationEngine -> skillsign.cli.canonicalProcessor 'Recomputes canonical form and digest'
 
-    skillsign.cli.canonicalProcessor -> skillsign.skillFiles 'Reads SKILL.md file'
+    skillsign.cli.verificationEngine -> skillsign.skillFiles 'Reads SKILL.md file bytes'
 
     skillsign.cli.verificationEngine -> skillConsumer {
       title 'TAMPERED — exit code 1'

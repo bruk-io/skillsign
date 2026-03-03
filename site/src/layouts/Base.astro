@@ -1,0 +1,160 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'Cryptographic signing and verification for Claude Code SKILL.md files' } = Astro.props;
+const rawBase = import.meta.env.BASE_URL;
+const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+
+    <!-- bh-01 components via vendored JS -->
+    <script type="module" src={`${base}vendor/bh-01/bh-01.bundled.js`}></script>
+  </head>
+  <body>
+    <nav class="site-nav">
+      <div class="nav-inner">
+        <a href={base} class="nav-brand">
+          <span class="nav-logo">⚡</span>
+          <span class="nav-title">SkillSign</span>
+        </a>
+        <bh-cluster gap="md" class="nav-links">
+          <a href={`${base}how-it-works`}>How It Works</a>
+          <a href={`${base}getting-started`}>Get Started</a>
+          <a href={`${base}docs/`}>Docs</a>
+          <a href="https://github.com/bruk-io/skillsign" class="nav-github" aria-label="GitHub">
+            <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+            </svg>
+          </a>
+        </bh-cluster>
+      </div>
+    </nav>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <span class="nav-logo">⚡</span>
+          <span>SkillSign</span>
+        </div>
+        <bh-cluster gap="md" justify="center" class="footer-links">
+          <a href={base}>Home</a>
+          <a href={`${base}how-it-works`}>How It Works</a>
+          <a href={`${base}getting-started`}>Get Started</a>
+          <a href={`${base}docs/`}>Documentation</a>
+          <a href="https://github.com/bruk-io/skillsign">GitHub</a>
+        </bh-cluster>
+        <div class="footer-copy text-muted">
+          &copy; {new Date().getFullYear()} SkillSign. MIT License.
+        </div>
+      </div>
+    </footer>
+
+    <style>
+      @import '../styles/global.css';
+
+      .site-nav {
+        position: sticky;
+        top: 0;
+        z-index: var(--bh-z-sticky, 100);
+        background: var(--bh-color-surface);
+        border-bottom: 1px solid var(--bh-color-border);
+        backdrop-filter: blur(8px);
+      }
+
+      .nav-inner {
+        max-width: 72rem;
+        margin: 0 auto;
+        padding: var(--bh-spacing-3) var(--bh-spacing-6);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: var(--bh-spacing-2);
+        font-weight: var(--bh-font-bold);
+        font-size: var(--bh-text-lg);
+        color: var(--bh-color-text);
+        text-decoration: none;
+      }
+
+      .nav-logo {
+        font-size: var(--bh-text-xl);
+      }
+
+      .nav-links a {
+        color: var(--bh-color-text-muted);
+        font-size: var(--bh-text-sm);
+        font-weight: var(--bh-font-medium);
+        transition: color var(--bh-transition-fast);
+      }
+
+      .nav-links a:hover {
+        color: var(--bh-color-primary);
+      }
+
+      .nav-github {
+        display: flex;
+        align-items: center;
+      }
+
+      .site-footer {
+        background: var(--bh-color-surface);
+        border-top: 1px solid var(--bh-color-border);
+        padding: var(--bh-spacing-12) var(--bh-spacing-6);
+        margin-top: var(--bh-spacing-20);
+      }
+
+      .footer-inner {
+        max-width: 72rem;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--bh-spacing-4);
+      }
+
+      .footer-brand {
+        display: flex;
+        align-items: center;
+        gap: var(--bh-spacing-2);
+        font-weight: var(--bh-font-bold);
+      }
+
+      .footer-links a {
+        color: var(--bh-color-text-muted);
+        font-size: var(--bh-text-sm);
+      }
+
+      .footer-copy {
+        font-size: var(--bh-text-xs);
+      }
+
+      @media (max-width: 768px) {
+        .nav-links {
+          gap: var(--bh-spacing-4);
+        }
+        .footer-links {
+          gap: var(--bh-spacing-4);
+        }
+      }
+    </style>
+  </body>
+</html>

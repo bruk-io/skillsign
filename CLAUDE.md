@@ -61,7 +61,7 @@ The C4 model lives in `architecture/` and covers:
 - **Level 3 (Components):** 8 components inside the CLI (canonical processor, digest engine, signing engine, verification engine, policy engine, sidecar manager, TUF client, OIDC authenticator)
 - **Dynamic views:** 14 flows covering happy paths and all error codes
 
-Validate with: `npx likec4 validate`
+Validate with: `npx likec4 validate ./architecture`
 
 ## Knowhere Marketplace Skills
 

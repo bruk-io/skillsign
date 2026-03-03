@@ -1,0 +1,60 @@
+@font-face {
+  font-family: 'DSEG14Classic';
+  src: url('https://cdn.jsdelivr.net/npm/dseg@0.46.0/fonts/DSEG14-Classic/DSEG14Classic-Regular.woff2') format('woff2'),
+       url('https://cdn.jsdelivr.net/npm/dseg@0.46.0/fonts/DSEG14-Classic/DSEG14Classic-Regular.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Font families */
+  --bh-font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --bh-font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  --bh-font-seg: 'DSEG14Classic', 'DSEG14', var(--bh-font-mono);
+
+  /* Font sizes */
+  --bh-text-2xs: 0.625rem;
+  --bh-text-xs: 0.75rem;
+  --bh-text-sm: 0.875rem;
+  --bh-text-base: 1rem;
+  --bh-text-lg: 1.125rem;
+  --bh-text-xl: 1.25rem;
+  --bh-text-2xl: 1.5rem;
+  --bh-text-3xl: 1.875rem;
+  --bh-text-4xl: 2.25rem;
+
+  /* Font weights */
+  --bh-font-normal: 400;
+  --bh-font-medium: 500;
+  --bh-font-semibold: 600;
+  --bh-font-bold: 700;
+
+  /* Letter spacing */
+  --bh-tracking-tighter: -0.5px;
+  --bh-tracking-tight: -0.3px;
+  --bh-tracking-normal: 0;
+  --bh-tracking-wide: 0.5px;
+  --bh-tracking-wider: 1px;
+  --bh-tracking-widest: 2px;
+
+  /* Line heights */
+  --bh-leading-none: 1;
+  --bh-leading-tight: 1.25;
+  --bh-leading-snug: 1.375;
+  --bh-leading-normal: 1.5;
+  --bh-leading-relaxed: 1.625;
+
+  /* Semantic composites */
+  --bh-body-size: var(--bh-text-base);
+  --bh-body-weight: var(--bh-font-normal);
+  --bh-body-leading: var(--bh-leading-normal);
+
+  --bh-heading-size: var(--bh-text-2xl);
+  --bh-heading-weight: var(--bh-font-bold);
+  --bh-heading-leading: var(--bh-leading-tight);
+
+  --bh-small-size: var(--bh-text-sm);
+  --bh-small-weight: var(--bh-font-normal);
+  --bh-small-leading: var(--bh-leading-normal);
+}

@@ -19,7 +19,7 @@ views {
 
     skillsign.cli.verificationEngine -> skillsign.cli.canonicalProcessor 'Recomputes canonical form and digest — matches'
 
-    skillsign.cli.canonicalProcessor -> skillsign.skillFiles 'Reads SKILL.md file'
+    skillsign.cli.verificationEngine -> skillsign.skillFiles 'Reads SKILL.md file bytes'
 
     skillsign.cli.verificationEngine -> skillsign.cli.verificationEngine {
       title 'ECDSA signature verification passes (step 6)'
@@ -30,19 +30,21 @@ views {
       '''
     }
 
-    skillsign.cli.verificationEngine -> skillsign.cli.tufClient 'Requests trusted Fulcio root certificates and Rekor public key [Phase 2]'
+    skillsign.cli.verificationEngine -> skillsign.cli.tufClient 'Requests trusted Fulcio root certificates and Rekor public key'
 
     parallel {
-      skillsign.cli.tufClient -> tuf 'Fetches current TUF root metadata [Phase 2]'
-      skillsign.cli.tufClient -> skillsign.tufCache 'Reads/writes cached TUF metadata [Phase 2]'
+      skillsign.cli.tufClient -> tuf 'Fetches current TUF root metadata'
+      skillsign.cli.tufClient -> skillsign.tufCache 'Reads/writes cached TUF metadata'
     }
 
     skillsign.cli.verificationEngine -> skillsign.cli.verificationEngine {
-      title 'SET verification and temporal binding (step 9) [Phase 2]'
+      title 'Temporal binding and SET verification (step 9)'
       notes '''
-        Verify SET cryptographic signature against Rekor public key (via TUF).
-        Confirm SET timestamp falls within certificate notBefore/notAfter window.
-        Currently a TODO in verify.py — planned for Phase 2 hardening.
+        Implemented: rekor_timestamp is checked against the certificate's
+        notBefore/notAfter window.
+
+        Phase 2: full cryptographic SET signature verification (ECDSA against
+        Rekor public key via TUF). Currently only the temporal window is checked.
       '''
     }
 
