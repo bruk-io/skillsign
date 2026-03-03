@@ -49,13 +49,15 @@ views {
     }
 
     skillsign.cli.verificationEngine -> skillsign.cli.verificationEngine {
-      title 'SET verification and temporal binding (step 9) [Phase 2]'
+      title 'Temporal binding and SET verification (step 9)'
       notes '''
-        1. Verify SET cryptographic signature against Rekor public key (via TUF)
-        2. Confirm SET timestamp falls within certificate notBefore/notAfter window
-        This proves the signature was created while the certificate was valid,
-        without requiring live Rekor access (unless --strict).
-        Currently a TODO in verify.py — planned for Phase 2 hardening.
+        Implemented: rekor_timestamp is checked against the certificate's
+        notBefore/notAfter window. This proves the Rekor log entry was created
+        while the certificate was valid.
+
+        Phase 2: full cryptographic SET signature verification (ECDSA against
+        Rekor public key via TUF). Currently only the temporal window is checked;
+        the SET itself is not cryptographically verified in default mode.
       '''
     }
 

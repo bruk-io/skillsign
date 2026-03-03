@@ -17,8 +17,7 @@ views {
     skillsign.cli.signingEngine -> skillsign.cli.manifestReader 'Reads and validates manifest'
     skillsign.cli.manifestReader -> skillsign.skillFiles 'Reads skillsign.yaml — OK'
 
-    skillsign.cli.signingEngine -> skillsign.cli.sidecarManager 'Checks for existing sidecar'
-    skillsign.cli.sidecarManager -> skillsign.skillFiles 'No existing sidecar found — OK'
+    skillsign.cli.signingEngine -> skillsign.skillFiles 'Checks for existing .skillsign sidecar — none found, OK'
 
     skillsign.cli.signingEngine -> skillsign.cli.canonicalProcessor 'Requests canonical form and digest'
 

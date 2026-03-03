@@ -33,7 +33,7 @@ model {
 
   skillsign.cli -> skillsign.skillFiles 'Reads and writes SKILL.md files, manifests, sidecars, and policies'
   skillsign.cli -> skillsign.tufCache 'Reads and writes cached TUF metadata'
-  skillsign.cli -> github 'Authenticates via OIDC'
+  skillsign.cli -> github 'Authenticates CI workflows via OIDC/HTTPS'
   skillsign.cli -> fulcio 'Obtains short-lived signing certificates via HTTPS'
   skillsign.cli -> rekor 'Submits and queries transparency log entries via HTTPS'
   skillsign.cli -> tuf 'Fetches TUF root metadata via HTTPS'

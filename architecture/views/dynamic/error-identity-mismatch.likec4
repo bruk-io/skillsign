@@ -6,13 +6,28 @@ views {
     variant sequence
 
     skillConsumer -> skillsign.cli.verificationEngine {
-      title 'Runs: skillsign verify ./SKILL.md — crypto checks pass'
+      title 'Runs: skillsign verify ./SKILL.md'
       navigateTo verificationFlow
       notes '''
-        Sidecar parsing, canonical form, digest comparison, and ECDSA
-        signature verification all pass. EKU is present.
-        Certificate chain validation against Fulcio root is Phase 2.
         Click to see full verification flow.
+      '''
+    }
+
+    skillsign.cli.verificationEngine -> skillsign.cli.sidecarManager 'Reads and parses sidecar — OK'
+
+    skillsign.cli.sidecarManager -> skillsign.skillFiles 'Reads .skillsign sidecar'
+
+    skillsign.cli.verificationEngine -> skillsign.cli.canonicalProcessor 'Recomputes canonical form and digest — matches'
+
+    skillsign.cli.verificationEngine -> skillsign.skillFiles 'Reads SKILL.md file bytes'
+
+    skillsign.cli.verificationEngine -> skillsign.cli.verificationEngine {
+      title 'ECDSA signature and certificate checks pass (steps 6-8 partial)'
+      notes '''
+        Step 6: ECDSA P-256 signature verified against certificate public key — OK.
+        Step 7: Certificate chain validates against Fulcio root via TUF — OK.
+        Step 8 partial: EKU id-kp-codeSigning present — OK.
+        Step 8 continues with SAN identity match below.
       '''
     }
 

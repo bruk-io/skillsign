@@ -16,15 +16,16 @@ views {
 
     skillsign.cli.signingEngine -> skillsign.cli.authHandler 'Requests OIDC authentication'
 
-    skillsign.cli.authHandler -> github {
+    skillsign.cli.authHandler -> skillsign.cli.authHandler {
       title 'OIDC authentication fails — exit code 10'
       notes '''
-        GitHub OIDC token exchange fails. Possible causes:
-        - User denies browser authorization
-        - Expired or invalid OIDC session
-        - Network connectivity to GitHub
-        - In CI: ambient OIDC token not available or misconfigured
-        If this fails, subsequent steps (Fulcio, signing, Rekor) do not execute.
+        CI path (GitHub Actions OIDC): ambient token not available or misconfigured,
+        network connectivity to GitHub, expired or invalid OIDC session.
+
+        Interactive path (Sigstore Dex): user denies browser authorization,
+        OAuth provider rejects login, network connectivity to oauth2.sigstore.dev/auth.
+
+        If authentication fails, subsequent steps (Fulcio, signing, Rekor) do not execute.
       '''
     }
 
