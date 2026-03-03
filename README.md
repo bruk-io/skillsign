@@ -80,6 +80,19 @@ CI signing is convenient for automation. Developer signing is stronger for trust
 - **Impersonation** — Signer identity is bound to a Fulcio certificate via GitHub OIDC; forgery fails verification
 - **Supply chain risk** — The SKILL.md file itself is signed; tampering with the skill content is detected (does not cover transitive dependencies)
 
+## Roadmap
+
+| Phase | Milestone | Status | Summary |
+|-------|-----------|--------|---------|
+| **1. MVP** | `v0.1-mvp` | **15/15 done** | End-to-end sign and verify through real Sigstore. Canonical form, digest, OIDC auth, signing engine, sidecar read/write, verification engine, TUF client, CLI commands, exit codes, test suite. |
+| **2. Hardening** | `v0.1-hardening` | Not started | `--strict` mode, `--offline` mode, `inspect`/`unsign` commands, `--format json`, all error flows with correct exit codes. |
+| **3. Adoption** | `v0.1-adoption` | Not started | Policy engine, `signer_org` matching, `max_age_days`, GitHub Actions example workflow, PyPI + Homebrew distribution. |
+| **4. Ecosystem** | `v0.2-planning` | Not started | Co-signing, registry specification, Claude Code native integration, non-GitHub identity providers. |
+
+Open work items: [#16](https://github.com/bruk-io/skillsign/issues/16) (QA e2e), [#18](https://github.com/bruk-io/skillsign/issues/18) (SET strict mode), [#20](https://github.com/bruk-io/skillsign/issues/20) (worktree cleanup).
+
+See [`docs/roadmap.md`](docs/roadmap.md) for the full breakdown.
+
 ## Requirements
 
 - Python 3.14+
