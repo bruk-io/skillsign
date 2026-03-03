@@ -1,0 +1,351 @@
+---
+import Base from '../layouts/Base.astro';
+const rawBase = import.meta.env.BASE_URL;
+const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
+---
+
+<Base title="How It Works — SkillSign">
+  <section class="page-header">
+    <h1 class="heading-xl">How It Works</h1>
+    <p class="text-muted header-subtitle">
+      SkillSign uses Sigstore keyless signing to bind your GitHub identity to your SKILL.md files
+      without managing long-lived private keys.
+    </p>
+  </section>
+
+  <!-- Signing Flow -->
+  <section class="section">
+    <div class="section-inner">
+      <h2 class="heading-lg">Signing Flow</h2>
+      <p class="text-muted" style="margin-bottom: var(--bh-spacing-8);">
+        The signing protocol produces a detached sidecar file containing the signature,
+        certificate, and transparency log entry. The SKILL.md file is never modified.
+      </p>
+
+      <bh-accordion>
+        <bh-accordion-item label="1. Read the manifest" open>
+          <p>
+            The CLI reads <code class="code-inline">skillsign.yaml</code> from the same directory as the
+            SKILL.md file. This manifest declares the skill's <code class="code-inline">skill_id</code>
+            (e.g., <code class="code-inline">github.com/org/skill-name</code>) and
+            <code class="code-inline">skill_version</code>. Both fields are validated — the skill_id must
+            follow the <code class="code-inline">{'{host}/{owner}/{name}'}</code> format with ASCII-only characters.
+          </p>
+        </bh-accordion-item>
+
+        <bh-accordion-item label="2. Check for existing sidecar">
+          <p>
+            If a <code class="code-inline">.skillsign</code> sidecar already exists for this skill_id
+            and version, the CLI exits with code 10 unless <code class="code-inline">--force</code> is
+            passed. This prevents accidental re-signing of the same version with a different key.
+          </p>
+        </bh-accordion-item>
+
+        <bh-accordion-item label="3. Compute canonical form">
+          <p>
+            The SKILL.md file is normalized to a deterministic byte representation:
+          </p>
+          <ul class="flow-list">
+            <li>File size check (max 1MB)</li>
+            <li>UTF-8 validation, BOM stripping</li>
+            <li>Line ending normalization (CRLF → LF)</li>
+            <li>Trailing whitespace stripping per line</li>
+            <li>Single trailing newline</li>
+            <li>Null byte rejection</li>
+          </ul>
+          <p class="text-muted" style="margin-top: var(--bh-spacing-2);">
+            This ensures trivial formatting differences don't break signatures while meaningful
+            content changes always invalidate them.
+          </p>
+        </bh-accordion-item>
+
+        <bh-accordion-item label="4. Compute SHA-256 digest">
+          <p>
+            The digest is computed over a structured byte sequence that binds the canonical content
+            to the skill's identity:
+          </p>
+          <div class="code-block" style="margin: var(--bh-spacing-4) 0;">
+"skillsign:v1" + \x00 + canonical_bytes + \x00 + skill_id + \x00 + skill_version</div>
+          <p class="text-muted">
+            The domain separator prevents cross-protocol confusion. Including skill_id and version in
+            the digest prevents substitution attacks.
+          </p>
+        </bh-accordion-item>
+
+        <bh-accordion-item label="5. Authenticate via OIDC">
+          <p>
+            The signer authenticates with GitHub via OIDC. In interactive mode, this opens a browser.
+            In CI (GitHub Actions), ambient OIDC credentials are detected automatically.
+            The result is an OIDC identity token proving the signer's GitHub identity.
+          </p>
+        </bh-accordion-item>
+
+        <bh-accordion-item label="6. Obtain Fulcio certificate">
+          <p>
+            The OIDC token is submitted to Sigstore's Fulcio CA, which issues a short-lived X.509
+            certificate (~10 minutes) binding an ephemeral ECDSA P-256 keypair to the signer's
+            verified GitHub identity. The certificate's Subject Alternative Name (SAN) encodes the identity.
+          </p>
+        </bh-accordion-item>
+
+        <bh-accordion-item label="7. Sign the digest (ECDSA P-256)">
+          <p>
+            The 32-byte SHA-256 digest is signed directly with the ephemeral private key using ECDSA P-256.
+            The signature is computed over the raw digest bytes without re-hashing (prehash mode).
+          </p>
+        </bh-accordion-item>
+
+        <bh-accordion-item label="8. Record in Rekor transparency log">
+          <p>
+            The signature, certificate, and digest are submitted to Rekor as a
+            <code class="code-inline">hashedrekord/v0.0.1</code> entry. Rekor returns a log entry ID,
+            timestamp, and Signed Entry Timestamp (SET). The sidecar is only written after Rekor confirms.
+          </p>
+        </bh-accordion-item>
+
+        <bh-accordion-item label="9. Write sidecar, discard key">
+          <p>
+            The sidecar YAML file (<code class="code-inline">SKILL.md.skillsign</code>) is written with
+            all fields: version, skill_id, skill_version, signer, timestamps, digest, Rekor metadata,
+            certificate, and signature. The ephemeral private key is discarded — it can never be used again.
+          </p>
+        </bh-accordion-item>
+      </bh-accordion>
+    </div>
+  </section>
+
+  <bh-divider spacing="lg"></bh-divider>
+
+  <!-- Verification Flow -->
+  <section class="section">
+    <div class="section-inner">
+      <h2 class="heading-lg">Verification Flow</h2>
+      <p class="text-muted" style="margin-bottom: var(--bh-spacing-8);">
+        Verification checks the signature, certificate chain, signer identity, and optionally
+        enforces a trust policy. Each failure produces a specific result code.
+      </p>
+
+      <bh-accordion>
+        <bh-accordion-item label="1. Locate and parse sidecar" open>
+          <p>
+            The CLI looks for <code class="code-inline">&lt;filename&gt;.md.skillsign</code> adjacent
+            to the SKILL.md file. If no sidecar exists, the result is <code class="code-inline">UNSIGNED</code>
+            (exit code 2). The sidecar is parsed as YAML 1.2 with strict restrictions: no duplicate keys,
+            no anchors/aliases, no tags, max 64KB.
+          </p>
+        </bh-accordion-item>
+
+        <bh-accordion-item label="2. Recompute digest">
+          <p>
+            The canonical form is recomputed from the current SKILL.md file, and the SHA-256 digest
+            is calculated over the same structured byte sequence used during signing.
+          </p>
+        </bh-accordion-item>
+
+        <bh-accordion-item label="3. Verify digest match">
+          <p>
+            The freshly computed digest is compared against the <code class="code-inline">digest</code>
+            field in the sidecar. A mismatch means the file was modified after signing →
+            <code class="code-inline">TAMPERED</code> (exit code 1).
+          </p>
+        </bh-accordion-item>
+
+        <bh-accordion-item label="4. Verify ECDSA signature">
+          <p>
+            The cryptographic signature is verified against the certificate's public key, using the
+            freshly computed digest (not the sidecar's digest field). This ensures the signature
+            was produced by the holder of the certificate's private key.
+          </p>
+        </bh-accordion-item>
+
+        <bh-accordion-item label="5. Verify certificate chain">
+          <p>
+            The certificate chain is validated against the Sigstore TUF root to confirm it was
+            issued by Fulcio. The Extended Key Usage (EKU) must include
+            <code class="code-inline">id-kp-codeSigning</code>. In offline mode, the bundled
+            TUF root is used.
+          </p>
+        </bh-accordion-item>
+
+        <bh-accordion-item label="6. Verify signer identity (SAN match)">
+          <p>
+            The certificate's Subject Alternative Name is compared against the
+            <code class="code-inline">signer</code> field in the sidecar. The match is case-sensitive
+            and exact. URI SANs are used for GitHub identities; email SANs for personal OAuth.
+            A mismatch → <code class="code-inline">IDENTITY_MISMATCH</code> (exit code 1).
+          </p>
+        </bh-accordion-item>
+
+        <bh-accordion-item label="7. Verify temporal validity (SET)">
+          <p>
+            The Rekor Signed Entry Timestamp (SET) is verified against Rekor's public key,
+            then its embedded timestamp is checked against the certificate's validity window.
+            This proves signing occurred while the certificate was valid — without needing
+            a live Rekor query.
+          </p>
+        </bh-accordion-item>
+
+        <bh-accordion-item label="8. Strict mode checks (optional)">
+          <p>
+            With <code class="code-inline">--strict</code>, the CLI additionally confirms the
+            <code class="code-inline">rekor_log_id</code> exists in Rekor as a
+            <code class="code-inline">hashedrekord/v0.0.1</code> entry and the entry's digest matches.
+          </p>
+        </bh-accordion-item>
+
+        <bh-accordion-item label="9. Owner-path consistency check">
+          <p>
+            The <code class="code-inline">skill_id</code> owner path is compared against the
+            <code class="code-inline">signer</code> owner path. For example, a skill at
+            <code class="code-inline">github.com/org/skill</code> signed by
+            <code class="code-inline">https://github.com/different-org</code> triggers
+            <code class="code-inline">SKILL_ID_MISMATCH</code>. This can be downgraded to a
+            warning via <code class="code-inline">--allow-id-mismatch</code>.
+          </p>
+        </bh-accordion-item>
+
+        <bh-accordion-item label="10. Apply trust policy (optional)">
+          <p>
+            If a <code class="code-inline">.skillsign-policy.yaml</code> is provided via
+            <code class="code-inline">--policy</code>, the policy engine evaluates rules
+            (allowed signers, orgs, max age) after cryptographic verification. Policy failures
+            produce <code class="code-inline">POLICY_FAIL</code> (exit code 3).
+          </p>
+        </bh-accordion-item>
+      </bh-accordion>
+    </div>
+  </section>
+
+  <!-- Verification Results -->
+  <section class="section section-alt">
+    <div class="section-inner">
+      <h2 class="heading-lg">Verification Results</h2>
+      <p class="text-muted" style="margin-bottom: var(--bh-spacing-8);">
+        Every verification attempt produces one of these results, each with a specific exit code
+        for CI integration.
+      </p>
+
+      <bh-grid gap="md" min="320px">
+        <bh-card variant="outlined" padding="md">
+          <div slot="header">
+            <bh-badge variant="success">Exit 0</bh-badge>
+            <span class="heading-sm" style="margin-left: var(--bh-spacing-2);">VERIFIED</span>
+          </div>
+          Signature valid, signer identity confirmed, content unmodified.
+        </bh-card>
+
+        <bh-card variant="outlined" padding="md">
+          <div slot="header">
+            <bh-badge variant="danger">Exit 1</bh-badge>
+            <span class="heading-sm" style="margin-left: var(--bh-spacing-2);">TAMPERED</span>
+          </div>
+          Digest mismatch — the file has been modified after signing.
+        </bh-card>
+
+        <bh-card variant="outlined" padding="md">
+          <div slot="header">
+            <bh-badge variant="danger">Exit 1</bh-badge>
+            <span class="heading-sm" style="margin-left: var(--bh-spacing-2);">INVALID_CERT</span>
+          </div>
+          Certificate cannot be verified against the Fulcio root.
+        </bh-card>
+
+        <bh-card variant="outlined" padding="md">
+          <div slot="header">
+            <bh-badge variant="danger">Exit 1</bh-badge>
+            <span class="heading-sm" style="margin-left: var(--bh-spacing-2);">IDENTITY_MISMATCH</span>
+          </div>
+          Certificate SAN does not match the claimed signer.
+        </bh-card>
+
+        <bh-card variant="outlined" padding="md">
+          <div slot="header">
+            <bh-badge variant="warning">Exit 2</bh-badge>
+            <span class="heading-sm" style="margin-left: var(--bh-spacing-2);">UNSIGNED</span>
+          </div>
+          No sidecar file found. Not a hard failure by default.
+        </bh-card>
+
+        <bh-card variant="outlined" padding="md">
+          <div slot="header">
+            <bh-badge variant="warning">Exit 3</bh-badge>
+            <span class="heading-sm" style="margin-left: var(--bh-spacing-2);">POLICY_FAIL</span>
+          </div>
+          Signature is valid but does not meet the caller's trust policy.
+        </bh-card>
+
+        <bh-card variant="outlined" padding="md">
+          <div slot="header">
+            <bh-badge variant="danger">Exit 1</bh-badge>
+            <span class="heading-sm" style="margin-left: var(--bh-spacing-2);">SKILL_ID_MISMATCH</span>
+          </div>
+          Skill_id owner path doesn't match signer owner path.
+        </bh-card>
+
+        <bh-card variant="outlined" padding="md">
+          <div slot="header">
+            <bh-badge variant="danger">Exit 1</bh-badge>
+            <span class="heading-sm" style="margin-left: var(--bh-spacing-2);">MALFORMED_SIDECAR</span>
+          </div>
+          Sidecar file is present but cannot be parsed or has invalid structure.
+        </bh-card>
+      </bh-grid>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section text-center">
+    <h2 class="heading-lg">Ready to get started?</h2>
+    <p class="text-muted" style="margin-top: var(--bh-spacing-2); margin-bottom: var(--bh-spacing-6);">
+      Install SkillSign and sign your first skill in under a minute.
+    </p>
+    <bh-button variant="primary" size="lg" onclick={`window.location.href='${base}getting-started'`}>
+      Quick Start Guide →
+    </bh-button>
+  </section>
+</Base>
+
+<style>
+  .page-header {
+    padding: var(--bh-spacing-20) var(--bh-spacing-6) var(--bh-spacing-12);
+    max-width: 72rem;
+    margin: 0 auto;
+  }
+
+  .header-subtitle {
+    font-size: var(--bh-text-lg);
+    max-width: 42rem;
+    margin-top: var(--bh-spacing-4);
+    line-height: var(--bh-leading-relaxed);
+  }
+
+  .section-inner {
+    max-width: 72rem;
+    margin: 0 auto;
+  }
+
+  .flow-list {
+    list-style: none;
+    padding: 0;
+    margin: var(--bh-spacing-3) 0;
+  }
+
+  .flow-list li {
+    padding: var(--bh-spacing-1) 0;
+    padding-left: var(--bh-spacing-5);
+    position: relative;
+  }
+
+  .flow-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--bh-color-primary);
+  }
+
+  @media (max-width: 768px) {
+    .page-header {
+      padding: var(--bh-spacing-12) var(--bh-spacing-4) var(--bh-spacing-8);
+    }
+  }
+</style>

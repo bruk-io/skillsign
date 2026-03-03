@@ -1,0 +1,10 @@
+:root {
+  --bh-z-base: 0;
+  --bh-z-dropdown: 100;
+  --bh-z-sticky: 200;
+  --bh-z-fixed: 300;
+  --bh-z-overlay: 400;
+  --bh-z-modal: 500;
+  --bh-z-popover: 600;
+  --bh-z-tooltip: 700;
+}

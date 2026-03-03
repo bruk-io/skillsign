@@ -22,5 +22,11 @@ htmlcov/
 # ruff
 .ruff_cache/
 
+# Site build outputs
+_mkdocs_build/
+site/dist/
+site/node_modules/
+site/.astro/
+
 # Claude Code worktrees (duplicate architecture files cause likec4 validate failures)
 .claude/worktrees/

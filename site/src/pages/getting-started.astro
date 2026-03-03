@@ -1,0 +1,381 @@
+---
+import Base from '../layouts/Base.astro';
+const rawBase = import.meta.env.BASE_URL;
+const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
+---
+
+<Base title="Getting Started — SkillSign">
+  <section class="page-header">
+    <h1 class="heading-xl">Getting Started</h1>
+    <p class="text-muted header-subtitle">
+      Install SkillSign, sign your first skill, and verify it — all in under a minute.
+    </p>
+  </section>
+
+  <!-- Prerequisites -->
+  <section class="section">
+    <div class="section-inner">
+      <h2 class="heading-lg">Prerequisites</h2>
+      <bh-grid gap="md" min="240px" style="margin-top: var(--bh-spacing-8)">
+        <bh-card variant="outlined" padding="md">
+          <div slot="header"><span class="heading-sm">GitHub Account</span></div>
+          SkillSign uses GitHub OIDC for identity. You'll authenticate via your browser
+          (or GitHub Actions OIDC in CI).
+        </bh-card>
+        <bh-card variant="outlined" padding="md">
+          <div slot="header"><span class="heading-sm">Python 3.14+</span></div>
+          SkillSign is a Python CLI tool. You need Python 3.14 or later installed.
+        </bh-card>
+        <bh-card variant="outlined" padding="md">
+          <div slot="header"><span class="heading-sm">A SKILL.md file</span></div>
+          The file you want to sign. Any valid SKILL.md file works — SkillSign handles
+          normalization automatically.
+        </bh-card>
+      </bh-grid>
+    </div>
+  </section>
+
+  <!-- Install -->
+  <section class="section section-alt">
+    <div class="section-inner">
+      <h2 class="heading-lg">Install</h2>
+      <p class="text-muted" style="margin-bottom: var(--bh-spacing-8);">
+        Choose your preferred installation method.
+      </p>
+
+      <div class="install-tabs">
+        <bh-tabs active="pip">
+          <bh-tab-bar slot="tab-bar">
+            <bh-tab tab-id="pip">pip</bh-tab>
+            <bh-tab tab-id="uvx">uvx (no install)</bh-tab>
+            <bh-tab tab-id="brew">Homebrew</bh-tab>
+          </bh-tab-bar>
+          <bh-tab-panel tab-id="pip">
+            <div class="install-step">
+              <div class="code-block"><span class="code-prompt">$</span> pip install skillsign</div>
+              <p class="text-muted" style="margin-top: var(--bh-spacing-3);">
+                Installs the <code class="code-inline">skillsign</code> CLI globally.
+              </p>
+            </div>
+          </bh-tab-panel>
+          <bh-tab-panel tab-id="uvx">
+            <div class="install-step">
+              <div class="code-block"><span class="code-prompt">$</span> uvx skillsign sign ./SKILL.md</div>
+              <p class="text-muted" style="margin-top: var(--bh-spacing-3);">
+                Run directly without installing. UV handles the ephemeral environment.
+              </p>
+            </div>
+          </bh-tab-panel>
+          <bh-tab-panel tab-id="brew">
+            <div class="install-step">
+              <div class="code-block"><span class="code-prompt">$</span> brew install bruk-io/tap/skillsign</div>
+              <p class="text-muted" style="margin-top: var(--bh-spacing-3);">
+                Install via Homebrew tap for macOS and Linux.
+              </p>
+            </div>
+          </bh-tab-panel>
+        </bh-tabs>
+      </div>
+
+      <div class="verify-install" style="margin-top: var(--bh-spacing-8);">
+        <p class="text-muted" style="margin-bottom: var(--bh-spacing-3);">Verify the installation:</p>
+        <div class="code-block"><span class="code-prompt">$</span> skillsign --version
+skillsign 0.1.0</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sign Your First Skill -->
+  <section class="section">
+    <div class="section-inner">
+      <h2 class="heading-lg">Sign your first skill</h2>
+
+      <div class="tutorial-steps">
+        <div class="tutorial-step">
+          <div class="tutorial-step-header">
+            <span class="step-badge">1</span>
+            <h3 class="heading-sm">Create a manifest</h3>
+          </div>
+          <p class="text-muted">
+            Create a <code class="code-inline">skillsign.yaml</code> in the same directory as your SKILL.md:
+          </p>
+          <div class="code-block" style="margin-top: var(--bh-spacing-3);"># skillsign.yaml
+skill_id: github.com/your-org/your-skill
+skill_version: 1.0.0</div>
+        </div>
+
+        <div class="tutorial-step">
+          <div class="tutorial-step-header">
+            <span class="step-badge">2</span>
+            <h3 class="heading-sm">Authenticate with GitHub</h3>
+          </div>
+          <p class="text-muted">
+            This opens your browser for GitHub OIDC authentication:
+          </p>
+          <div class="code-block" style="margin-top: var(--bh-spacing-3);"><span class="code-prompt">$</span> skillsign auth login
+
+Opening browser for GitHub authentication...
+✓ Authenticated as github.com/your-username</div>
+        </div>
+
+        <div class="tutorial-step">
+          <div class="tutorial-step-header">
+            <span class="step-badge">3</span>
+            <h3 class="heading-sm">Sign the skill</h3>
+          </div>
+          <p class="text-muted">
+            Sign your SKILL.md file. SkillSign reads the manifest, computes the canonical
+            form, obtains a certificate, signs, and records in Rekor:
+          </p>
+          <div class="code-block" style="margin-top: var(--bh-spacing-3);"><span class="code-prompt">$</span> skillsign sign ./SKILL.md
+
+✓ Signed by: github.com/your-username
+✓ Skill: github.com/your-org/your-skill@1.0.0
+✓ Certificate issued: 2026-03-03T10:00:00Z (expires 2026-03-03T10:10:00Z)
+✓ Rekor log entry: https://rekor.sigstore.dev/api/v1/log/entries/24296fb2...
+✓ Signature written to: SKILL.md.skillsign</div>
+        </div>
+
+        <div class="tutorial-step">
+          <div class="tutorial-step-header">
+            <span class="step-badge">✓</span>
+            <h3 class="heading-sm">Done!</h3>
+          </div>
+          <p class="text-muted">
+            You now have a <code class="code-inline">SKILL.md.skillsign</code> sidecar file.
+            Distribute it alongside your SKILL.md — consumers can verify your authorship.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Verify a Skill -->
+  <section class="section section-alt">
+    <div class="section-inner">
+      <h2 class="heading-lg">Verify a skill</h2>
+
+      <div class="tutorial-steps">
+        <div class="tutorial-step">
+          <div class="tutorial-step-header">
+            <span class="step-badge">1</span>
+            <h3 class="heading-sm">Basic verification</h3>
+          </div>
+          <p class="text-muted">
+            Verify a skill file and its sidecar:
+          </p>
+          <div class="code-block" style="margin-top: var(--bh-spacing-3);"><span class="code-prompt">$</span> skillsign verify ./SKILL.md
+
+✓ Sidecar parsed (version: 1)
+✓ Digest verified (sha256:e3b0c4...)
+✓ Signature valid (ECDSA P-256)
+✓ Certificate chain verified
+✓ Identity: https://github.com/your-username
+✓ Rekor entry confirmed
+
+<span class="code-success">VERIFIED</span> — signed by github.com/your-username</div>
+        </div>
+
+        <div class="tutorial-step">
+          <div class="tutorial-step-header">
+            <span class="step-badge">2</span>
+            <h3 class="heading-sm">Strict mode (optional)</h3>
+          </div>
+          <p class="text-muted">
+            For higher assurance, use <code class="code-inline">--strict</code> to require
+            live Rekor confirmation:
+          </p>
+          <div class="code-block" style="margin-top: var(--bh-spacing-3);"><span class="code-prompt">$</span> skillsign verify --strict ./SKILL.md</div>
+        </div>
+
+        <div class="tutorial-step">
+          <div class="tutorial-step-header">
+            <span class="step-badge">3</span>
+            <h3 class="heading-sm">With trust policy (optional)</h3>
+          </div>
+          <p class="text-muted">
+            Enforce organizational trust rules:
+          </p>
+          <div class="code-block" style="margin-top: var(--bh-spacing-3);"><span class="code-prompt">$</span> skillsign verify --policy .skillsign-policy.yaml ./SKILL.md</div>
+          <p class="text-muted" style="margin-top: var(--bh-spacing-3);">
+            Policy files can restrict which signers, organizations, and signature ages are acceptable.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Exit Codes for CI -->
+  <section class="section">
+    <div class="section-inner">
+      <h2 class="heading-lg">CI Integration</h2>
+      <p class="text-muted" style="margin-bottom: var(--bh-spacing-8);">
+        SkillSign uses specific exit codes for easy CI pipeline integration.
+      </p>
+      <div class="exit-code-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Exit Code</th>
+              <th>Meaning</th>
+              <th>CI Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code class="code-inline">0</code></td>
+              <td>VERIFIED</td>
+              <td class="text-muted">Proceed — skill is trusted</td>
+            </tr>
+            <tr>
+              <td><code class="code-inline">1</code></td>
+              <td>Hard failure (TAMPERED, INVALID_CERT, etc.)</td>
+              <td class="text-muted">Block — do not execute</td>
+            </tr>
+            <tr>
+              <td><code class="code-inline">2</code></td>
+              <td>UNSIGNED</td>
+              <td class="text-muted">Decide based on policy</td>
+            </tr>
+            <tr>
+              <td><code class="code-inline">3</code></td>
+              <td>POLICY_FAIL</td>
+              <td class="text-muted">Block — doesn't meet trust policy</td>
+            </tr>
+            <tr>
+              <td><code class="code-inline">10</code></td>
+              <td>CLI error</td>
+              <td class="text-muted">Investigate — bad input or config</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: var(--bh-spacing-8);">
+        <h3 class="heading-sm" style="margin-bottom: var(--bh-spacing-4);">GitHub Actions example</h3>
+        <div class="code-block">- name: Verify skill signatures
+  run: |
+    pip install skillsign
+    skillsign verify --policy .skillsign-policy.yaml ./skills/**/*.md</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Next Steps -->
+  <section class="section section-alt text-center">
+    <h2 class="heading-lg">Next steps</h2>
+    <p class="text-muted" style="margin-top: var(--bh-spacing-2); margin-bottom: var(--bh-spacing-6); max-width: 36rem; margin-left: auto; margin-right: auto;">
+      Dive deeper into the specification, explore the architecture, or read the full documentation.
+    </p>
+    <bh-cluster gap="md" justify="center">
+      <bh-button variant="secondary" onclick={`window.location.href='${base}how-it-works'`}>
+        How It Works
+      </bh-button>
+      <bh-button variant="secondary" onclick={`window.location.href='${base}docs/'`}>
+        Full Documentation
+      </bh-button>
+      <bh-button variant="secondary" onclick="window.location.href='https://github.com/bruk-io/skillsign'">
+        Source Code
+      </bh-button>
+    </bh-cluster>
+  </section>
+</Base>
+
+<style>
+  .page-header {
+    padding: var(--bh-spacing-20) var(--bh-spacing-6) var(--bh-spacing-12);
+    max-width: 72rem;
+    margin: 0 auto;
+  }
+
+  .header-subtitle {
+    font-size: var(--bh-text-lg);
+    max-width: 42rem;
+    margin-top: var(--bh-spacing-4);
+    line-height: var(--bh-leading-relaxed);
+  }
+
+  .section-inner {
+    max-width: 72rem;
+    margin: 0 auto;
+  }
+
+  /* Install */
+  .install-tabs {
+    max-width: 42rem;
+  }
+
+  .install-step {
+    margin-top: var(--bh-spacing-4);
+  }
+
+  .code-prompt {
+    color: var(--bh-color-primary);
+    user-select: none;
+  }
+
+  .code-success {
+    color: var(--bh-color-success);
+    font-weight: var(--bh-font-bold);
+  }
+
+  /* Tutorial */
+  .tutorial-steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bh-spacing-10);
+    margin-top: var(--bh-spacing-8);
+  }
+
+  .tutorial-step-header {
+    display: flex;
+    align-items: center;
+    gap: var(--bh-spacing-3);
+    margin-bottom: var(--bh-spacing-3);
+  }
+
+  .step-badge {
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--bh-radius-full);
+    background: var(--bh-color-primary);
+    color: var(--bh-color-primary-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--bh-font-bold);
+    font-size: var(--bh-text-sm);
+    flex-shrink: 0;
+  }
+
+  /* Exit codes table */
+  .exit-code-table {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--bh-text-sm);
+  }
+
+  th, td {
+    text-align: left;
+    padding: var(--bh-spacing-3) var(--bh-spacing-4);
+    border-bottom: 1px solid var(--bh-color-border);
+  }
+
+  th {
+    font-weight: var(--bh-font-semibold);
+    color: var(--bh-color-text-muted);
+    font-size: var(--bh-text-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--bh-tracking-wider);
+  }
+
+  @media (max-width: 768px) {
+    .page-header {
+      padding: var(--bh-spacing-12) var(--bh-spacing-4) var(--bh-spacing-8);
+    }
+  }
+</style>
