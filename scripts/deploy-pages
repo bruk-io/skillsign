@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Deploy versioned build assets to the gh-pages branch.
+#
+# Usage:
+#   ./scripts/deploy-pages main ./_build
+#   ./scripts/deploy-pages v0.1.0 ./_build
+
+VERSION="${1:?Usage: deploy-pages <version> <build-dir>}"
+BUILD_DIR="${2:?Usage: deploy-pages <version> <build-dir>}"
+
+if [ ! -d "$BUILD_DIR" ]; then
+    echo "ERROR: Build directory '$BUILD_DIR' does not exist. Run 'make build' first."
+    exit 1
+fi
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+WORK_DIR="$(mktemp -d)"
+trap 'cd "$REPO_ROOT" && git worktree remove "$WORK_DIR" 2>/dev/null || rm -rf "$WORK_DIR"' EXIT
+
+echo "Deploying version: $VERSION"
+
+# Create gh-pages branch if it doesn't exist (without touching working tree)
+if ! git show-ref --verify --quiet refs/heads/gh-pages 2>/dev/null && \
+   ! git show-ref --verify --quiet refs/remotes/origin/gh-pages 2>/dev/null; then
+    # Create an orphan commit using plumbing commands (no working tree impact)
+    EMPTY_TREE="$(git hash-object -t tree /dev/null)"
+    ORPHAN_COMMIT="$(git commit-tree "$EMPTY_TREE" -m 'Initialize gh-pages')"
+    git branch gh-pages "$ORPHAN_COMMIT"
+    echo "Created orphan gh-pages branch."
+fi
+
+git worktree add "$WORK_DIR" gh-pages
+
+# Copy build into version directory
+rm -rf "${WORK_DIR:?}/$VERSION"
+cp -r "$BUILD_DIR" "$WORK_DIR/$VERSION"
+
+# If this is a release (not "main"), update the "latest" alias
+if [ "$VERSION" != "main" ]; then
+    rm -rf "$WORK_DIR/latest"
+    cp -r "$BUILD_DIR" "$WORK_DIR/latest"
+fi
+
+# Update versions.json
+python3 -c "
+import json
+from pathlib import Path
+
+versions_path = Path('$WORK_DIR/versions.json')
+versions = json.loads(versions_path.read_text()) if versions_path.exists() else []
+
+# Remove existing entry for this version
+versions = [v for v in versions if v['version'] != '$VERSION']
+
+# Add new entry
+entry = {'version': '$VERSION', 'title': '$VERSION'}
+if '$VERSION' == 'main':
+    entry['title'] = 'main (dev)'
+    # main goes at the end
+    versions.append(entry)
+else:
+    entry['aliases'] = ['latest']
+    # releases go at the front (newest first)
+    versions.insert(0, entry)
+
+versions_path.write_text(json.dumps(versions, indent=2) + '\n')
+"
+
+# Create root index.html redirect
+cat > "$WORK_DIR/index.html" << 'REDIRECT'
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="0; url=latest/">
+  <link rel="canonical" href="latest/">
+  <title>Redirecting...</title>
+</head>
+<body>
+  <p>Redirecting to <a href="latest/">latest version</a>...</p>
+</body>
+</html>
+REDIRECT
+
+# Ensure GitHub Pages doesn't process with Jekyll
+touch "$WORK_DIR/.nojekyll"
+
+# Commit
+cd "$WORK_DIR"
+git add -A
+if git diff --cached --quiet; then
+    echo "No changes to deploy."
+else
+    git commit -m "Deploy $VERSION"
+    echo "Committed to gh-pages."
+fi

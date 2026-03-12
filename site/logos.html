@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logo Concepts — SkillSign</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/site.css">
+  <script type="module" src="vendor/bh-01/bh-01.bundled.js"></script>
+  <style>
+    .logo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--bh-spacing-6);
+      margin-top: var(--bh-spacing-6);
+    }
+    .logo-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--bh-spacing-4);
+    }
+    .logo-sizes {
+      display: flex;
+      align-items: flex-end;
+      gap: var(--bh-spacing-6);
+    }
+    .logo-size-label {
+      font-size: var(--bh-text-xs);
+      color: var(--bh-color-text-muted);
+      text-align: center;
+    }
+    .logo-preview {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--bh-spacing-2);
+    }
+    .nav-demo {
+      display: flex;
+      align-items: center;
+      gap: var(--bh-spacing-2);
+      padding: var(--bh-spacing-3) var(--bh-spacing-4);
+      background: var(--bh-color-surface);
+      border: 1px solid var(--bh-color-border);
+      border-radius: var(--bh-radius-lg);
+    }
+    .nav-demo .nav-title {
+      font-weight: var(--bh-font-bold);
+      font-size: var(--bh-text-lg);
+    }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <span class="nav-logo">⚡</span>
+        <span class="nav-title">SkillSign</span>
+      </a>
+      <bh-cluster gap="md" class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="logos.html">Logos</a>
+      </bh-cluster>
+    </div>
+  </nav>
+
+  <main>
+    <section class="page-header">
+      <h1 class="heading-xl">Logo Concepts</h1>
+      <p class="text-muted header-subtitle">
+        Each concept shown at 4px, 8px, and 12px pixel size, plus a nav bar mockup.
+      </p>
+    </section>
+
+    <section class="section">
+      <div class="section-inner">
+        <div class="logo-grid">
+
+          <!-- 1. Shield + Checkmark -->
+          <bh-card variant="outlined" padding="lg">
+            <div slot="header"><span class="heading-sm">1. Shield + Checkmark</span></div>
+            <div class="logo-card">
+              <div class="logo-sizes">
+                <div class="logo-preview">
+                  <bh-pixel-display id="shield-sm" cols="12" rows="14" label="Shield small"
+                    style="--bh-pixel-size:4px; --bh-pixel-gap:1px;"></bh-pixel-display>
+                  <span class="logo-size-label">4px</span>
+                </div>
+                <div class="logo-preview">
+                  <bh-pixel-display id="shield-md" cols="12" rows="14" label="Shield medium"
+                    style="--bh-pixel-size:8px; --bh-pixel-gap:1px; --bh-pixel-glow:6px;"></bh-pixel-display>
+                  <span class="logo-size-label">8px</span>
+                </div>
+                <div class="logo-preview">
+                  <bh-pixel-display id="shield-lg" cols="12" rows="14" label="Shield large"
+                    style="--bh-pixel-size:12px; --bh-pixel-gap:2px; --bh-pixel-glow:8px; --bh-pixel-radius:2px;"></bh-pixel-display>
+                  <span class="logo-size-label">12px</span>
+                </div>
+              </div>
+              <div class="nav-demo">
+                <bh-pixel-display id="shield-nav" cols="12" rows="14" label="Shield nav"
+                  style="--bh-pixel-size:3px; --bh-pixel-gap:0px; --bh-pixel-glow:3px;"></bh-pixel-display>
+                <span class="nav-title">SkillSign</span>
+              </div>
+            </div>
+          </bh-card>
+
+          <!-- 2. Magnifying Glass + MD -->
+          <bh-card variant="outlined" padding="lg">
+            <div slot="header"><span class="heading-sm">2. Magnifying Glass + MD</span></div>
+            <div class="logo-card">
+              <div class="logo-sizes">
+                <div class="logo-preview">
+                  <bh-pixel-display id="mag-sm" cols="14" rows="14" label="Magnifier small"
+                    style="--bh-pixel-size:4px; --bh-pixel-gap:1px;"></bh-pixel-display>
+                  <span class="logo-size-label">4px</span>
+                </div>
+                <div class="logo-preview">
+                  <bh-pixel-display id="mag-md" cols="14" rows="14" label="Magnifier medium"
+                    style="--bh-pixel-size:8px; --bh-pixel-gap:1px; --bh-pixel-glow:6px;"></bh-pixel-display>
+                  <span class="logo-size-label">8px</span>
+                </div>
+                <div class="logo-preview">
+                  <bh-pixel-display id="mag-lg" cols="14" rows="14" label="Magnifier large"
+                    style="--bh-pixel-size:12px; --bh-pixel-gap:2px; --bh-pixel-glow:8px; --bh-pixel-radius:2px;"></bh-pixel-display>
+                  <span class="logo-size-label">12px</span>
+                </div>
+              </div>
+              <div class="nav-demo">
+                <bh-pixel-display id="mag-nav" cols="14" rows="14" label="Magnifier nav"
+                  style="--bh-pixel-size:3px; --bh-pixel-gap:0px; --bh-pixel-glow:3px;"></bh-pixel-display>
+                <span class="nav-title">SkillSign</span>
+              </div>
+            </div>
+          </bh-card>
+
+          <!-- 2b. Magnifying Glass + MD (compact) -->
+          <bh-card variant="outlined" padding="lg">
+            <div slot="header"><span class="heading-sm">2b. Magnifier Compact</span></div>
+            <div class="logo-card">
+              <div class="logo-sizes">
+                <div class="logo-preview">
+                  <bh-pixel-display id="magc-sm" cols="12" rows="12" label="Magnifier compact small"
+                    style="--bh-pixel-size:4px; --bh-pixel-gap:1px;"></bh-pixel-display>
+                  <span class="logo-size-label">4px</span>
+                </div>
+                <div class="logo-preview">
+                  <bh-pixel-display id="magc-md" cols="12" rows="12" label="Magnifier compact medium"
+                    style="--bh-pixel-size:8px; --bh-pixel-gap:1px; --bh-pixel-glow:6px;"></bh-pixel-display>
+                  <span class="logo-size-label">8px</span>
+                </div>
+                <div class="logo-preview">
+                  <bh-pixel-display id="magc-lg" cols="12" rows="12" label="Magnifier compact large"
+                    style="--bh-pixel-size:12px; --bh-pixel-gap:2px; --bh-pixel-glow:8px; --bh-pixel-radius:2px;"></bh-pixel-display>
+                  <span class="logo-size-label">12px</span>
+                </div>
+              </div>
+              <div class="nav-demo">
+                <bh-pixel-display id="magc-nav" cols="12" rows="12" label="Magnifier compact nav"
+                  style="--bh-pixel-size:3px; --bh-pixel-gap:0px; --bh-pixel-glow:3px;"></bh-pixel-display>
+                <span class="nav-title">SkillSign</span>
+              </div>
+            </div>
+          </bh-card>
+
+          <!-- 3. Key + SS -->
+          <bh-card variant="outlined" padding="lg">
+            <div slot="header"><span class="heading-sm">3. Key + SS</span></div>
+            <div class="logo-card">
+              <div class="logo-sizes">
+                <div class="logo-preview">
+                  <bh-pixel-display id="keyss-sm" cols="22" rows="7" label="Key+SS small"
+                    style="--bh-pixel-size:4px; --bh-pixel-gap:1px;"></bh-pixel-display>
+                  <span class="logo-size-label">4px</span>
+                </div>
+                <div class="logo-preview">
+                  <bh-pixel-display id="keyss-md" cols="22" rows="7" label="Key+SS medium"
+                    style="--bh-pixel-size:8px; --bh-pixel-gap:1px; --bh-pixel-glow:6px;"></bh-pixel-display>
+                  <span class="logo-size-label">8px</span>
+                </div>
+              </div>
+              <div class="nav-demo">
+                <bh-pixel-display id="keyss-nav" cols="22" rows="7" label="Key+SS nav"
+                  style="--bh-pixel-size:3px; --bh-pixel-gap:0px; --bh-pixel-glow:3px;"></bh-pixel-display>
+                <span class="nav-title">SkillSign</span>
+              </div>
+            </div>
+          </bh-card>
+
+          <!-- 4. Seal -->
+          <bh-card variant="outlined" padding="lg">
+            <div slot="header"><span class="heading-sm">4. Seal / Stamp</span></div>
+            <div class="logo-card">
+              <div class="logo-sizes">
+                <div class="logo-preview">
+                  <bh-pixel-display id="seal-sm" cols="13" rows="13" label="Seal small"
+                    style="--bh-pixel-size:4px; --bh-pixel-gap:1px;"></bh-pixel-display>
+                  <span class="logo-size-label">4px</span>
+                </div>
+                <div class="logo-preview">
+                  <bh-pixel-display id="seal-md" cols="13" rows="13" label="Seal medium"
+                    style="--bh-pixel-size:8px; --bh-pixel-gap:1px; --bh-pixel-glow:6px;"></bh-pixel-display>
+                  <span class="logo-size-label">8px</span>
+                </div>
+                <div class="logo-preview">
+                  <bh-pixel-display id="seal-lg" cols="13" rows="13" label="Seal large"
+                    style="--bh-pixel-size:12px; --bh-pixel-gap:2px; --bh-pixel-glow:8px; --bh-pixel-radius:2px;"></bh-pixel-display>
+                  <span class="logo-size-label">12px</span>
+                </div>
+              </div>
+              <div class="nav-demo">
+                <bh-pixel-display id="seal-nav" cols="13" rows="13" label="Seal nav"
+                  style="--bh-pixel-size:3px; --bh-pixel-gap:0px; --bh-pixel-glow:3px;"></bh-pixel-display>
+                <span class="nav-title">SkillSign</span>
+              </div>
+            </div>
+          </bh-card>
+
+          <!-- 5. SS Monogram -->
+          <bh-card variant="outlined" padding="lg">
+            <div slot="header"><span class="heading-sm">5. SS Monogram</span></div>
+            <div class="logo-card">
+              <div class="logo-sizes">
+                <div class="logo-preview">
+                  <bh-pixel-display id="mono-sm" cols="7" rows="5" label="SS small"
+                    style="--bh-pixel-size:4px; --bh-pixel-gap:1px;"></bh-pixel-display>
+                  <span class="logo-size-label">4px</span>
+                </div>
+                <div class="logo-preview">
+                  <bh-pixel-display id="mono-md" cols="7" rows="5" label="SS medium"
+                    style="--bh-pixel-size:8px; --bh-pixel-gap:1px; --bh-pixel-glow:6px;"></bh-pixel-display>
+                  <span class="logo-size-label">8px</span>
+                </div>
+                <div class="logo-preview">
+                  <bh-pixel-display id="mono-lg" cols="7" rows="5" label="SS large"
+                    style="--bh-pixel-size:12px; --bh-pixel-gap:2px; --bh-pixel-glow:8px; --bh-pixel-radius:2px;"></bh-pixel-display>
+                  <span class="logo-size-label">12px</span>
+                </div>
+              </div>
+              <div class="nav-demo">
+                <bh-pixel-display id="mono-nav" cols="7" rows="5" label="SS nav"
+                  style="--bh-pixel-size:4px; --bh-pixel-gap:1px; --bh-pixel-glow:4px;"></bh-pixel-display>
+                <span class="nav-title">SkillSign</span>
+              </div>
+            </div>
+          </bh-card>
+
+          <!-- 6. Pen Nib -->
+          <bh-card variant="outlined" padding="lg">
+            <div slot="header"><span class="heading-sm">6. Pen Nib (Signing)</span></div>
+            <div class="logo-card">
+              <div class="logo-sizes">
+                <div class="logo-preview">
+                  <bh-pixel-display id="pen-sm" cols="11" rows="13" label="Pen small"
+                    style="--bh-pixel-size:4px; --bh-pixel-gap:1px;"></bh-pixel-display>
+                  <span class="logo-size-label">4px</span>
+                </div>
+                <div class="logo-preview">
+                  <bh-pixel-display id="pen-md" cols="11" rows="13" label="Pen medium"
+                    style="--bh-pixel-size:8px; --bh-pixel-gap:1px; --bh-pixel-glow:6px;"></bh-pixel-display>
+                  <span class="logo-size-label">8px</span>
+                </div>
+                <div class="logo-preview">
+                  <bh-pixel-display id="pen-lg" cols="11" rows="13" label="Pen large"
+                    style="--bh-pixel-size:12px; --bh-pixel-gap:2px; --bh-pixel-glow:8px; --bh-pixel-radius:2px;"></bh-pixel-display>
+                  <span class="logo-size-label">12px</span>
+                </div>
+              </div>
+              <div class="nav-demo">
+                <bh-pixel-display id="pen-nav" cols="11" rows="13" label="Pen nav"
+                  style="--bh-pixel-size:3px; --bh-pixel-gap:0px; --bh-pixel-glow:3px;"></bh-pixel-display>
+                <span class="nav-title">SkillSign</span>
+              </div>
+            </div>
+          </bh-card>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    // P = 1 (primary/mandarin), G = 2 (success/green), W = 3 (warning/yellow)
+    const P = 1, G = 2, W = 3, D = 4, _ = 0;
+
+    function toData(grid) {
+      return new Uint8Array(grid.flat());
+    }
+
+    function setAll(id, data) {
+      const suffixes = ['sm', 'md', 'lg', 'nav'];
+      for (const s of suffixes) {
+        const el = document.getElementById(`${id}-${s}`);
+        if (el) el.data = data;
+      }
+    }
+
+    // 1. Shield + Checkmark (12 cols x 14 rows)
+    // Shield outline in primary, checkmark in green
+    const shield = toData([
+      [_,_,_,P,P,P,P,P,P,_,_,_],
+      [_,_,P,P,P,P,P,P,P,P,_,_],
+      [_,P,P,_,_,_,_,_,_,P,P,_],
+      [_,P,_,_,_,_,_,_,_,_,P,_],
+      [_,P,_,_,_,_,_,_,G,_,P,_],
+      [_,P,_,_,_,_,_,G,_,_,P,_],
+      [_,P,_,G,_,_,G,_,_,_,P,_],
+      [_,P,_,_,G,G,_,_,_,_,P,_],
+      [_,P,_,_,_,_,_,_,_,_,P,_],
+      [_,P,P,_,_,_,_,_,_,P,P,_],
+      [_,_,P,P,_,_,_,_,P,P,_,_],
+      [_,_,_,P,P,_,_,P,P,_,_,_],
+      [_,_,_,_,P,P,P,P,_,_,_,_],
+      [_,_,_,_,_,P,P,_,_,_,_,_],
+    ]);
+    setAll('shield', shield);
+
+    // 2. Magnifying Glass + MD (14 cols x 14 rows)
+    // Lens rim in primary, "MD" text in green inside lens, handle in primary
+    // Pixel font: M=[101,111,101,101,101] D=[110,101,101,101,110]
+    // "MD" placed at cols 3-9, rows 3-7 (centered in 11px diameter lens)
+    const mag = toData([
+      [_,_,_,P,P,P,P,P,_,_,_,_,_,_],
+      [_,_,P,_,_,_,_,_,P,_,_,_,_,_],
+      [_,P,_,_,_,_,_,_,_,P,_,_,_,_],
+      [P,_,_,G,_,G,_,G,G,_,P,_,_,_],  // M:1_1  D:11_
+      [P,_,_,G,G,G,_,G,_,G,P,_,_,_],  // M:111  D:1_1
+      [P,_,_,G,_,G,_,G,_,G,P,_,_,_],  // M:1_1  D:1_1
+      [P,_,_,G,_,G,_,G,_,G,P,_,_,_],  // M:1_1  D:1_1
+      [P,_,_,G,_,G,_,G,G,_,P,_,_,_],  // M:1_1  D:11_
+      [_,P,_,_,_,_,_,_,_,P,_,_,_,_],
+      [_,_,P,_,_,_,_,_,P,P,_,_,_,_],  // handle starts
+      [_,_,_,P,P,P,P,P,_,_,P,_,_,_],
+      [_,_,_,_,_,_,_,_,_,_,_,P,_,_],
+      [_,_,_,_,_,_,_,_,_,_,_,_,P,_],
+      [_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+    ]);
+    setAll('mag', mag);
+
+    // 2b. Magnifying Glass Compact (12 cols x 12 rows)
+    // Tighter lens (9px diameter), "MD" snug inside, shorter handle
+    const magc = toData([
+      [_,_,_,P,P,P,P,_,_,_,_,_],
+      [_,_,P,_,_,_,_,P,_,_,_,_],
+      [_,P,_,_,_,_,_,_,P,_,_,_],
+      [P,_,G,_,G,_,G,G,_,P,_,_],  // M:1_1  D:11_
+      [P,_,G,G,G,_,G,_,G,P,_,_],  // M:111  D:1_1
+      [P,_,G,_,G,_,G,_,G,P,_,_],  // M:1_1  D:1_1
+      [P,_,G,_,G,_,G,_,G,P,_,_],  // M:1_1  D:1_1
+      [P,_,G,_,G,_,G,G,_,P,_,_],  // M:1_1  D:11_
+      [_,P,_,_,_,_,_,_,P,_,_,_],
+      [_,_,P,P,P,P,P,P,P,P,_,_],  // bottom + handle merge
+      [_,_,_,_,_,_,_,_,_,P,P,_],
+      [_,_,_,_,_,_,_,_,_,_,P,P],
+    ]);
+    setAll('magc', magc);
+
+    // 3. Key + SS (22 cols x 7 rows)
+    // Horizontal skeleton key in primary, "SS" text in green
+    // Key: circle head (cols 0-5) + shaft (cols 6-12) + teeth
+    // SS: cols 14-20
+    const keyss = toData([
+      [_,P,P,P,_,_,_,_,_,_,_,_,_,_,_,G,G,_,G,G,_,_],
+      [P,_,_,_,P,_,_,_,_,_,_,_,_,_,G,_,_,_,G,_,_,_],
+      [P,_,_,_,P,P,P,P,P,P,P,P,_,_,_,G,_,_,_,G,_,_],
+      [P,_,_,_,P,_,_,_,_,_,_,_,_,_,_,_,G,_,_,_,G,_],
+      [P,_,_,_,P,P,P,P,P,P,_,_,_,_,G,_,_,_,G,_,_,_],
+      [_,P,P,P,_,_,_,P,_,P,_,_,_,_,_,G,G,_,_,G,G,_],
+      [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+    ]);
+    setAll('keyss', keyss);
+
+    // 4. Seal / Stamp (13 cols x 13 rows)
+    // Circle outline in warning (wax-seal color), checkmark in primary
+    const seal = toData([
+      [_,_,_,_,W,W,W,W,W,_,_,_,_],
+      [_,_,W,W,_,_,_,_,_,W,W,_,_],
+      [_,W,_,_,_,_,_,_,_,_,_,W,_],
+      [_,W,_,_,_,_,_,_,_,_,_,W,_],
+      [W,_,_,_,_,_,_,_,P,_,_,_,W],
+      [W,_,_,_,_,_,_,P,_,_,_,_,W],
+      [W,_,_,P,_,_,P,_,_,_,_,_,W],
+      [W,_,_,_,P,P,_,_,_,_,_,_,W],
+      [W,_,_,_,_,_,_,_,_,_,_,_,W],
+      [_,W,_,_,_,_,_,_,_,_,_,W,_],
+      [_,W,_,_,_,_,_,_,_,_,_,W,_],
+      [_,_,W,W,_,_,_,_,_,W,W,_,_],
+      [_,_,_,_,W,W,W,W,W,_,_,_,_],
+    ]);
+    setAll('seal', seal);
+
+    // 5. SS Monogram (7 cols x 5 rows)
+    // "SS" in primary using the pixel font layout (3px wide chars, 1px gap)
+    const mono = toData([
+      [_,P,P,_,_,P,P],
+      [P,_,_,_,P,_,_],
+      [_,P,_,_,_,P,_],
+      [_,_,P,_,_,_,P],
+      [P,P,_,_,P,P,_],
+    ]);
+    setAll('mono', mono);
+
+    // 6. Pen Nib — a signing pen angled down-left (11 cols x 13 rows)
+    // Pen body in primary, nib tip with green "ink" trail
+    const pen = toData([
+      [_,_,_,_,_,_,_,_,_,P,P],
+      [_,_,_,_,_,_,_,_,P,P,_],
+      [_,_,_,_,_,_,_,P,P,_,_],
+      [_,_,_,_,_,_,P,P,P,_,_],
+      [_,_,_,_,_,P,P,_,P,_,_],
+      [_,_,_,_,P,P,_,_,_,_,_],
+      [_,_,_,P,P,_,_,_,_,_,_],
+      [_,_,P,P,_,_,_,_,_,_,_],
+      [_,P,P,_,_,_,_,_,_,_,_],
+      [_,P,_,_,_,_,_,_,_,_,_],
+      [G,_,_,_,_,_,_,_,_,_,_],
+      [_,G,G,G,G,_,_,_,_,_,_],
+      [_,_,_,_,_,_,_,_,_,_,_],
+    ]);
+    setAll('pen', pen);
+  </script>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="nav-logo">⚡</span>
+        <span>SkillSign</span>
+      </div>
+      <div class="footer-copy text-muted">
+        &copy; 2026 SkillSign. MIT License.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

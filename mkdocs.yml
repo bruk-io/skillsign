@@ -1,66 +1,59 @@
 site_name: SkillSign
-site_dir: _mkdocs_build
 site_description: Cryptographic signing and verification for Claude Code SKILL.md files
-site_author: Bruk Habtu
+site_url: https://bruk-io.github.io/skillsign/
 repo_url: https://github.com/bruk-io/skillsign
 repo_name: bruk-io/skillsign
-edit_uri: edit/main/docs/
 
 theme:
   name: material
-  features:
-    - navigation.tabs
-    - navigation.tabs.sticky
-    - navigation.sections
-    - navigation.expand
-    - navigation.top
-    - search.suggest
-    - search.highlight
-    - content.code.copy
-    - content.code.annotate
   palette:
-    - scheme: default
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
       primary: deep orange
-      accent: deep orange
+      accent: orange
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
-    - scheme: slate
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
       primary: deep orange
-      accent: deep orange
+      accent: orange
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - content.code.copy
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
+exclude_docs: |
+  Makefile
+  _build/
 
 plugins:
   - search
-  - mkdocstrings:
-      handlers:
-        python:
-          options:
-            show_source: true
-            show_root_heading: true
-            members_order: source
 
 markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
   - pymdownx.highlight:
       anchor_linenums: true
-  - pymdownx.superfences
+  - pymdownx.inlinehilite
   - pymdownx.tabbed:
       alternate_style: true
-  - pymdownx.details
-  - admonition
-  - attr_list
-  - md_in_html
+  - tables
   - toc:
       permalink: true
 
 nav:
   - Home: index.md
-  - Getting Started:
-      - Installation: getting-started/installation.md
-      - Quick Start: getting-started/quickstart.md
-  - Reference:
-      - Specification: spec.md
-      - Roadmap: roadmap.md
-      - API Reference: api/index.md
+  - Specification: spec.md
+  - Roadmap: roadmap.md
+  - Architecture: architecture.md
