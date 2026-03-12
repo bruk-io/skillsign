@@ -1,24 +1,39 @@
-# SkillSign Documentation
+# SkillSign
 
-Cryptographic signing and verification for Claude Code SKILL.md files using Sigstore keyless signing.
+Cryptographic signing and verification for Claude Code SKILL.md files using [Sigstore](https://www.sigstore.dev/) keyless signing.
 
-## Overview
+## What is SkillSign?
 
-SkillSign provides a trust and signing standard for Claude Code skills. It establishes authorship, integrity, and a chain of custody for SKILL.md files — without requiring authors to manage long-lived private keys.
+Claude Code skills — distributed as `SKILL.md` files — are increasingly being shared via npm, GitHub repositories, and informal channels. These files aren't documentation. When loaded by Claude Code, they execute as instructions with access to the filesystem, shell, network, and any configured tools.
 
-**Key features:**
+SkillSign establishes **authorship**, **integrity**, and a **chain of custody** for these files — without requiring authors to manage long-lived private keys.
 
-- **Keyless signing** via Sigstore — no private keys to manage
-- **GitHub identity** binding via OIDC
-- **Transparency logging** via Rekor
-- **Detached signatures** — SKILL.md files stay clean
-- **Policy engine** for organizational trust decisions
-- **CI-friendly** exit codes for pipeline integration
+## Quick Start
 
-## Quick Links
+```bash
+# Install
+uv tool install skillsign
 
-- [Installation](getting-started/installation.md) — Install the CLI
-- [Quick Start](getting-started/quickstart.md) — Sign and verify your first skill
-- [Specification](spec.md) — The full v0.1 spec
-- [Roadmap](roadmap.md) — What's planned
-- [API Reference](api/index.md) — Python API docs
+# Sign a skill (authenticates via GitHub OIDC)
+skillsign sign ./SKILL.md
+
+# Verify a skill
+skillsign verify ./SKILL.md
+```
+
+## How It Works
+
+1. **Sign** — The author authenticates via GitHub OIDC, SkillSign obtains a short-lived certificate from Fulcio, signs the skill's canonical form, and logs the signature to Rekor's transparency log.
+2. **Verify** — A consumer checks the signature, certificate chain, identity, and transparency log entry to confirm the skill is authentic and untampered.
+
+The signature is stored in a detached `.skillsign` sidecar file alongside the `SKILL.md`.
+
+## Architecture
+
+Explore the interactive [architecture diagrams](architecture/) built with [LikeC4](https://likec4.dev/).
+
+## Links
+
+- [Specification](spec.md) — The full v0.1 draft specification
+- [Roadmap](roadmap.md) — Development phases and deliverables
+- [GitHub](https://github.com/bruk-io/skillsign) — Source code
