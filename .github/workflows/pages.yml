@@ -41,7 +41,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Build all assets
-        run: make build
+        run: make build VERSION="$DEPLOY_VERSION" BASE_PREFIX="/${{ github.event.repository.name }}"
 
       - name: Deploy to gh-pages
         run: |

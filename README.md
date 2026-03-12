@@ -121,7 +121,7 @@ skillsign/
 │   └── errors.py       # Error types and exit codes
 ├── tests/              # Unit, integration, and e2e tests
 ├── architecture/       # C4 model (LikeC4 DSL)
-├── site/               # Product website (Astro + bh-01)
+├── site/               # Product website (HTML + bh-01)
 ├── docs/               # Developer docs (MkDocs)
 └── pyproject.toml
 ```
@@ -129,8 +129,9 @@ skillsign/
 ## Documentation
 
 - [Specification](docs/spec.md) — v0.1 draft, the source of truth for all behavior
-- [Product site](https://bruk-io.github.io/skillsign/) — Overview, how it works, getting started
-- [Dev docs](https://bruk-io.github.io/skillsign/docs/) — API reference and developer guides
+- [Product site](https://bruk-io.github.io/skillsign/main/) — Overview, how it works, getting started
+- [Dev docs](https://bruk-io.github.io/skillsign/main/docs/) — API reference and developer guides
+- [Architecture](https://bruk-io.github.io/skillsign/main/architecture/) — Interactive C4 diagrams (LikeC4)
 
 ## License
 
