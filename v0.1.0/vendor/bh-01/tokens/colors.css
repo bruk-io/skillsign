@@ -1,0 +1,42 @@
+:root {
+  /* Base */
+  --bh-color-black: #000000;
+  --bh-color-white: #FFFFFF;
+
+  /* Accents */
+  --bh-color-mandarin: #FF6B35;
+  --bh-color-mandarin-light: #FF8B4D;
+  --bh-color-mandarin-lighter: #FFAA75;
+  --bh-color-mandarin-dark: #E85A28;
+  --bh-color-mandarin-darker: #C4461C;
+
+  --bh-color-sky: #5DAFD6;
+
+  --bh-color-pomegranate: #F83E1F;
+
+  --bh-color-amaranth: #E92C63;
+  --bh-color-amaranth-light: #F04E77;
+  --bh-color-amaranth-lighter: #F47090;
+  --bh-color-amaranth-dark: #D11A50;
+  --bh-color-amaranth-darker: #B8163F;
+
+  /* Dark neutrals */
+  --bh-color-cod: #0D0C0A;
+  --bh-color-night: #111110;
+  --bh-color-thunder: #151412;
+  --bh-color-charcoal: #1A1A1A;
+  --bh-color-soot: #1E1D1B;
+  --bh-color-mine-shaft: #222120;
+  --bh-color-tundora: #2A2826;
+  --bh-color-boulder: #5A5754;
+  --bh-color-bitter: #777875;
+
+  /* Light neutrals */
+  --bh-color-fossil: #A8A39B;
+  --bh-color-swiss-coffee: #C8C4BC;
+  --bh-color-linen: #CCC7BD;
+  --bh-color-bone: #DDD9D1;
+  --bh-color-pearl: #E8E4DC;
+  --bh-color-alabaster: #F0ECE4;
+  --bh-color-parchment: #F5F2EC;
+}

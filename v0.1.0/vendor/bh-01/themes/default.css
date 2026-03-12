@@ -1,0 +1,126 @@
+@import '../tokens/index.css';
+
+:root,
+[data-theme='light'] {
+  /* Surfaces */
+  --bh-color-bg: var(--bh-color-alabaster);
+  --bh-color-surface: var(--bh-color-pearl);
+  --bh-color-surface-raised: var(--bh-color-parchment);
+  --bh-color-surface-overlay: var(--bh-color-white);
+  --bh-color-surface-recessed: var(--bh-color-bone);
+
+  /* Text */
+  --bh-color-text: var(--bh-color-charcoal);
+  --bh-color-text-muted: var(--bh-color-boulder);
+  --bh-color-text-tertiary: var(--bh-color-boulder);
+  --bh-color-text-inverse: var(--bh-color-white);
+  --bh-color-text-bright: var(--bh-color-black);
+
+  /* Accent / Primary */
+  --bh-color-primary: var(--bh-color-mandarin);
+  --bh-color-primary-hover: var(--bh-color-mandarin-dark);
+  --bh-color-primary-active: var(--bh-color-mandarin-darker);
+  --bh-color-primary-text: var(--bh-color-white);
+  --bh-color-primary-glow: rgba(255, 107, 53, 0.12);
+
+  /* Secondary */
+  --bh-color-secondary: var(--bh-color-pearl);
+  --bh-color-secondary-hover: var(--bh-color-bone);
+  --bh-color-secondary-active: var(--bh-color-linen);
+  --bh-color-secondary-text: var(--bh-color-charcoal);
+
+  /* Accent colors */
+  --bh-color-accent: var(--bh-color-mandarin);
+  --bh-color-accent-secondary: var(--bh-color-sky);
+  --bh-color-accent-tertiary: var(--bh-color-amaranth);
+
+  /* Status */
+  --bh-color-success: var(--bh-color-sky);
+  --bh-color-success-dim: rgba(93, 175, 214, 0.15);
+  --bh-color-warning: var(--bh-color-pomegranate);
+  --bh-color-warning-dim: rgba(248, 62, 31, 0.15);
+  --bh-color-danger: var(--bh-color-amaranth);
+  --bh-color-danger-hover: var(--bh-color-amaranth-dark);
+  --bh-color-danger-active: var(--bh-color-amaranth-darker);
+  --bh-color-danger-text: var(--bh-color-white);
+
+  /* Borders */
+  --bh-color-border: var(--bh-color-linen);
+  --bh-color-border-muted: var(--bh-color-bone);
+  --bh-color-border-bright: var(--bh-color-fossil);
+  --bh-color-ring: var(--bh-color-mandarin);
+
+  /* Links */
+  --bh-color-link: var(--bh-color-sky);
+  --bh-color-link-hover: var(--bh-color-mandarin);
+  --bh-color-link-subtle: var(--bh-color-boulder);
+  --bh-color-link-subtle-hover: var(--bh-color-sky);
+
+  /* Shadows */
+  --bh-shadow-surface: var(--bh-shadow-sm);
+  --bh-shadow-inset: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+  --bh-shadow-raised: 0 1px 0 rgba(255, 255, 255, 0.6), 0 2px 6px rgba(0, 0, 0, 0.06);
+  --bh-shadow-emboss: inset 0 -1px 0 rgba(255, 255, 255, 0.5), inset 0 1px 0 rgba(0, 0, 0, 0.06);
+}
+
+[data-theme='dark'] {
+  /* Surfaces */
+  --bh-color-bg: var(--bh-color-cod);
+  --bh-color-surface: var(--bh-color-thunder);
+  --bh-color-surface-raised: var(--bh-color-mine-shaft);
+  --bh-color-surface-overlay: var(--bh-color-mine-shaft);
+  --bh-color-surface-recessed: var(--bh-color-night);
+
+  /* Text */
+  --bh-color-text: var(--bh-color-swiss-coffee);
+  --bh-color-text-muted: var(--bh-color-boulder);
+  --bh-color-text-tertiary: var(--bh-color-boulder);
+  --bh-color-text-inverse: var(--bh-color-cod);
+  --bh-color-text-bright: var(--bh-color-white);
+
+  /* Accent / Primary */
+  --bh-color-primary: var(--bh-color-mandarin);
+  --bh-color-primary-hover: var(--bh-color-mandarin-light);
+  --bh-color-primary-active: var(--bh-color-mandarin-lighter);
+  --bh-color-primary-text: var(--bh-color-cod);
+  --bh-color-primary-glow: rgba(255, 107, 53, 0.15);
+
+  /* Secondary */
+  --bh-color-secondary: var(--bh-color-mine-shaft);
+  --bh-color-secondary-hover: var(--bh-color-tundora);
+  --bh-color-secondary-active: var(--bh-color-boulder);
+  --bh-color-secondary-text: var(--bh-color-swiss-coffee);
+
+  /* Accent colors */
+  --bh-color-accent: var(--bh-color-mandarin);
+  --bh-color-accent-secondary: var(--bh-color-sky);
+  --bh-color-accent-tertiary: var(--bh-color-amaranth);
+
+  /* Status */
+  --bh-color-success: var(--bh-color-sky);
+  --bh-color-success-dim: rgba(93, 175, 214, 0.15);
+  --bh-color-warning: var(--bh-color-pomegranate);
+  --bh-color-warning-dim: rgba(248, 62, 31, 0.15);
+  --bh-color-danger: var(--bh-color-amaranth);
+  --bh-color-danger-hover: var(--bh-color-amaranth-light);
+  --bh-color-danger-active: var(--bh-color-amaranth-lighter);
+  --bh-color-danger-text: var(--bh-color-cod);
+
+  /* Borders */
+  --bh-color-border: var(--bh-color-tundora);
+  --bh-color-border-muted: var(--bh-color-soot);
+  --bh-color-border-bright: var(--bh-color-boulder);
+  --bh-color-ring: var(--bh-color-mandarin);
+
+  /* Links */
+  --bh-color-link: var(--bh-color-sky);
+  --bh-color-link-hover: var(--bh-color-mandarin);
+  --bh-color-link-subtle: var(--bh-color-swiss-coffee);
+  --bh-color-link-subtle-hover: var(--bh-color-sky);
+
+  /* Shadows */
+  --bh-shadow-surface: var(--bh-shadow-md);
+  --bh-shadow-inset: inset 0 1px 3px rgba(0, 0, 0, 0.25);
+  --bh-shadow-raised: 0 1px 0 rgba(255, 255, 255, 0.04), 0 2px 6px rgba(0, 0, 0, 0.2);
+  --bh-shadow-emboss: inset 0 -1px 0 rgba(255, 255, 255, 0.04), inset 0 1px 0 rgba(0, 0, 0, 0.2);
+}

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Cryptographic signing and verification for Claude Code SKILL.md files">
+  <title>SkillSign — Trust for Claude Code Skills</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/site.css">
+  <script type="module" src="vendor/bh-01/bh-01.bundled.js"></script>
+  <script type="module" src="js/logo.js"></script>
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <bh-pixel-display class="site-logo" label="SkillSign logo"></bh-pixel-display>
+        <span class="nav-title">SkillSign</span>
+      </a>
+      <bh-cluster gap="md" class="nav-links">
+        <a href="how-it-works.html">How It Works</a>
+        <a href="getting-started.html">Get Started</a>
+        <a href="https://github.com/bruk-io/skillsign/blob/main/docs/spec.md">Spec</a>
+        <a href="https://github.com/bruk-io/skillsign" class="nav-github" aria-label="GitHub">
+          <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+        </a>
+      </bh-cluster>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-inner">
+        <bh-badge variant="primary" size="sm">v0.1 — Sigstore Keyless Signing</bh-badge>
+        <h1 class="heading-xl">
+          Cryptographic trust for<br>
+          <span class="text-primary">Claude Code skills</span>
+        </h1>
+        <p class="hero-subtitle text-muted">
+          Sign SKILL.md files with your GitHub identity. Verify authorship and integrity
+          before execution. No long-lived keys — powered by Sigstore.
+        </p>
+        <bh-cluster gap="md">
+          <bh-button variant="primary" size="lg" onclick="window.location.href='getting-started.html'">
+            Get Started
+          </bh-button>
+          <bh-button variant="secondary" size="lg" onclick="window.location.href='https://github.com/bruk-io/skillsign'">
+            View on GitHub
+          </bh-button>
+        </bh-cluster>
+        <bh-stack gap="md" class="hero-install">
+          <bh-code-block language="bash" header copy-button>$ git clone https://github.com/bruk-io/skillsign.git \
+  && cd skillsign \
+  && uv sync
+
+$ uv run skillsign --version
+skillsign 0.1.0</bh-code-block>
+          <p class="text-muted text-center text-sm">
+            <code class="code-inline">pip install</code>, <code class="code-inline">uvx</code>, and
+            <code class="code-inline">brew</code> distribution coming in Phase 3.
+          </p>
+        </bh-stack>
+      </div>
+    </section>
+
+    <!-- How It Works Overview -->
+    <section class="section">
+      <div class="section-inner">
+        <bh-stack gap="lg" align="center">
+          <bh-stack gap="xs" align="center">
+            <h2 class="heading-lg text-center">How it works</h2>
+            <p class="text-center text-muted">
+              Three steps. No key management. Fully transparent.
+            </p>
+          </bh-stack>
+          <div class="steps-grid">
+            <div class="step">
+              <div class="step-number">1</div>
+              <h3 class="heading-sm">Sign</h3>
+              <p class="text-muted">
+                Authenticate with GitHub via OIDC. Sigstore issues a short-lived certificate
+                binding your identity to an ephemeral key. Sign your SKILL.md — the key is discarded.
+              </p>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="step">
+              <div class="step-number">2</div>
+              <h3 class="heading-sm">Log</h3>
+              <p class="text-muted">
+                The signature and certificate are recorded in Rekor, Sigstore's append-only
+                transparency log. Anyone can audit the signing history.
+              </p>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="step">
+              <div class="step-number">3</div>
+              <h3 class="heading-sm">Verify</h3>
+              <p class="text-muted">
+                Consumers verify the signature, certificate chain, and identity before execution.
+                Tampered files, expired certs, and identity mismatches are caught automatically.
+              </p>
+            </div>
+          </div>
+          <bh-button variant="secondary" onclick="window.location.href='how-it-works.html'">
+            See the full flow →
+          </bh-button>
+        </bh-stack>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <bh-pixel-display class="site-logo" label="SkillSign logo"></bh-pixel-display>
+        <span>SkillSign</span>
+      </div>
+      <bh-cluster gap="md" justify="center" class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="how-it-works.html">How It Works</a>
+        <a href="getting-started.html">Get Started</a>
+        <a href="https://github.com/bruk-io/skillsign/blob/main/docs/spec.md">Specification</a>
+        <a href="https://github.com/bruk-io/skillsign">GitHub</a>
+      </bh-cluster>
+      <div class="footer-copy text-muted">
+        &copy; 2026 SkillSign. MIT License.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
