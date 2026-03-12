@@ -109,7 +109,6 @@ def exit_code_for(result: VerificationResult) -> int:
     return _EXIT_CODES[result]
 
 
-
 def _verify_cert_chain(
     cert: x509.Certificate,
     meta: dict[str, Any],
