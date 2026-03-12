@@ -1,0 +1,1 @@
+const t={View:"likec4-view"};let s="/skillsign/main/architecture/";s.endsWith("/")||(s=s+"/");const i="LikeC4",e=s,o="https://kroki.io/d2/svg",a="https://kroki.io/plantuml/svg";export{t as C,o as a,e as b,a as k,i as p};
