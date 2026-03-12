@@ -67,4 +67,5 @@ def query_rekor_entry(log_id: str) -> dict[str, Any]:
 
     # Return the inner entry data (value of the single key)
     entry_uuid = next(iter(first))
-    return first[entry_uuid]
+    result: dict[str, Any] = first[entry_uuid]
+    return result
