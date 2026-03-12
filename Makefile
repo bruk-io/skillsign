@@ -1,5 +1,8 @@
 BUILD_DIR := _build
 VERSION ?= main
+# Base path prefix for GitHub Pages (e.g. /skillsign for bruk-io.github.io/skillsign)
+# Set to empty string when using a custom domain (skillsign.ai)
+BASE_PREFIX ?= /skillsign
 
 .PHONY: build build-site build-docs build-architecture clean deploy
 
@@ -17,7 +20,7 @@ build-docs:
 	@$(MAKE) -C docs build
 
 build-architecture:
-	@$(MAKE) -C architecture build
+	@$(MAKE) -C architecture build BASE_URL="$(BASE_PREFIX)/$(VERSION)/architecture/"
 
 clean:
 	@$(MAKE) -C site clean
