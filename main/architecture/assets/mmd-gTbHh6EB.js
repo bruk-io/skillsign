@@ -14,14 +14,15 @@ graph TB
     SkillsignCli.PolicyEngine[Policy Engine]
     SkillsignCli.SidecarManager[Sidecar Manager]
     SkillsignCli.TufClient[TUF Client]
+    SkillsignCli.RekorClient[Rekor Client]
   end
   Fulcio[Fulcio CA]
-  Rekor[Rekor Transparency Log]
   Github[GitHub Actions OIDC]
   SigstoreDex[Sigstore Dex (OAuth)]
   SkillsignSkillFiles([Skill File Store])
   Tuf[TUF Root]
   SkillsignTufCache([TUF Root Cache])
+  Rekor[Rekor Transparency Log]
   SkillAuthor -. "Signs SKILL.md files via CLI" .-> SkillsignCli.SigningEngine
   SkillConsumer -. "Verifies skill signatures via CLI" .-> SkillsignCli.VerificationEngine
   ClaudeCode -. "Invokes verification before loading skills" .-> SkillsignCli.VerificationEngine
@@ -32,17 +33,18 @@ graph TB
   SkillsignCli.VerificationEngine -. "Passes verified signer identity, rekor_timestamp, and skill_id for policy evaluation [Phase 2]" .-> SkillsignCli.PolicyEngine
   SkillsignCli.VerificationEngine -. "Reads sidecar fields via" .-> SkillsignCli.SidecarManager
   SkillsignCli.VerificationEngine -. "Gets trusted Fulcio root certificates and Rekor public key from" .-> SkillsignCli.TufClient
+  SkillsignCli.VerificationEngine -. "Queries Rekor log entries for strict mode verification" .-> SkillsignCli.RekorClient
   SkillsignCli.AuthHandler -. "Detects ambient OIDC token from GitHub Actions runtime (CI path)" .-> Github
   SkillsignCli.AuthHandler -. "Opens browser for OAuth login via Dex — user picks Google, GitHub, or Microsoft (interactive path)" .-> SigstoreDex
   SkillsignCli.SigningEngine -. "Submits ephemeral public key and OIDC token via Sigstore SDK, receives short-lived X.509 certificate" .-> Fulcio
   SkillsignCli.SigningEngine -. "Submits signature, certificate, and digest as hashedrekord/v0.0.1 entry via Sigstore SDK" .-> Rekor
   SkillsignCli.SigningEngine -. "Checks for existing .skillsign sidecar before signing" .-> SkillsignSkillFiles
-  SkillsignCli.VerificationEngine -. "Confirms log entry exists and digest matches in --strict mode" .-> Rekor
   SkillsignCli.PolicyEngine -. "Reads .skillsign-policy.yaml trust policies [Phase 2]" .-> SkillsignSkillFiles
   SkillsignCli.SidecarManager -. "Reads and writes .skillsign sidecar files" .-> SkillsignSkillFiles
   SkillsignCli.ManifestReader -. "Reads skillsign.yaml manifests" .-> SkillsignSkillFiles
   SkillsignCli.TufClient -. "Fetches current TUF root metadata via HTTPS" .-> Tuf
   SkillsignCli.TufClient -. "Reads and writes cached TUF metadata via local filesystem" .-> SkillsignTufCache
+  SkillsignCli.RekorClient -. "Queries transparency log entries via HTTPS/JSON" .-> Rekor
 `;case"skillsignContainers":return`---
 title: "Containers / SkillSign Containers"
 ---
@@ -66,7 +68,7 @@ graph TB
   SkillConsumer -. "Verifies skill signatures via CLI" .-> Skillsign.Cli
   ClaudeCode -. "Invokes verification before loading skills" .-> Skillsign.Cli
   Skillsign.Cli -. "Authenticates CI workflows via OIDC/HTTPS" .-> Github
-  Skillsign.Cli -. "Opens browser for OAuth login via Dex — user picks Google, GitHub, or Microsoft (interactive path)" .-> SigstoreDex
+  Skillsign.Cli -. "Authenticates developers via browser-based OAuth/HTTPS" .-> SigstoreDex
   Skillsign.Cli -. "Obtains short-lived signing certificates via HTTPS" .-> Fulcio
   Skillsign.Cli -. "Submits and queries transparency log entries via HTTPS" .-> Rekor
   Skillsign.Cli -. "Fetches TUF root metadata via HTTPS" .-> Tuf
@@ -286,12 +288,14 @@ title: "Flows / Skill Consumer / Policy Verification"
 graph LR
   SkillConsumer[fa:fa-user Skill Consumer]
   SkillsignCliVerificationEngine[Verification Engine]
+  SkillsignCliRekorClient[Rekor Client]
   Rekor[Rekor Transparency Log]
   SkillsignCliPolicyEngine[Policy Engine]
   SkillsignSkillFiles([Skill File Store])
   SkillConsumer -. "Runs: skillsign verify --policy .skillsign-policy.yaml --strict ./SKILL.md" .-> SkillsignCliVerificationEngine
   SkillsignCliVerificationEngine -. "Completes full cryptographic verification" .-> SkillsignCliVerificationEngine
-  SkillsignCliVerificationEngine -. "Confirms rekor_log_id exists, digest matches, and timestamp valid (--strict mode)" .-> Rekor
+  SkillsignCliVerificationEngine -. "Delegates live Rekor query for strict mode verification" .-> SkillsignCliRekorClient
+  SkillsignCliRekorClient -. "Queries log entry by rekor_log_id, confirms digest match and timestamp validity via HTTPS/JSON" .-> Rekor
   SkillsignCliVerificationEngine -. "Passes verified signer identity, rekor_timestamp, and skill_id [Phase 2]" .-> SkillsignCliPolicyEngine
   SkillsignCliPolicyEngine -. "Reads .skillsign-policy.yaml trust policy" .-> SkillsignSkillFiles
   SkillsignCliPolicyEngine -. "Returns policy evaluation result" .-> SkillsignCliVerificationEngine

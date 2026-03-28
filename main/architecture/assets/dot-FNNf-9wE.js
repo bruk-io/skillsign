@@ -43,7 +43,6 @@ function t(e){switch(e){case"cliComponents":return`digraph {
         signingengine [color="#4f46e5",
             fillcolor="#6366f1",
             fontcolor="#eef2ff",
-            group="skillsign.cli",
             height=2.5,
             label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="4"><TR><TD><FONT POINT-SIZE="20">Signing Engine</FONT></TD></TR><TR><TD><FONT POINT-SIZE="13" COLOR="#c7d2fe">ECDSA P-256, X.509</FONT></TD></TR><TR><TD><FONT POINT-SIZE="15" COLOR="#c7d2fe">Orchestrates the signing protocol via<BR/>Sigstore SDK: reads manifest, canonicalizes<BR/>SKILL.md, computes digest, obtains OIDC<BR/>identity token, invokes<BR/>SigningContext.signer() which generates</FONT></TD></TR></TABLE>>,
             likec4_id="skillsign.cli.signingEngine",
@@ -53,7 +52,6 @@ function t(e){switch(e){case"cliComponents":return`digraph {
         verificationengine [color="#4f46e5",
             fillcolor="#6366f1",
             fontcolor="#eef2ff",
-            group="skillsign.cli",
             height=2.5,
             label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="4"><TR><TD><FONT POINT-SIZE="20">Verification Engine</FONT></TD></TR><TR><TD><FONT POINT-SIZE="13" COLOR="#c7d2fe">ECDSA P-256, X.509</FONT></TD></TR><TR><TD><FONT POINT-SIZE="15" COLOR="#c7d2fe">Orchestrates verification: reads sidecar via<BR/>SidecarManager, recomputes digest, verifies<BR/>ECDSA P-256 signature using certificate<BR/>public key, validates cert chain against<BR/>Fulcio root via TUF TrustedRoot and</FONT></TD></TR></TABLE>>,
             likec4_id="skillsign.cli.verificationEngine",
@@ -63,9 +61,8 @@ function t(e){switch(e){case"cliComponents":return`digraph {
         authhandler [color="#4f46e5",
             fillcolor="#6366f1",
             fontcolor="#eef2ff",
-            group="skillsign.cli",
             height=2.5,
-            label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="4"><TR><TD><FONT POINT-SIZE="20">Auth Handler</FONT></TD></TR><TR><TD><FONT POINT-SIZE="13" COLOR="#c7d2fe">OIDC</FONT></TD></TR><TR><TD><FONT POINT-SIZE="15" COLOR="#c7d2fe">Obtains OIDC identity token for signing.<BR/>Detects ambient CI credentials first (GitHub<BR/>Actions OIDC via detect_credential). Falls<BR/>back to interactive browser-based flow via<BR/>Sigstore OAuth issuer</FONT></TD></TR></TABLE>>,
+            label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="4"><TR><TD><FONT POINT-SIZE="20">Auth Handler</FONT></TD></TR><TR><TD><FONT POINT-SIZE="13" COLOR="#c7d2fe">OIDC</FONT></TD></TR><TR><TD><FONT POINT-SIZE="15" COLOR="#c7d2fe">Obtains OIDC identity token for signing.<BR/>Detects ambient CI credentials first (GitHub<BR/>Actions OIDC via<BR/>detect_credential("sigstore") with client ID<BR/>_SIGSTORE_CLIENT_ID="sigstore"). Falls back</FONT></TD></TR></TABLE>>,
             likec4_id="skillsign.cli.authHandler",
             likec4_level=1,
             margin="0.223,0.223",
@@ -73,7 +70,6 @@ function t(e){switch(e){case"cliComponents":return`digraph {
         manifestreader [color="#4f46e5",
             fillcolor="#6366f1",
             fontcolor="#eef2ff",
-            group="skillsign.cli",
             height=2.5,
             label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="4"><TR><TD><FONT POINT-SIZE="20">Manifest Reader</FONT></TD></TR><TR><TD><FONT POINT-SIZE="13" COLOR="#c7d2fe">YAML 1.2</FONT></TD></TR><TR><TD><FONT POINT-SIZE="15" COLOR="#c7d2fe">Reads skillsign.yaml to extract skill_id and<BR/>skill_version at signing time, with same<BR/>strict YAML parsing restrictions as the<BR/>sidecar (Section 7.3)</FONT></TD></TR></TABLE>>,
             likec4_id="skillsign.cli.manifestReader",
@@ -83,7 +79,6 @@ function t(e){switch(e){case"cliComponents":return`digraph {
         canonicalprocessor [color="#4f46e5",
             fillcolor="#6366f1",
             fontcolor="#eef2ff",
-            group="skillsign.cli",
             height=2.5,
             label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="4"><TR><TD><FONT POINT-SIZE="20">Canonical Form Processor</FONT></TD></TR><TR><TD><FONT POINT-SIZE="13" COLOR="#c7d2fe">UTF-8, SHA-256</FONT></TD></TR><TR><TD><FONT POINT-SIZE="15" COLOR="#c7d2fe">Implemented across canonical.py and<BR/>digest.py. canonical.py: 8-step normalization<BR/>(BOM strip, CRLF normalization, trailing<BR/>whitespace trim, single trailing newline,<BR/>UTF-8 encode, null-byte rejection).</FONT></TD></TR></TABLE>>,
             likec4_id="skillsign.cli.canonicalProcessor",
@@ -93,7 +88,6 @@ function t(e){switch(e){case"cliComponents":return`digraph {
         policyengine [color="#4f46e5",
             fillcolor="#6366f1",
             fontcolor="#eef2ff",
-            group="skillsign.cli",
             height=2.5,
             label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="4"><TR><TD><FONT POINT-SIZE="20">Policy Engine</FONT></TD></TR><TR><TD><FONT POINT-SIZE="13" COLOR="#c7d2fe">YAML 1.2</FONT></TD></TR><TR><TD><FONT POINT-SIZE="15" COLOR="#c7d2fe">[Phase 2, not yet implemented] Evaluates<BR/>trust policies with first-match-wins rule<BR/>evaluation, signer_org matching with<BR/>lowercase normalization, and max_age_days<BR/>enforcement against verified rekor_timestamp</FONT></TD></TR></TABLE>>,
             likec4_id="skillsign.cli.policyEngine",
@@ -103,7 +97,6 @@ function t(e){switch(e){case"cliComponents":return`digraph {
         sidecarmanager [color="#4f46e5",
             fillcolor="#6366f1",
             fontcolor="#eef2ff",
-            group="skillsign.cli",
             height=2.5,
             label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="4"><TR><TD><FONT POINT-SIZE="20">Sidecar Manager</FONT></TD></TR><TR><TD><FONT POINT-SIZE="13" COLOR="#c7d2fe">YAML 1.2</FONT></TD></TR><TR><TD><FONT POINT-SIZE="15" COLOR="#c7d2fe">Implemented as a single sidecar.py module<BR/>combining reader and writer. Writer:<BR/>assembles canonical field-ordered YAML (PEM<BR/>fields as literal block scalars) and writes<BR/>atomically via temp file rename. Reader:</FONT></TD></TR></TABLE>>,
             likec4_id="skillsign.cli.sidecarManager",
@@ -113,10 +106,18 @@ function t(e){switch(e){case"cliComponents":return`digraph {
         tufclient [color="#4f46e5",
             fillcolor="#6366f1",
             fontcolor="#eef2ff",
-            group="skillsign.cli",
             height=2.5,
             label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="4"><TR><TD><FONT POINT-SIZE="20">TUF Client</FONT></TD></TR><TR><TD><FONT POINT-SIZE="13" COLOR="#c7d2fe">TUF, HTTPS</FONT></TD></TR><TR><TD><FONT POINT-SIZE="15" COLOR="#c7d2fe">Wraps Sigstore SDK TrustedRoot via<BR/>infra/tuf.py. Fetches production TUF root<BR/>metadata including Fulcio root certificates<BR/>and Rekor public key. Falls back to cached<BR/>metadata when offline. Used by verification</FONT></TD></TR></TABLE>>,
             likec4_id="skillsign.cli.tufClient",
+            likec4_level=1,
+            margin="0.223,0.223",
+            width=4.445];
+        rekorclient [color="#4f46e5",
+            fillcolor="#6366f1",
+            fontcolor="#eef2ff",
+            height=2.5,
+            label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="4"><TR><TD><FONT POINT-SIZE="20">Rekor Client</FONT></TD></TR><TR><TD><FONT POINT-SIZE="13" COLOR="#c7d2fe">HTTPS, JSON</FONT></TD></TR><TR><TD><FONT POINT-SIZE="15" COLOR="#c7d2fe">Wraps Rekor transparency log queries via<BR/>infra/rekor.py. Fetches log entries by log ID<BR/>using the Rekor search API<BR/>(/api/v1/log/entries/retrieve). Used by<BR/>verification engine in --strict mode to</FONT></TD></TR></TABLE>>,
+            likec4_id="skillsign.cli.rekorClient",
             likec4_level=1,
             margin="0.223,0.223",
             width=4.445];
@@ -192,19 +193,6 @@ function t(e){switch(e){case"cliComponents":return`digraph {
         likec4_id=hc2fbf,
         style=dashed,
         weight=3];
-    rekor [color="#475569",
-        fillcolor="#64748b",
-        fontcolor="#f8fafc",
-        height=2.5,
-        label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="4"><TR><TD><FONT POINT-SIZE="20">Rekor Transparency Log</FONT></TD></TR><TR><TD><FONT POINT-SIZE="15" COLOR="#cbd5e1">Append-only, publicly auditable log recording<BR/>signatures, certificates, and digests</FONT></TD></TR></TABLE>>,
-        likec4_id=rekor,
-        likec4_level=0,
-        margin="0.223,0.223",
-        width=4.445];
-    signingengine -> rekor [arrowhead=normal,
-        label=<<TABLE BORDER="0" CELLPADDING="3" CELLSPACING="0" BGCOLOR="#18191BA0"><TR><TD ALIGN="TEXT" BALIGN="LEFT"><FONT POINT-SIZE="14">Submits signature, certificate, and<BR/>digest as hashedrekord/v0.0.1 entry via<BR/>Sigstore SDK</FONT></TD></TR></TABLE>>,
-        likec4_id="1uh55pu",
-        style=dashed];
     skillfiles [height=2.5,
         label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="4"><TR><TD><FONT POINT-SIZE="20">Skill File Store</FONT></TD></TR><TR><TD><FONT POINT-SIZE="13" COLOR="#bfdbfe">Local File System</FONT></TD></TR><TR><TD><FONT POINT-SIZE="15" COLOR="#bfdbfe">SKILL.md files, skillsign.yaml manifests,<BR/>.skillsign sidecars, and<BR/>.skillsign-policy.yaml trust policies on disk</FONT></TD></TR></TABLE>>,
         likec4_id="skillsign.skillFiles",
@@ -218,6 +206,19 @@ function t(e){switch(e){case"cliComponents":return`digraph {
         likec4_id=rb4ce3,
         style=dashed,
         weight=2];
+    rekor [color="#475569",
+        fillcolor="#64748b",
+        fontcolor="#f8fafc",
+        height=2.5,
+        label=<<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="4"><TR><TD><FONT POINT-SIZE="20">Rekor Transparency Log</FONT></TD></TR><TR><TD><FONT POINT-SIZE="15" COLOR="#cbd5e1">Append-only, publicly auditable log recording<BR/>signatures, certificates, and digests</FONT></TD></TR></TABLE>>,
+        likec4_id=rekor,
+        likec4_level=0,
+        margin="0.223,0.223",
+        width=4.445];
+    signingengine -> rekor [arrowhead=normal,
+        label=<<TABLE BORDER="0" CELLPADDING="3" CELLSPACING="0" BGCOLOR="#18191BA0"><TR><TD ALIGN="TEXT" BALIGN="LEFT"><FONT POINT-SIZE="14">Submits signature, certificate, and<BR/>digest as hashedrekord/v0.0.1 entry via<BR/>Sigstore SDK</FONT></TD></TR></TABLE>>,
+        likec4_id="1uh55pu",
+        style=dashed];
     verificationengine -> canonicalprocessor [arrowhead=normal,
         label=<<TABLE BORDER="0" CELLPADDING="3" CELLSPACING="0" BGCOLOR="#18191BA0"><TR><TD ALIGN="TEXT" BALIGN="LEFT"><FONT POINT-SIZE="14">Recomputes digest via</FONT></TD></TR></TABLE>>,
         likec4_id="1l5jd35",
@@ -238,10 +239,11 @@ function t(e){switch(e){case"cliComponents":return`digraph {
         likec4_id=yjyegz,
         style=dashed,
         weight=3];
-    verificationengine -> rekor [arrowhead=normal,
-        label=<<TABLE BORDER="0" CELLPADDING="3" CELLSPACING="0" BGCOLOR="#18191BA0"><TR><TD ALIGN="TEXT" BALIGN="LEFT"><FONT POINT-SIZE="14">Confirms log entry exists and digest<BR/>matches in --strict mode</FONT></TD></TR></TABLE>>,
-        likec4_id=euqmpk,
-        style=dashed];
+    verificationengine -> rekorclient [arrowhead=normal,
+        label=<<TABLE BORDER="0" CELLPADDING="3" CELLSPACING="0" BGCOLOR="#18191BA0"><TR><TD ALIGN="TEXT" BALIGN="LEFT"><FONT POINT-SIZE="14">Queries Rekor log entries for strict<BR/>mode verification</FONT></TD></TR></TABLE>>,
+        likec4_id=xcpy79,
+        style=dashed,
+        weight=3];
     github [color="#475569",
         fillcolor="#64748b",
         fontcolor="#f8fafc",
@@ -310,6 +312,10 @@ function t(e){switch(e){case"cliComponents":return`digraph {
         minlen=1,
         style=dashed,
         weight=2];
+    rekorclient -> rekor [arrowhead=normal,
+        label=<<TABLE BORDER="0" CELLPADDING="3" CELLSPACING="0" BGCOLOR="#18191BA0"><TR><TD ALIGN="TEXT" BALIGN="LEFT"><FONT POINT-SIZE="14">Queries transparency log entries via<BR/>HTTPS/JSON</FONT></TD></TR></TABLE>>,
+        likec4_id="1yk4lsn",
+        style=dashed];
 }
 `;case"skillsignContainers":return`digraph {
     graph [TBbalance=min,
@@ -457,7 +463,7 @@ function t(e){switch(e){case"cliComponents":return`digraph {
         margin="0.223,0.223",
         width=4.445];
     cli -> sigstoredex [arrowhead=normal,
-        label=<<TABLE BORDER="0" CELLPADDING="3" CELLSPACING="0" BGCOLOR="#18191BA0"><TR><TD ALIGN="TEXT" BALIGN="LEFT"><FONT POINT-SIZE="14">Opens browser for OAuth login via Dex —<BR/>user picks Google, GitHub, or Microsoft<BR/>(interactive path)</FONT></TD></TR></TABLE>>,
+        label=<<TABLE BORDER="0" CELLPADDING="3" CELLSPACING="0" BGCOLOR="#18191BA0"><TR><TD ALIGN="TEXT" BALIGN="LEFT"><FONT POINT-SIZE="14">Authenticates developers via<BR/>browser-based OAuth/HTTPS</FONT></TD></TR></TABLE>>,
         likec4_id=p0ypx7,
         minlen=1,
         style=dashed];
@@ -1625,7 +1631,7 @@ function t(e){switch(e){case"cliComponents":return`digraph {
   "authhandler" [
     likec4_id = "skillsign.cli.authHandler";
     likec4_level = 0;
-    label = <<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="4"><TR><TD><FONT POINT-SIZE="20">Auth Handler</FONT></TD></TR><TR><TD><FONT POINT-SIZE="13" COLOR="#c7d2fe">OIDC</FONT></TD></TR><TR><TD><FONT POINT-SIZE="15" COLOR="#c7d2fe">Obtains OIDC identity token for signing.<BR/>Detects ambient CI credentials first (GitHub<BR/>Actions OIDC via detect_credential). Falls<BR/>back to interactive browser-based flow via<BR/>Sigstore OAuth issuer</FONT></TD></TR></TABLE>>;
+    label = <<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="4"><TR><TD><FONT POINT-SIZE="20">Auth Handler</FONT></TD></TR><TR><TD><FONT POINT-SIZE="13" COLOR="#c7d2fe">OIDC</FONT></TD></TR><TR><TD><FONT POINT-SIZE="15" COLOR="#c7d2fe">Obtains OIDC identity token for signing.<BR/>Detects ambient CI credentials first (GitHub<BR/>Actions OIDC via<BR/>detect_credential("sigstore") with client ID<BR/>_SIGSTORE_CLIENT_ID="sigstore"). Falls back</FONT></TD></TR></TABLE>>;
     margin = "0.223,0.223";
     width = 4.445;
     height = 2.5;
@@ -2066,6 +2072,17 @@ function t(e){switch(e){case"cliComponents":return`digraph {
     fontcolor = "#eef2ff";
     color = "#4f46e5";
   ];
+  "rekorclient" [
+    likec4_id = "skillsign.cli.rekorClient";
+    likec4_level = 0;
+    label = <<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="4"><TR><TD><FONT POINT-SIZE="20">Rekor Client</FONT></TD></TR><TR><TD><FONT POINT-SIZE="13" COLOR="#c7d2fe">HTTPS, JSON</FONT></TD></TR><TR><TD><FONT POINT-SIZE="15" COLOR="#c7d2fe">Wraps Rekor transparency log queries via<BR/>infra/rekor.py. Fetches log entries by log ID<BR/>using the Rekor search API<BR/>(/api/v1/log/entries/retrieve). Used by<BR/>verification engine in --strict mode to</FONT></TD></TR></TABLE>>;
+    margin = "0.223,0.223";
+    width = 4.445;
+    height = 2.5;
+    fillcolor = "#6366f1";
+    fontcolor = "#eef2ff";
+    color = "#4f46e5";
+  ];
   "rekor" [
     likec4_id = "rekor";
     likec4_level = 0;
@@ -2113,35 +2130,41 @@ function t(e){switch(e){case"cliComponents":return`digraph {
     label = <<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3"><TR><TD><TABLE BORDER="0" CELLPADDING="6" BGCOLOR="#18191BA0"><TR><TD WIDTH="20" HEIGHT="20"><FONT POINT-SIZE="14"><B>2</B></FONT></TD></TR></TABLE></TD><TD BGCOLOR="#18191BA0" CELLPADDING="3"><FONT POINT-SIZE="14">Completes full cryptographic<BR/>verification</FONT></TD></TR></TABLE>>;
     arrowhead = "normal";
   ];
-  "verificationengine" -> "rekor" [
+  "verificationengine" -> "rekorclient" [
     likec4_id = "step-03";
     style = "dashed";
-    label = <<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3"><TR><TD><TABLE BORDER="0" CELLPADDING="6" BGCOLOR="#18191BA0"><TR><TD WIDTH="20" HEIGHT="20"><FONT POINT-SIZE="14"><B>3</B></FONT></TD></TR></TABLE></TD><TD BGCOLOR="#18191BA0" CELLPADDING="3"><FONT POINT-SIZE="14">Confirms rekor_log_id exists, digest<BR/>matches, and timestamp valid (--strict<BR/>mode)</FONT></TD></TR></TABLE>>;
+    label = <<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3"><TR><TD><TABLE BORDER="0" CELLPADDING="6" BGCOLOR="#18191BA0"><TR><TD WIDTH="20" HEIGHT="20"><FONT POINT-SIZE="14"><B>3</B></FONT></TD></TR></TABLE></TD><TD BGCOLOR="#18191BA0" CELLPADDING="3"><FONT POINT-SIZE="14">Delegates live Rekor query for strict<BR/>mode verification</FONT></TD></TR></TABLE>>;
+    arrowhead = "normal";
+  ];
+  "rekorclient" -> "rekor" [
+    likec4_id = "step-04";
+    style = "dashed";
+    label = <<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3"><TR><TD><TABLE BORDER="0" CELLPADDING="6" BGCOLOR="#18191BA0"><TR><TD WIDTH="20" HEIGHT="20"><FONT POINT-SIZE="14"><B>4</B></FONT></TD></TR></TABLE></TD><TD BGCOLOR="#18191BA0" CELLPADDING="3"><FONT POINT-SIZE="14">Queries log entry by rekor_log_id,<BR/>confirms digest match and timestamp<BR/>validity via HTTPS/JSON</FONT></TD></TR></TABLE>>;
     arrowhead = "normal";
   ];
   "verificationengine" -> "policyengine" [
-    likec4_id = "step-04";
+    likec4_id = "step-05";
     style = "dashed";
-    label = <<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3"><TR><TD><TABLE BORDER="0" CELLPADDING="6" BGCOLOR="#18191BA0"><TR><TD WIDTH="20" HEIGHT="20"><FONT POINT-SIZE="14"><B>4</B></FONT></TD></TR></TABLE></TD><TD BGCOLOR="#18191BA0" CELLPADDING="3"><FONT POINT-SIZE="14">Passes verified signer identity,<BR/>rekor_timestamp, and skill_id [Phase 2]</FONT></TD></TR></TABLE>>;
+    label = <<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3"><TR><TD><TABLE BORDER="0" CELLPADDING="6" BGCOLOR="#18191BA0"><TR><TD WIDTH="20" HEIGHT="20"><FONT POINT-SIZE="14"><B>5</B></FONT></TD></TR></TABLE></TD><TD BGCOLOR="#18191BA0" CELLPADDING="3"><FONT POINT-SIZE="14">Passes verified signer identity,<BR/>rekor_timestamp, and skill_id [Phase 2]</FONT></TD></TR></TABLE>>;
     arrowhead = "normal";
   ];
   "policyengine" -> "skillfiles" [
-    likec4_id = "step-05";
+    likec4_id = "step-06";
     style = "dashed";
-    label = <<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3"><TR><TD><TABLE BORDER="0" CELLPADDING="6" BGCOLOR="#18191BA0"><TR><TD WIDTH="20" HEIGHT="20"><FONT POINT-SIZE="14"><B>5</B></FONT></TD></TR></TABLE></TD><TD BGCOLOR="#18191BA0" CELLPADDING="3"><FONT POINT-SIZE="14">Reads .skillsign-policy.yaml trust<BR/>policy</FONT></TD></TR></TABLE>>;
+    label = <<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3"><TR><TD><TABLE BORDER="0" CELLPADDING="6" BGCOLOR="#18191BA0"><TR><TD WIDTH="20" HEIGHT="20"><FONT POINT-SIZE="14"><B>6</B></FONT></TD></TR></TABLE></TD><TD BGCOLOR="#18191BA0" CELLPADDING="3"><FONT POINT-SIZE="14">Reads .skillsign-policy.yaml trust<BR/>policy</FONT></TD></TR></TABLE>>;
     arrowhead = "normal";
   ];
   "verificationengine" -> "policyengine" [
-    likec4_id = "step-06";
+    likec4_id = "step-07";
     style = "dashed";
-    label = <<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3"><TR><TD><TABLE BORDER="0" CELLPADDING="6" BGCOLOR="#18191BA0"><TR><TD WIDTH="20" HEIGHT="20"><FONT POINT-SIZE="14"><B>6</B></FONT></TD></TR></TABLE></TD><TD BGCOLOR="#18191BA0" CELLPADDING="3"><FONT POINT-SIZE="14">Returns policy evaluation result</FONT></TD></TR></TABLE>>;
+    label = <<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3"><TR><TD><TABLE BORDER="0" CELLPADDING="6" BGCOLOR="#18191BA0"><TR><TD WIDTH="20" HEIGHT="20"><FONT POINT-SIZE="14"><B>7</B></FONT></TD></TR></TABLE></TD><TD BGCOLOR="#18191BA0" CELLPADDING="3"><FONT POINT-SIZE="14">Returns policy evaluation result</FONT></TD></TR></TABLE>>;
     arrowtail = "normal";
     dir = "back";
   ];
   "skillconsumer" -> "verificationengine" [
-    likec4_id = "step-07";
+    likec4_id = "step-08";
     style = "dashed";
-    label = <<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3"><TR><TD><TABLE BORDER="0" CELLPADDING="6" BGCOLOR="#18191BA0"><TR><TD WIDTH="20" HEIGHT="20"><FONT POINT-SIZE="14"><B>7</B></FONT></TD></TR></TABLE></TD><TD BGCOLOR="#18191BA0" CELLPADDING="3"><FONT POINT-SIZE="14">Returns VERIFIED (0), POLICY_FAIL (3),<BR/>or verification failure (1)</FONT></TD></TR></TABLE>>;
+    label = <<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3"><TR><TD><TABLE BORDER="0" CELLPADDING="6" BGCOLOR="#18191BA0"><TR><TD WIDTH="20" HEIGHT="20"><FONT POINT-SIZE="14"><B>8</B></FONT></TD></TR></TABLE></TD><TD BGCOLOR="#18191BA0" CELLPADDING="3"><FONT POINT-SIZE="14">Returns VERIFIED (0), POLICY_FAIL (3),<BR/>or verification failure (1)</FONT></TD></TR></TABLE>>;
     arrowtail = "normal";
     dir = "back";
   ];
@@ -2251,7 +2274,7 @@ function t(e){switch(e){case"cliComponents":return`digraph {
   "authhandler" [
     likec4_id = "skillsign.cli.authHandler";
     likec4_level = 0;
-    label = <<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="4"><TR><TD><FONT POINT-SIZE="20">Auth Handler</FONT></TD></TR><TR><TD><FONT POINT-SIZE="13" COLOR="#c7d2fe">OIDC</FONT></TD></TR><TR><TD><FONT POINT-SIZE="15" COLOR="#c7d2fe">Obtains OIDC identity token for signing.<BR/>Detects ambient CI credentials first (GitHub<BR/>Actions OIDC via detect_credential). Falls<BR/>back to interactive browser-based flow via<BR/>Sigstore OAuth issuer</FONT></TD></TR></TABLE>>;
+    label = <<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="4"><TR><TD><FONT POINT-SIZE="20">Auth Handler</FONT></TD></TR><TR><TD><FONT POINT-SIZE="13" COLOR="#c7d2fe">OIDC</FONT></TD></TR><TR><TD><FONT POINT-SIZE="15" COLOR="#c7d2fe">Obtains OIDC identity token for signing.<BR/>Detects ambient CI credentials first (GitHub<BR/>Actions OIDC via<BR/>detect_credential("sigstore") with client ID<BR/>_SIGSTORE_CLIENT_ID="sigstore"). Falls back</FONT></TD></TR></TABLE>>;
     margin = "0.223,0.223";
     width = 4.445;
     height = 2.5;
@@ -2606,387 +2629,408 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <!-- Generated by graphviz version 14.0.4 (0)
  -->
 <!-- Pages: 1 -->
-<svg width="3806pt" height="1272pt"
- viewBox="0.00 0.00 3806.00 1272.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="4424pt" height="1272pt"
+ viewBox="0.00 0.00 4424.00 1272.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(15.05 1256.65)">
 <g id="clust1" class="cluster">
 <title>cluster_cli</title>
-<polygon fill="#194b9e" stroke="#1b3d88" points="286.73,-316.4 286.73,-954 2924.73,-954 2924.73,-316.4 286.73,-316.4"/>
-<text xml:space="preserve" text-anchor="start" x="294.73" y="-941.1" font-family="Arial" font-weight="bold" font-size="11.00" fill="#bfdbfe" fill-opacity="0.701961">SKILLSIGN CLI</text>
+<polygon fill="#194b9e" stroke="#1b3d88" points="720.54,-316.4 720.54,-954 3830.54,-954 3830.54,-316.4 720.54,-316.4"/>
+<text xml:space="preserve" text-anchor="start" x="728.54" y="-941.1" font-family="Arial" font-weight="bold" font-size="11.00" fill="#bfdbfe" fill-opacity="0.701961">SKILLSIGN CLI</text>
 </g>
 <!-- signingengine -->
 <g id="node1" class="node">
 <title>signingengine</title>
-<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="1092.35,-892.8 757.1,-892.8 757.1,-712.8 1092.35,-712.8 1092.35,-892.8"/>
-<text xml:space="preserve" text-anchor="start" x="857.45" y="-853.6" font-family="Arial" font-size="20.00" fill="#eef2ff">Signing Engine</text>
-<text xml:space="preserve" text-anchor="start" x="862.58" y="-831.9" font-family="Arial" font-size="13.00" fill="#c7d2fe">ECDSA P&#45;256, X.509</text>
-<text xml:space="preserve" text-anchor="start" x="803" y="-810.5" font-family="Arial" font-size="15.00" fill="#c7d2fe">Orchestrates the signing protocol via</text>
-<text xml:space="preserve" text-anchor="start" x="777.16" y="-792.5" font-family="Arial" font-size="15.00" fill="#c7d2fe">Sigstore SDK: reads manifest, canonicalizes</text>
-<text xml:space="preserve" text-anchor="start" x="783.83" y="-774.5" font-family="Arial" font-size="15.00" fill="#c7d2fe">SKILL.md, computes digest, obtains OIDC</text>
-<text xml:space="preserve" text-anchor="start" x="850.94" y="-756.5" font-family="Arial" font-size="15.00" fill="#c7d2fe">identity token, invokes</text>
-<text xml:space="preserve" text-anchor="start" x="789.65" y="-738.5" font-family="Arial" font-size="15.00" fill="#c7d2fe">SigningContext.signer() which generates</text>
+<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="1892.16,-892.8 1556.91,-892.8 1556.91,-712.8 1892.16,-712.8 1892.16,-892.8"/>
+<text xml:space="preserve" text-anchor="start" x="1657.26" y="-853.6" font-family="Arial" font-size="20.00" fill="#eef2ff">Signing Engine</text>
+<text xml:space="preserve" text-anchor="start" x="1662.39" y="-831.9" font-family="Arial" font-size="13.00" fill="#c7d2fe">ECDSA P&#45;256, X.509</text>
+<text xml:space="preserve" text-anchor="start" x="1602.81" y="-810.5" font-family="Arial" font-size="15.00" fill="#c7d2fe">Orchestrates the signing protocol via</text>
+<text xml:space="preserve" text-anchor="start" x="1576.97" y="-792.5" font-family="Arial" font-size="15.00" fill="#c7d2fe">Sigstore SDK: reads manifest, canonicalizes</text>
+<text xml:space="preserve" text-anchor="start" x="1583.64" y="-774.5" font-family="Arial" font-size="15.00" fill="#c7d2fe">SKILL.md, computes digest, obtains OIDC</text>
+<text xml:space="preserve" text-anchor="start" x="1650.74" y="-756.5" font-family="Arial" font-size="15.00" fill="#c7d2fe">identity token, invokes</text>
+<text xml:space="preserve" text-anchor="start" x="1589.46" y="-738.5" font-family="Arial" font-size="15.00" fill="#c7d2fe">SigningContext.signer() which generates</text>
 </g>
 <!-- verificationengine -->
 <g id="node2" class="node">
 <title>verificationengine</title>
-<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="2434.19,-892.8 2097.27,-892.8 2097.27,-712.8 2434.19,-712.8 2434.19,-892.8"/>
-<text xml:space="preserve" text-anchor="start" x="2182.34" y="-853.6" font-family="Arial" font-size="20.00" fill="#eef2ff">Verification Engine</text>
-<text xml:space="preserve" text-anchor="start" x="2203.58" y="-831.9" font-family="Arial" font-size="13.00" fill="#c7d2fe">ECDSA P&#45;256, X.509</text>
-<text xml:space="preserve" text-anchor="start" x="2124" y="-810.5" font-family="Arial" font-size="15.00" fill="#c7d2fe">Orchestrates verification: reads sidecar via</text>
-<text xml:space="preserve" text-anchor="start" x="2117.32" y="-792.5" font-family="Arial" font-size="15.00" fill="#c7d2fe">SidecarManager, recomputes digest, verifies</text>
-<text xml:space="preserve" text-anchor="start" x="2130.66" y="-774.5" font-family="Arial" font-size="15.00" fill="#c7d2fe">ECDSA P&#45;256 signature using certificate</text>
-<text xml:space="preserve" text-anchor="start" x="2137.74" y="-756.5" font-family="Arial" font-size="15.00" fill="#c7d2fe">public key, validates cert chain against</text>
-<text xml:space="preserve" text-anchor="start" x="2144.43" y="-738.5" font-family="Arial" font-size="15.00" fill="#c7d2fe">Fulcio root via TUF TrustedRoot and</text>
+<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="2439.99,-892.8 2103.08,-892.8 2103.08,-712.8 2439.99,-712.8 2439.99,-892.8"/>
+<text xml:space="preserve" text-anchor="start" x="2188.15" y="-853.6" font-family="Arial" font-size="20.00" fill="#eef2ff">Verification Engine</text>
+<text xml:space="preserve" text-anchor="start" x="2209.39" y="-831.9" font-family="Arial" font-size="13.00" fill="#c7d2fe">ECDSA P&#45;256, X.509</text>
+<text xml:space="preserve" text-anchor="start" x="2129.81" y="-810.5" font-family="Arial" font-size="15.00" fill="#c7d2fe">Orchestrates verification: reads sidecar via</text>
+<text xml:space="preserve" text-anchor="start" x="2123.13" y="-792.5" font-family="Arial" font-size="15.00" fill="#c7d2fe">SidecarManager, recomputes digest, verifies</text>
+<text xml:space="preserve" text-anchor="start" x="2136.47" y="-774.5" font-family="Arial" font-size="15.00" fill="#c7d2fe">ECDSA P&#45;256 signature using certificate</text>
+<text xml:space="preserve" text-anchor="start" x="2143.55" y="-756.5" font-family="Arial" font-size="15.00" fill="#c7d2fe">public key, validates cert chain against</text>
+<text xml:space="preserve" text-anchor="start" x="2150.24" y="-738.5" font-family="Arial" font-size="15.00" fill="#c7d2fe">Fulcio root via TUF TrustedRoot and</text>
 </g>
 <!-- authhandler -->
 <g id="node3" class="node">
 <title>authhandler</title>
-<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="655,-536.4 326.45,-536.4 326.45,-356.4 655,-356.4 655,-536.4"/>
-<text xml:space="preserve" text-anchor="start" x="432.36" y="-497.2" font-family="Arial" font-size="20.00" fill="#eef2ff">Auth Handler</text>
-<text xml:space="preserve" text-anchor="start" x="474.48" y="-475.5" font-family="Arial" font-size="13.00" fill="#c7d2fe">OIDC</text>
-<text xml:space="preserve" text-anchor="start" x="359" y="-454.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">Obtains OIDC identity token for signing.</text>
-<text xml:space="preserve" text-anchor="start" x="346.51" y="-436.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">Detects ambient CI credentials first (GitHub</text>
-<text xml:space="preserve" text-anchor="start" x="351.92" y="-418.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">Actions OIDC via detect_credential). Falls</text>
-<text xml:space="preserve" text-anchor="start" x="351.5" y="-400.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">back to interactive browser&#45;based flow via</text>
-<text xml:space="preserve" text-anchor="start" x="417.78" y="-382.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">Sigstore OAuth issuer</text>
+<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="3354.42,-536.4 2990.65,-536.4 2990.65,-356.4 3354.42,-356.4 3354.42,-536.4"/>
+<text xml:space="preserve" text-anchor="start" x="3114.17" y="-497.2" font-family="Arial" font-size="20.00" fill="#eef2ff">Auth Handler</text>
+<text xml:space="preserve" text-anchor="start" x="3156.29" y="-475.5" font-family="Arial" font-size="13.00" fill="#c7d2fe">OIDC</text>
+<text xml:space="preserve" text-anchor="start" x="3040.81" y="-454.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">Obtains OIDC identity token for signing.</text>
+<text xml:space="preserve" text-anchor="start" x="3028.32" y="-436.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">Detects ambient CI credentials first (GitHub</text>
+<text xml:space="preserve" text-anchor="start" x="3115.44" y="-418.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">Actions OIDC via</text>
+<text xml:space="preserve" text-anchor="start" x="3034.24" y="-400.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">detect_credential(&quot;sigstore&quot;) with client ID</text>
+<text xml:space="preserve" text-anchor="start" x="3010.7" y="-382.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">_SIGSTORE_CLIENT_ID=&quot;sigstore&quot;). Falls back</text>
 </g>
 <!-- manifestreader -->
 <g id="node4" class="node">
 <title>manifestreader</title>
-<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="1084.84,-536.4 764.61,-536.4 764.61,-356.4 1084.84,-356.4 1084.84,-536.4"/>
-<text xml:space="preserve" text-anchor="start" x="851.36" y="-488.2" font-family="Arial" font-size="20.00" fill="#eef2ff">Manifest Reader</text>
-<text xml:space="preserve" text-anchor="start" x="896.18" y="-466.5" font-family="Arial" font-size="13.00" fill="#c7d2fe">YAML 1.2</text>
-<text xml:space="preserve" text-anchor="start" x="784.67" y="-445.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">Reads skillsign.yaml to extract skill_id and</text>
-<text xml:space="preserve" text-anchor="start" x="795.51" y="-427.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">skill_version at signing time, with same</text>
-<text xml:space="preserve" text-anchor="start" x="798.85" y="-409.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">strict YAML parsing restrictions as the</text>
-<text xml:space="preserve" text-anchor="start" x="855.95" y="-391.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">sidecar (Section 7.3)</text>
+<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="1080.65,-536.4 760.42,-536.4 760.42,-356.4 1080.65,-356.4 1080.65,-536.4"/>
+<text xml:space="preserve" text-anchor="start" x="847.17" y="-488.2" font-family="Arial" font-size="20.00" fill="#eef2ff">Manifest Reader</text>
+<text xml:space="preserve" text-anchor="start" x="891.99" y="-466.5" font-family="Arial" font-size="13.00" fill="#c7d2fe">YAML 1.2</text>
+<text xml:space="preserve" text-anchor="start" x="780.48" y="-445.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">Reads skillsign.yaml to extract skill_id and</text>
+<text xml:space="preserve" text-anchor="start" x="791.32" y="-427.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">skill_version at signing time, with same</text>
+<text xml:space="preserve" text-anchor="start" x="794.66" y="-409.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">strict YAML parsing restrictions as the</text>
+<text xml:space="preserve" text-anchor="start" x="851.75" y="-391.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">sidecar (Section 7.3)</text>
 </g>
 <!-- canonicalprocessor -->
 <g id="node5" class="node">
 <title>canonicalprocessor</title>
-<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="1530.36,-536.4 1195.09,-536.4 1195.09,-356.4 1530.36,-356.4 1530.36,-536.4"/>
-<text xml:space="preserve" text-anchor="start" x="1244.35" y="-497.2" font-family="Arial" font-size="20.00" fill="#eef2ff">Canonical Form Processor</text>
-<text xml:space="preserve" text-anchor="start" x="1314.33" y="-475.5" font-family="Arial" font-size="13.00" fill="#c7d2fe">UTF&#45;8, SHA&#45;256</text>
-<text xml:space="preserve" text-anchor="start" x="1236.82" y="-454.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">Implemented across canonical.py and</text>
-<text xml:space="preserve" text-anchor="start" x="1215.15" y="-436.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">digest.py. canonical.py: 8&#45;step normalization</text>
-<text xml:space="preserve" text-anchor="start" x="1230.19" y="-418.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">(BOM strip, CRLF normalization, trailing</text>
-<text xml:space="preserve" text-anchor="start" x="1233.08" y="-400.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">whitespace trim, single trailing newline,</text>
-<text xml:space="preserve" text-anchor="start" x="1247.26" y="-382.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">UTF&#45;8 encode, null&#45;byte rejection).</text>
+<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="1980.17,-536.4 1644.9,-536.4 1644.9,-356.4 1980.17,-356.4 1980.17,-536.4"/>
+<text xml:space="preserve" text-anchor="start" x="1694.16" y="-497.2" font-family="Arial" font-size="20.00" fill="#eef2ff">Canonical Form Processor</text>
+<text xml:space="preserve" text-anchor="start" x="1764.13" y="-475.5" font-family="Arial" font-size="13.00" fill="#c7d2fe">UTF&#45;8, SHA&#45;256</text>
+<text xml:space="preserve" text-anchor="start" x="1686.63" y="-454.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">Implemented across canonical.py and</text>
+<text xml:space="preserve" text-anchor="start" x="1664.96" y="-436.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">digest.py. canonical.py: 8&#45;step normalization</text>
+<text xml:space="preserve" text-anchor="start" x="1680" y="-418.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">(BOM strip, CRLF normalization, trailing</text>
+<text xml:space="preserve" text-anchor="start" x="1682.89" y="-400.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">whitespace trim, single trailing newline,</text>
+<text xml:space="preserve" text-anchor="start" x="1697.07" y="-382.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">UTF&#45;8 encode, null&#45;byte rejection).</text>
 </g>
 <!-- policyengine -->
 <g id="node6" class="node">
 <title>policyengine</title>
-<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="1984.94,-536.4 1640.52,-536.4 1640.52,-356.4 1984.94,-356.4 1984.94,-536.4"/>
-<text xml:space="preserve" text-anchor="start" x="1752.14" y="-497.2" font-family="Arial" font-size="20.00" fill="#eef2ff">Policy Engine</text>
-<text xml:space="preserve" text-anchor="start" x="1784.18" y="-475.5" font-family="Arial" font-size="13.00" fill="#c7d2fe">YAML 1.2</text>
-<text xml:space="preserve" text-anchor="start" x="1674.31" y="-454.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">[Phase 2, not yet implemented] Evaluates</text>
-<text xml:space="preserve" text-anchor="start" x="1686.45" y="-436.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">trust policies with first&#45;match&#45;wins rule</text>
-<text xml:space="preserve" text-anchor="start" x="1690.99" y="-418.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">evaluation, signer_org matching with</text>
-<text xml:space="preserve" text-anchor="start" x="1662.64" y="-400.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">lowercase normalization, and max_age_days</text>
-<text xml:space="preserve" text-anchor="start" x="1660.57" y="-382.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">enforcement against verified rekor_timestamp</text>
+<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="1534.74,-536.4 1190.33,-536.4 1190.33,-356.4 1534.74,-356.4 1534.74,-536.4"/>
+<text xml:space="preserve" text-anchor="start" x="1301.94" y="-497.2" font-family="Arial" font-size="20.00" fill="#eef2ff">Policy Engine</text>
+<text xml:space="preserve" text-anchor="start" x="1333.99" y="-475.5" font-family="Arial" font-size="13.00" fill="#c7d2fe">YAML 1.2</text>
+<text xml:space="preserve" text-anchor="start" x="1224.12" y="-454.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">[Phase 2, not yet implemented] Evaluates</text>
+<text xml:space="preserve" text-anchor="start" x="1236.26" y="-436.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">trust policies with first&#45;match&#45;wins rule</text>
+<text xml:space="preserve" text-anchor="start" x="1240.8" y="-418.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">evaluation, signer_org matching with</text>
+<text xml:space="preserve" text-anchor="start" x="1212.45" y="-400.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">lowercase normalization, and max_age_days</text>
+<text xml:space="preserve" text-anchor="start" x="1210.38" y="-382.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">enforcement against verified rekor_timestamp</text>
 </g>
 <!-- sidecarmanager -->
 <g id="node7" class="node">
 <title>sidecarmanager</title>
-<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="2448.94,-536.4 2094.52,-536.4 2094.52,-356.4 2448.94,-356.4 2448.94,-536.4"/>
-<text xml:space="preserve" text-anchor="start" x="2195.57" y="-497.2" font-family="Arial" font-size="20.00" fill="#eef2ff">Sidecar Manager</text>
-<text xml:space="preserve" text-anchor="start" x="2243.18" y="-475.5" font-family="Arial" font-size="13.00" fill="#c7d2fe">YAML 1.2</text>
-<text xml:space="preserve" text-anchor="start" x="2127.48" y="-454.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">Implemented as a single sidecar.py module</text>
-<text xml:space="preserve" text-anchor="start" x="2152.52" y="-436.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">combining reader and writer. Writer:</text>
-<text xml:space="preserve" text-anchor="start" x="2114.57" y="-418.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">assembles canonical field&#45;ordered YAML (PEM</text>
-<text xml:space="preserve" text-anchor="start" x="2140.01" y="-400.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">fields as literal block scalars) and writes</text>
-<text xml:space="preserve" text-anchor="start" x="2137.92" y="-382.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">atomically via temp file rename. Reader:</text>
+<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="2444.74,-536.4 2090.33,-536.4 2090.33,-356.4 2444.74,-356.4 2444.74,-536.4"/>
+<text xml:space="preserve" text-anchor="start" x="2191.38" y="-497.2" font-family="Arial" font-size="20.00" fill="#eef2ff">Sidecar Manager</text>
+<text xml:space="preserve" text-anchor="start" x="2238.99" y="-475.5" font-family="Arial" font-size="13.00" fill="#c7d2fe">YAML 1.2</text>
+<text xml:space="preserve" text-anchor="start" x="2123.29" y="-454.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">Implemented as a single sidecar.py module</text>
+<text xml:space="preserve" text-anchor="start" x="2148.33" y="-436.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">combining reader and writer. Writer:</text>
+<text xml:space="preserve" text-anchor="start" x="2110.38" y="-418.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">assembles canonical field&#45;ordered YAML (PEM</text>
+<text xml:space="preserve" text-anchor="start" x="2135.82" y="-400.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">fields as literal block scalars) and writes</text>
+<text xml:space="preserve" text-anchor="start" x="2133.73" y="-382.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">atomically via temp file rename. Reader:</text>
 </g>
 <!-- tufclient -->
 <g id="node8" class="node">
 <title>tufclient</title>
-<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="2884.78,-536.4 2558.68,-536.4 2558.68,-356.4 2884.78,-356.4 2884.78,-536.4"/>
-<text xml:space="preserve" text-anchor="start" x="2673.94" y="-497.2" font-family="Arial" font-size="20.00" fill="#eef2ff">TUF Client</text>
-<text xml:space="preserve" text-anchor="start" x="2684.17" y="-475.5" font-family="Arial" font-size="13.00" fill="#c7d2fe">TUF, HTTPS</text>
-<text xml:space="preserve" text-anchor="start" x="2597.93" y="-454.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">Wraps Sigstore SDK TrustedRoot via</text>
-<text xml:space="preserve" text-anchor="start" x="2587.09" y="-436.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">infra/tuf.py. Fetches production TUF root</text>
-<text xml:space="preserve" text-anchor="start" x="2583.74" y="-418.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">metadata including Fulcio root certificates</text>
-<text xml:space="preserve" text-anchor="start" x="2579.15" y="-400.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">and Rekor public key. Falls back to cached</text>
-<text xml:space="preserve" text-anchor="start" x="2578.73" y="-382.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">metadata when offline. Used by verification</text>
+<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="2880.59,-536.4 2554.49,-536.4 2554.49,-356.4 2880.59,-356.4 2880.59,-536.4"/>
+<text xml:space="preserve" text-anchor="start" x="2669.75" y="-497.2" font-family="Arial" font-size="20.00" fill="#eef2ff">TUF Client</text>
+<text xml:space="preserve" text-anchor="start" x="2679.98" y="-475.5" font-family="Arial" font-size="13.00" fill="#c7d2fe">TUF, HTTPS</text>
+<text xml:space="preserve" text-anchor="start" x="2593.74" y="-454.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">Wraps Sigstore SDK TrustedRoot via</text>
+<text xml:space="preserve" text-anchor="start" x="2582.89" y="-436.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">infra/tuf.py. Fetches production TUF root</text>
+<text xml:space="preserve" text-anchor="start" x="2579.55" y="-418.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">metadata including Fulcio root certificates</text>
+<text xml:space="preserve" text-anchor="start" x="2574.96" y="-400.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">and Rekor public key. Falls back to cached</text>
+<text xml:space="preserve" text-anchor="start" x="2574.54" y="-382.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">metadata when offline. Used by verification</text>
+</g>
+<!-- rekorclient -->
+<g id="node9" class="node">
+<title>rekorclient</title>
+<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="3790.57,-536.4 3464.5,-536.4 3464.5,-356.4 3790.57,-356.4 3790.57,-536.4"/>
+<text xml:space="preserve" text-anchor="start" x="3572.52" y="-497.2" font-family="Arial" font-size="20.00" fill="#eef2ff">Rekor Client</text>
+<text xml:space="preserve" text-anchor="start" x="3585.28" y="-475.5" font-family="Arial" font-size="13.00" fill="#c7d2fe">HTTPS, JSON</text>
+<text xml:space="preserve" text-anchor="start" x="3487.89" y="-454.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">Wraps Rekor transparency log queries via</text>
+<text xml:space="preserve" text-anchor="start" x="3484.56" y="-436.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">infra/rekor.py. Fetches log entries by log ID</text>
+<text xml:space="preserve" text-anchor="start" x="3536.24" y="-418.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">using the Rekor search API</text>
+<text xml:space="preserve" text-anchor="start" x="3504.98" y="-400.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">(/api/v1/log/entries/retrieve). Used by</text>
+<text xml:space="preserve" text-anchor="start" x="3507.07" y="-382.1" font-family="Arial" font-size="15.00" fill="#c7d2fe">verification engine in &#45;&#45;strict mode to</text>
 </g>
 <!-- skillauthor -->
-<g id="node9" class="node">
+<g id="node10" class="node">
 <title>skillauthor</title>
-<polygon fill="#a35829" stroke="#7e451d" stroke-width="0" points="1096.54,-1241.6 752.92,-1241.6 752.92,-1061.6 1096.54,-1061.6 1096.54,-1241.6"/>
-<text xml:space="preserve" text-anchor="start" x="874.15" y="-1165.6" font-family="Arial" font-size="20.00" fill="#ffe0c2">Skill Author</text>
-<text xml:space="preserve" text-anchor="start" x="772.97" y="-1142.1" font-family="Arial" font-size="15.00" fill="#f9b27c">A developer who creates and signs SKILL.md</text>
-<text xml:space="preserve" text-anchor="start" x="862.2" y="-1124.1" font-family="Arial" font-size="15.00" fill="#f9b27c">files for distribution</text>
+<polygon fill="#a35829" stroke="#7e451d" stroke-width="0" points="1896.35,-1241.6 1552.73,-1241.6 1552.73,-1061.6 1896.35,-1061.6 1896.35,-1241.6"/>
+<text xml:space="preserve" text-anchor="start" x="1673.96" y="-1165.6" font-family="Arial" font-size="20.00" fill="#ffe0c2">Skill Author</text>
+<text xml:space="preserve" text-anchor="start" x="1572.78" y="-1142.1" font-family="Arial" font-size="15.00" fill="#f9b27c">A developer who creates and signs SKILL.md</text>
+<text xml:space="preserve" text-anchor="start" x="1662.01" y="-1124.1" font-family="Arial" font-size="15.00" fill="#f9b27c">files for distribution</text>
 </g>
 <!-- skillconsumer -->
-<g id="node10" class="node">
+<g id="node11" class="node">
 <title>skillconsumer</title>
-<polygon fill="#a35829" stroke="#7e451d" stroke-width="0" points="2210.75,-1241.6 1890.71,-1241.6 1890.71,-1061.6 2210.75,-1061.6 2210.75,-1241.6"/>
-<text xml:space="preserve" text-anchor="start" x="1983.49" y="-1165.6" font-family="Arial" font-size="20.00" fill="#ffe0c2">Skill Consumer</text>
-<text xml:space="preserve" text-anchor="start" x="1913.14" y="-1142.1" font-family="Arial" font-size="15.00" fill="#f9b27c">A developer who installs and uses signed</text>
-<text xml:space="preserve" text-anchor="start" x="1980.69" y="-1124.1" font-family="Arial" font-size="15.00" fill="#f9b27c">skills in Claude Code</text>
+<polygon fill="#a35829" stroke="#7e451d" stroke-width="0" points="2378.56,-1241.6 2058.52,-1241.6 2058.52,-1061.6 2378.56,-1061.6 2378.56,-1241.6"/>
+<text xml:space="preserve" text-anchor="start" x="2151.29" y="-1165.6" font-family="Arial" font-size="20.00" fill="#ffe0c2">Skill Consumer</text>
+<text xml:space="preserve" text-anchor="start" x="2080.95" y="-1142.1" font-family="Arial" font-size="15.00" fill="#f9b27c">A developer who installs and uses signed</text>
+<text xml:space="preserve" text-anchor="start" x="2148.5" y="-1124.1" font-family="Arial" font-size="15.00" fill="#f9b27c">skills in Claude Code</text>
 </g>
 <!-- claudecode -->
-<g id="node11" class="node">
+<g id="node12" class="node">
 <title>claudecode</title>
-<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="2640.75,-1241.6 2320.71,-1241.6 2320.71,-1061.6 2640.75,-1061.6 2640.75,-1241.6"/>
-<text xml:space="preserve" text-anchor="start" x="2422.35" y="-1165.6" font-family="Arial" font-size="20.00" fill="#f8fafc">Claude Code</text>
-<text xml:space="preserve" text-anchor="start" x="2353.98" y="-1142.1" font-family="Arial" font-size="15.00" fill="#cbd5e1">Anthropic CLI that loads and executes</text>
-<text xml:space="preserve" text-anchor="start" x="2382.35" y="-1124.1" font-family="Arial" font-size="15.00" fill="#cbd5e1">SKILL.md files as instructions</text>
+<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="2808.56,-1241.6 2488.52,-1241.6 2488.52,-1061.6 2808.56,-1061.6 2808.56,-1241.6"/>
+<text xml:space="preserve" text-anchor="start" x="2590.16" y="-1165.6" font-family="Arial" font-size="20.00" fill="#f8fafc">Claude Code</text>
+<text xml:space="preserve" text-anchor="start" x="2521.79" y="-1142.1" font-family="Arial" font-size="15.00" fill="#cbd5e1">Anthropic CLI that loads and executes</text>
+<text xml:space="preserve" text-anchor="start" x="2550.16" y="-1124.1" font-family="Arial" font-size="15.00" fill="#cbd5e1">SKILL.md files as instructions</text>
 </g>
 <!-- fulcio -->
-<g id="node12" class="node">
-<title>fulcio</title>
-<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="3314.75,-536.4 2994.71,-536.4 2994.71,-356.4 3314.75,-356.4 3314.75,-536.4"/>
-<text xml:space="preserve" text-anchor="start" x="3111.38" y="-478.4" font-family="Arial" font-size="20.00" fill="#f8fafc">Fulcio CA</text>
-<text xml:space="preserve" text-anchor="start" x="3024.25" y="-454.9" font-family="Arial" font-size="15.00" fill="#cbd5e1">Sigstore certificate authority that issues</text>
-<text xml:space="preserve" text-anchor="start" x="3023.41" y="-436.9" font-family="Arial" font-size="15.00" fill="#cbd5e1">short&#45;lived certificates binding a verified</text>
-<text xml:space="preserve" text-anchor="start" x="3032.16" y="-418.9" font-family="Arial" font-size="15.00" fill="#cbd5e1">GitHub identity to a signer&#45;generated</text>
-<text xml:space="preserve" text-anchor="start" x="3083.85" y="-400.9" font-family="Arial" font-size="15.00" fill="#cbd5e1">ephemeral public key</text>
-</g>
-<!-- rekor -->
 <g id="node13" class="node">
-<title>rekor</title>
-<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="3774.05,-536.4 3435.41,-536.4 3435.41,-356.4 3774.05,-356.4 3774.05,-536.4"/>
-<text xml:space="preserve" text-anchor="start" x="3494.67" y="-460.4" font-family="Arial" font-size="20.00" fill="#f8fafc">Rekor Transparency Log</text>
-<text xml:space="preserve" text-anchor="start" x="3455.46" y="-436.9" font-family="Arial" font-size="15.00" fill="#cbd5e1">Append&#45;only, publicly auditable log recording</text>
-<text xml:space="preserve" text-anchor="start" x="3487.58" y="-418.9" font-family="Arial" font-size="15.00" fill="#cbd5e1">signatures, certificates, and digests</text>
+<title>fulcio</title>
+<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="650.56,-536.4 330.52,-536.4 330.52,-356.4 650.56,-356.4 650.56,-536.4"/>
+<text xml:space="preserve" text-anchor="start" x="447.19" y="-478.4" font-family="Arial" font-size="20.00" fill="#f8fafc">Fulcio CA</text>
+<text xml:space="preserve" text-anchor="start" x="360.06" y="-454.9" font-family="Arial" font-size="15.00" fill="#cbd5e1">Sigstore certificate authority that issues</text>
+<text xml:space="preserve" text-anchor="start" x="359.22" y="-436.9" font-family="Arial" font-size="15.00" fill="#cbd5e1">short&#45;lived certificates binding a verified</text>
+<text xml:space="preserve" text-anchor="start" x="367.96" y="-418.9" font-family="Arial" font-size="15.00" fill="#cbd5e1">GitHub identity to a signer&#45;generated</text>
+<text xml:space="preserve" text-anchor="start" x="419.66" y="-400.9" font-family="Arial" font-size="15.00" fill="#cbd5e1">ephemeral public key</text>
 </g>
 <!-- skillfiles -->
 <g id="node14" class="node">
 <title>skillfiles</title>
-<path fill="#3b82f6" stroke="#2563eb" stroke-width="2" d="M674.75,-163.64C674.75,-172.67 603.02,-180 514.73,-180 426.43,-180 354.71,-172.67 354.71,-163.64 354.71,-163.64 354.71,-16.36 354.71,-16.36 354.71,-7.33 426.43,0 514.73,0 603.02,0 674.75,-7.33 674.75,-16.36 674.75,-16.36 674.75,-163.64 674.75,-163.64"/>
-<path fill="none" stroke="#2563eb" stroke-width="2" d="M674.75,-163.64C674.75,-154.61 603.02,-147.27 514.73,-147.27 426.43,-147.27 354.71,-154.61 354.71,-163.64"/>
-<text xml:space="preserve" text-anchor="start" x="450.82" y="-122.8" font-family="Arial" font-size="20.00" fill="#eff6ff">Skill File Store</text>
-<text xml:space="preserve" text-anchor="start" x="463.43" y="-101.1" font-family="Arial" font-size="13.00" fill="#bfdbfe">Local File System</text>
-<text xml:space="preserve" text-anchor="start" x="381.77" y="-79.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">SKILL.md files, skillsign.yaml manifests,</text>
-<text xml:space="preserve" text-anchor="start" x="439.69" y="-61.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">.skillsign sidecars, and</text>
-<text xml:space="preserve" text-anchor="start" x="377.18" y="-43.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">.skillsign&#45;policy.yaml trust policies on disk</text>
+<path fill="#3b82f6" stroke="#2563eb" stroke-width="2" d="M1080.56,-163.64C1080.56,-172.67 1008.83,-180 920.54,-180 832.24,-180 760.52,-172.67 760.52,-163.64 760.52,-163.64 760.52,-16.36 760.52,-16.36 760.52,-7.33 832.24,0 920.54,0 1008.83,0 1080.56,-7.33 1080.56,-16.36 1080.56,-16.36 1080.56,-163.64 1080.56,-163.64"/>
+<path fill="none" stroke="#2563eb" stroke-width="2" d="M1080.56,-163.64C1080.56,-154.61 1008.83,-147.27 920.54,-147.27 832.24,-147.27 760.52,-154.61 760.52,-163.64"/>
+<text xml:space="preserve" text-anchor="start" x="856.63" y="-122.8" font-family="Arial" font-size="20.00" fill="#eff6ff">Skill File Store</text>
+<text xml:space="preserve" text-anchor="start" x="869.24" y="-101.1" font-family="Arial" font-size="13.00" fill="#bfdbfe">Local File System</text>
+<text xml:space="preserve" text-anchor="start" x="787.58" y="-79.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">SKILL.md files, skillsign.yaml manifests,</text>
+<text xml:space="preserve" text-anchor="start" x="845.5" y="-61.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">.skillsign sidecars, and</text>
+<text xml:space="preserve" text-anchor="start" x="782.99" y="-43.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">.skillsign&#45;policy.yaml trust policies on disk</text>
+</g>
+<!-- rekor -->
+<g id="node15" class="node">
+<title>rekor</title>
+<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="4308.86,-180 3970.22,-180 3970.22,0 4308.86,0 4308.86,-180"/>
+<text xml:space="preserve" text-anchor="start" x="4029.48" y="-104" font-family="Arial" font-size="20.00" fill="#f8fafc">Rekor Transparency Log</text>
+<text xml:space="preserve" text-anchor="start" x="3990.27" y="-80.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Append&#45;only, publicly auditable log recording</text>
+<text xml:space="preserve" text-anchor="start" x="4022.39" y="-62.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">signatures, certificates, and digests</text>
 </g>
 <!-- github -->
-<g id="node15" class="node">
+<g id="node16" class="node">
 <title>github</title>
-<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="1655.28,-180 1314.17,-180 1314.17,0 1655.28,0 1655.28,-180"/>
-<text xml:space="preserve" text-anchor="start" x="1390.25" y="-131" font-family="Arial" font-size="20.00" fill="#f8fafc">GitHub Actions OIDC</text>
-<text xml:space="preserve" text-anchor="start" x="1340.92" y="-107.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">CI identity provider: GitHub Actions runtime</text>
-<text xml:space="preserve" text-anchor="start" x="1334.23" y="-89.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">issues OIDC tokens encoding the exact repo,</text>
-<text xml:space="preserve" text-anchor="start" x="1343.41" y="-71.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">workflow, and branch. Fulcio verifies these</text>
-<text xml:space="preserve" text-anchor="start" x="1335.09" y="-53.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">tokens and issues certificates with URI SANs</text>
-<text xml:space="preserve" text-anchor="start" x="1467.64" y="-35.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">(e.g.,</text>
+<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="3337.09,-180 2995.98,-180 2995.98,0 3337.09,0 3337.09,-180"/>
+<text xml:space="preserve" text-anchor="start" x="3072.06" y="-131" font-family="Arial" font-size="20.00" fill="#f8fafc">GitHub Actions OIDC</text>
+<text xml:space="preserve" text-anchor="start" x="3022.73" y="-107.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">CI identity provider: GitHub Actions runtime</text>
+<text xml:space="preserve" text-anchor="start" x="3016.04" y="-89.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">issues OIDC tokens encoding the exact repo,</text>
+<text xml:space="preserve" text-anchor="start" x="3025.22" y="-71.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">workflow, and branch. Fulcio verifies these</text>
+<text xml:space="preserve" text-anchor="start" x="3016.89" y="-53.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">tokens and issues certificates with URI SANs</text>
+<text xml:space="preserve" text-anchor="start" x="3149.44" y="-35.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">(e.g.,</text>
 </g>
 <!-- sigstoredex -->
-<g id="node16" class="node">
+<g id="node17" class="node">
 <title>sigstoredex</title>
-<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="3337.18,-180 3000.27,-180 3000.27,0 3337.18,0 3337.18,-180"/>
-<text xml:space="preserve" text-anchor="start" x="3073.69" y="-131" font-family="Arial" font-size="20.00" fill="#f8fafc">Sigstore Dex (OAuth)</text>
-<text xml:space="preserve" text-anchor="start" x="3077.02" y="-107.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Interactive identity provider:</text>
-<text xml:space="preserve" text-anchor="start" x="3070.76" y="-89.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Sigstore&#45;hosted Dex instance</text>
-<text xml:space="preserve" text-anchor="start" x="3025.3" y="-71.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">(oauth2.sigstore.dev/auth) that federates to</text>
-<text xml:space="preserve" text-anchor="start" x="3020.33" y="-53.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Google, GitHub, and Microsoft OAuth. Fulcio</text>
-<text xml:space="preserve" text-anchor="start" x="3034.49" y="-35.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">verifies the Dex&#45;issued token and issues</text>
+<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="3783.99,-180 3447.08,-180 3447.08,0 3783.99,0 3783.99,-180"/>
+<text xml:space="preserve" text-anchor="start" x="3520.5" y="-131" font-family="Arial" font-size="20.00" fill="#f8fafc">Sigstore Dex (OAuth)</text>
+<text xml:space="preserve" text-anchor="start" x="3523.83" y="-107.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Interactive identity provider:</text>
+<text xml:space="preserve" text-anchor="start" x="3517.57" y="-89.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Sigstore&#45;hosted Dex instance</text>
+<text xml:space="preserve" text-anchor="start" x="3472.11" y="-71.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">(oauth2.sigstore.dev/auth) that federates to</text>
+<text xml:space="preserve" text-anchor="start" x="3467.14" y="-53.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Google, GitHub, and Microsoft OAuth. Fulcio</text>
+<text xml:space="preserve" text-anchor="start" x="3481.3" y="-35.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">verifies the Dex&#45;issued token and issues</text>
 </g>
 <!-- tuf -->
-<g id="node17" class="node">
+<g id="node18" class="node">
 <title>tuf</title>
-<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="2443.75,-180 2123.71,-180 2123.71,0 2443.75,0 2443.75,-180"/>
-<text xml:space="preserve" text-anchor="start" x="2240.39" y="-104" font-family="Arial" font-size="20.00" fill="#f8fafc">TUF Root</text>
-<text xml:space="preserve" text-anchor="start" x="2164.93" y="-80.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">The Update Framework root of trust</text>
-<text xml:space="preserve" text-anchor="start" x="2178.68" y="-62.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">distributing Sigstore public keys</text>
+<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="2439.56,-180 2119.52,-180 2119.52,0 2439.56,0 2439.56,-180"/>
+<text xml:space="preserve" text-anchor="start" x="2236.2" y="-104" font-family="Arial" font-size="20.00" fill="#f8fafc">TUF Root</text>
+<text xml:space="preserve" text-anchor="start" x="2160.74" y="-80.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">The Update Framework root of trust</text>
+<text xml:space="preserve" text-anchor="start" x="2174.48" y="-62.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">distributing Sigstore public keys</text>
 </g>
 <!-- tufcache -->
-<g id="node18" class="node">
+<g id="node19" class="node">
 <title>tufcache</title>
-<path fill="#3b82f6" stroke="#2563eb" stroke-width="2" d="M2889.81,-163.64C2889.81,-172.67 2814.47,-180 2721.73,-180 2628.98,-180 2553.65,-172.67 2553.65,-163.64 2553.65,-163.64 2553.65,-16.36 2553.65,-16.36 2553.65,-7.33 2628.98,0 2721.73,0 2814.47,0 2889.81,-7.33 2889.81,-16.36 2889.81,-16.36 2889.81,-163.64 2889.81,-163.64"/>
-<path fill="none" stroke="#2563eb" stroke-width="2" d="M2889.81,-163.64C2889.81,-154.61 2814.47,-147.27 2721.73,-147.27 2628.98,-147.27 2553.65,-154.61 2553.65,-163.64"/>
-<text xml:space="preserve" text-anchor="start" x="2646.7" y="-122.8" font-family="Arial" font-size="20.00" fill="#eff6ff">TUF Root Cache</text>
-<text xml:space="preserve" text-anchor="start" x="2670.43" y="-101.1" font-family="Arial" font-size="13.00" fill="#bfdbfe">Local File System</text>
-<text xml:space="preserve" text-anchor="start" x="2573.7" y="-79.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">Local cache of bundled and fetched Sigstore</text>
-<text xml:space="preserve" text-anchor="start" x="2607.09" y="-61.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">TUF root metadata and Fulcio root</text>
-<text xml:space="preserve" text-anchor="start" x="2685.88" y="-43.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">certificates</text>
+<path fill="#3b82f6" stroke="#2563eb" stroke-width="2" d="M2885.61,-163.64C2885.61,-172.67 2810.28,-180 2717.54,-180 2624.79,-180 2549.46,-172.67 2549.46,-163.64 2549.46,-163.64 2549.46,-16.36 2549.46,-16.36 2549.46,-7.33 2624.79,0 2717.54,0 2810.28,0 2885.61,-7.33 2885.61,-16.36 2885.61,-16.36 2885.61,-163.64 2885.61,-163.64"/>
+<path fill="none" stroke="#2563eb" stroke-width="2" d="M2885.61,-163.64C2885.61,-154.61 2810.28,-147.27 2717.54,-147.27 2624.79,-147.27 2549.46,-154.61 2549.46,-163.64"/>
+<text xml:space="preserve" text-anchor="start" x="2642.51" y="-122.8" font-family="Arial" font-size="20.00" fill="#eff6ff">TUF Root Cache</text>
+<text xml:space="preserve" text-anchor="start" x="2666.24" y="-101.1" font-family="Arial" font-size="13.00" fill="#bfdbfe">Local File System</text>
+<text xml:space="preserve" text-anchor="start" x="2569.51" y="-79.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">Local cache of bundled and fetched Sigstore</text>
+<text xml:space="preserve" text-anchor="start" x="2602.9" y="-61.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">TUF root metadata and Fulcio root</text>
+<text xml:space="preserve" text-anchor="start" x="2681.69" y="-43.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">certificates</text>
 </g>
 <!-- signingengine&#45;&gt;authhandler -->
 <g id="edge4" class="edge">
 <title>signingengine&#45;&gt;authhandler</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M785.9,-712.87C758.47,-693.86 730.35,-673.31 705,-652.8 663.49,-619.23 620.49,-579.19 584,-543.42"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="586.13,-541.84 578.95,-538.45 582.45,-545.58 586.13,-541.84"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="705,-613.2 705,-636 897.73,-636 897.73,-613.2 705,-613.2"/>
-<text xml:space="preserve" text-anchor="start" x="708" y="-620.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Gets OIDC identity token from</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1891.77,-749.51C1941.76,-735.61 1996.99,-721.94 2048.54,-712.8 2365.58,-656.58 2460.87,-741.05 2770.54,-652.8 2858.54,-627.72 2949.88,-582.79 3023.22,-541.34"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3024.22,-543.79 3029.44,-537.8 3021.63,-539.23 3024.22,-543.79"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2909.13,-613.2 2909.13,-636 3101.86,-636 3101.86,-613.2 2909.13,-613.2"/>
+<text xml:space="preserve" text-anchor="start" x="2912.13" y="-620.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Gets OIDC identity token from</text>
 </g>
 <!-- signingengine&#45;&gt;manifestreader -->
 <g id="edge5" class="edge">
 <title>signingengine&#45;&gt;manifestreader</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M924.73,-712.83C924.73,-662.18 924.73,-598.61 924.73,-546.39"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="927.35,-546.63 924.73,-539.13 922.1,-546.63 927.35,-546.63"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="924.73,-613.2 924.73,-636 1156.37,-636 1156.37,-613.2 924.73,-613.2"/>
-<text xml:space="preserve" text-anchor="start" x="927.73" y="-620.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads skill_id and skill_version from</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1556.95,-786.66C1368.05,-766.39 1076.47,-724.42 993.89,-652.8 962.84,-625.87 944.93,-584.85 934.6,-546.52"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="937.15,-545.88 932.76,-539.26 932.06,-547.18 937.15,-545.88"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="993.89,-613.2 993.89,-636 1225.54,-636 1225.54,-613.2 993.89,-613.2"/>
+<text xml:space="preserve" text-anchor="start" x="996.89" y="-620.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads skill_id and skill_version from</text>
 </g>
 <!-- signingengine&#45;&gt;canonicalprocessor -->
 <g id="edge7" class="edge">
 <title>signingengine&#45;&gt;canonicalprocessor</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1092.14,-716.44C1123.83,-697.29 1155.78,-675.78 1183.73,-652.8 1222.28,-621.11 1259.45,-580.66 1289.84,-544.05"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1291.55,-546.09 1294.29,-538.64 1287.5,-542.76 1291.55,-546.09"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1243.47,-613.2 1243.47,-636 1412.87,-636 1412.87,-613.2 1243.47,-613.2"/>
-<text xml:space="preserve" text-anchor="start" x="1246.47" y="-620.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Gets SHA&#45;256 digest from</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1698.69,-712.87C1692.11,-676.08 1689.91,-633.44 1702.14,-596.4 1708.07,-578.44 1717.09,-560.87 1727.47,-544.46"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1729.45,-546.24 1731.36,-538.53 1725.06,-543.36 1729.45,-546.24"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1702.14,-613.2 1702.14,-636 1871.54,-636 1871.54,-613.2 1702.14,-613.2"/>
+<text xml:space="preserve" text-anchor="start" x="1705.14" y="-620.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Gets SHA&#45;256 digest from</text>
 </g>
 <!-- signingengine&#45;&gt;fulcio -->
 <g id="edge6" class="edge">
 <title>signingengine&#45;&gt;fulcio</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1092.03,-788.45C1542.51,-752.49 2747.86,-656.02 2757.73,-652.8 2803.36,-637.92 2807.75,-619.5 2849.83,-596.4 2893.32,-572.53 2941.18,-548.24 2985.84,-526.4"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2986.71,-528.89 2992.3,-523.24 2984.41,-524.17 2986.71,-528.89"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2849.83,-596.4 2849.83,-652.8 3108.73,-652.8 3108.73,-596.4 2849.83,-596.4"/>
-<text xml:space="preserve" text-anchor="start" x="2852.83" y="-637.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">Submits ephemeral public key and OIDC</text>
-<text xml:space="preserve" text-anchor="start" x="2852.83" y="-620.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">token via Sigstore SDK, receives</text>
-<text xml:space="preserve" text-anchor="start" x="2852.83" y="-603.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">short&#45;lived X.509 certificate</text>
-</g>
-<!-- signingengine&#45;&gt;rekor -->
-<g id="edge8" class="edge">
-<title>signingengine&#45;&gt;rekor</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1092.26,-787.18C1310.82,-768.4 1705.18,-735.53 2042.73,-712.8 2284.55,-696.52 2901.17,-727.53 3131.73,-652.8 3175.79,-638.52 3178.08,-617.39 3219.36,-596.4 3229.82,-591.08 3330.33,-552.25 3426.07,-515.56"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3426.72,-518.13 3432.79,-512.99 3424.84,-513.22 3426.72,-518.13"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="3219.36,-596.4 3219.36,-652.8 3469.73,-652.8 3469.73,-596.4 3219.36,-596.4"/>
-<text xml:space="preserve" text-anchor="start" x="3222.36" y="-637.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">Submits signature, certificate, and</text>
-<text xml:space="preserve" text-anchor="start" x="3222.36" y="-620.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">digest as hashedrekord/v0.0.1 entry via</text>
-<text xml:space="preserve" text-anchor="start" x="3222.36" y="-603.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">Sigstore SDK</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1557.13,-792.59C1298.65,-775.98 816.51,-734.87 666.64,-652.8 620.29,-627.42 580.67,-584.68 550.81,-544.74"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="552.94,-543.2 546.38,-538.71 548.71,-546.31 552.94,-543.2"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="666.64,-596.4 666.64,-652.8 925.54,-652.8 925.54,-596.4 666.64,-596.4"/>
+<text xml:space="preserve" text-anchor="start" x="669.64" y="-637.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">Submits ephemeral public key and OIDC</text>
+<text xml:space="preserve" text-anchor="start" x="669.64" y="-620.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">token via Sigstore SDK, receives</text>
+<text xml:space="preserve" text-anchor="start" x="669.64" y="-603.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">short&#45;lived X.509 certificate</text>
 </g>
 <!-- signingengine&#45;&gt;skillfiles -->
-<g id="edge9" class="edge">
+<g id="edge8" class="edge">
 <title>signingengine&#45;&gt;skillfiles</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M757.29,-775.58C525.93,-735.55 127.26,-651.53 41.64,-536.4 -16.7,-457.94 -10.55,-399.08 41.64,-316.4 107.69,-211.77 237.09,-154.69 343.88,-124.18"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="344.38,-126.76 350.9,-122.21 342.97,-121.71 344.38,-126.76"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="41.64,-426.6 41.64,-466.2 271.73,-466.2 271.73,-426.6 41.64,-426.6"/>
-<text xml:space="preserve" text-anchor="start" x="44.64" y="-450.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">Checks for existing .skillsign sidecar</text>
-<text xml:space="preserve" text-anchor="start" x="44.64" y="-433.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">before signing</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1557.19,-802.39C1170.17,-799.73 232.09,-768.94 45.45,-536.4 -15.75,-460.15 -14.45,-393.68 45.45,-316.4 130.92,-206.13 520.01,-140.28 749.59,-110.36"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="749.62,-113 756.72,-109.44 748.95,-107.8 749.62,-113"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="45.45,-426.6 45.45,-466.2 275.54,-466.2 275.54,-426.6 45.45,-426.6"/>
+<text xml:space="preserve" text-anchor="start" x="48.45" y="-450.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">Checks for existing .skillsign sidecar</text>
+<text xml:space="preserve" text-anchor="start" x="48.45" y="-433.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">before signing</text>
+</g>
+<!-- signingengine&#45;&gt;rekor -->
+<g id="edge9" class="edge">
+<title>signingengine&#45;&gt;rekor</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1891.94,-747.91C1941.81,-734.01 1996.93,-720.74 2048.54,-712.8 2401.08,-658.53 3310.74,-754.81 3652.54,-652.8 3915.08,-574.44 4034.88,-542.39 4155.54,-296.4 4171.41,-264.03 4172.31,-225.31 4167.55,-190.25"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="4170.17,-190 4166.45,-182.98 4164.98,-190.79 4170.17,-190"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="4143.47,-418.2 4143.47,-474.6 4393.83,-474.6 4393.83,-418.2 4143.47,-418.2"/>
+<text xml:space="preserve" text-anchor="start" x="4146.47" y="-459" font-family="Arial" font-size="14.00" fill="#c9c9c9">Submits signature, certificate, and</text>
+<text xml:space="preserve" text-anchor="start" x="4146.47" y="-442.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">digest as hashedrekord/v0.0.1 entry via</text>
+<text xml:space="preserve" text-anchor="start" x="4146.47" y="-425.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Sigstore SDK</text>
 </g>
 <!-- verificationengine&#45;&gt;canonicalprocessor -->
 <g id="edge10" class="edge">
 <title>verificationengine&#45;&gt;canonicalprocessor</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2097.38,-764.38C1992.38,-738.56 1855.55,-700.35 1739.1,-652.8 1663.25,-621.83 1583.06,-579.53 1516.27,-541.36"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1517.79,-539.2 1509.98,-537.75 1515.18,-543.76 1517.79,-539.2"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1739.1,-613.2 1739.1,-636 1886.73,-636 1886.73,-613.2 1739.1,-613.2"/>
-<text xml:space="preserve" text-anchor="start" x="1742.1" y="-620.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Recomputes digest via</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2156.3,-712.83C2089.06,-660.91 2004.25,-595.43 1935.7,-542.49"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1937.35,-540.46 1929.81,-537.95 1934.15,-544.61 1937.35,-540.46"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2069.52,-613.2 2069.52,-636 2217.14,-636 2217.14,-613.2 2069.52,-613.2"/>
+<text xml:space="preserve" text-anchor="start" x="2072.52" y="-620.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Recomputes digest via</text>
 </g>
 <!-- verificationengine&#45;&gt;policyengine -->
 <g id="edge11" class="edge">
 <title>verificationengine&#45;&gt;policyengine</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2097.5,-734.11C2053.04,-711.91 2006.81,-684.62 1968.52,-652.8 1931.88,-622.35 1898.77,-581.71 1872.59,-544.62"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1874.95,-543.41 1868.51,-538.75 1870.64,-546.41 1874.95,-543.41"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1968.52,-596.4 1968.52,-652.8 2215.73,-652.8 2215.73,-596.4 1968.52,-596.4"/>
-<text xml:space="preserve" text-anchor="start" x="1971.52" y="-637.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">Passes verified signer identity,</text>
-<text xml:space="preserve" text-anchor="start" x="1971.52" y="-620.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">rekor_timestamp, and skill_id for policy</text>
-<text xml:space="preserve" text-anchor="start" x="1971.52" y="-603.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">evaluation [Phase 2]</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2103.29,-750.26C2053.51,-736.47 1998.66,-722.66 1947.54,-712.8 1831.54,-690.42 1509.14,-729.54 1419.33,-652.8 1388.6,-626.55 1373.76,-585.3 1366.84,-546.63"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1369.44,-546.31 1365.65,-539.33 1364.26,-547.15 1369.44,-546.31"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1419.33,-596.4 1419.33,-652.8 1666.54,-652.8 1666.54,-596.4 1419.33,-596.4"/>
+<text xml:space="preserve" text-anchor="start" x="1422.33" y="-637.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">Passes verified signer identity,</text>
+<text xml:space="preserve" text-anchor="start" x="1422.33" y="-620.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">rekor_timestamp, and skill_id for policy</text>
+<text xml:space="preserve" text-anchor="start" x="1422.33" y="-603.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">evaluation [Phase 2]</text>
 </g>
 <!-- verificationengine&#45;&gt;sidecarmanager -->
 <g id="edge12" class="edge">
 <title>verificationengine&#45;&gt;sidecarmanager</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2248.54,-712.88C2243.58,-676.76 2240.34,-634.61 2243.88,-596.4 2245.39,-580.13 2247.8,-562.98 2250.6,-546.34"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2253.17,-546.88 2251.86,-539.04 2247.99,-545.98 2253.17,-546.88"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2243.88,-613.2 2243.88,-636 2397.73,-636 2397.73,-613.2 2243.88,-613.2"/>
-<text xml:space="preserve" text-anchor="start" x="2246.88" y="-620.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads sidecar fields via</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2270.53,-712.83C2269.96,-662.18 2269.24,-598.61 2268.65,-546.39"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2271.28,-546.6 2268.57,-539.13 2266.03,-546.66 2271.28,-546.6"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2269.78,-613.2 2269.78,-636 2423.62,-636 2423.62,-613.2 2269.78,-613.2"/>
+<text xml:space="preserve" text-anchor="start" x="2272.78" y="-620.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads sidecar fields via</text>
 </g>
 <!-- verificationengine&#45;&gt;tufclient -->
 <g id="edge13" class="edge">
 <title>verificationengine&#45;&gt;tufclient</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2369.04,-712.82C2412.68,-676.02 2464.41,-633.39 2512.42,-596.4 2535.68,-578.48 2560.81,-559.93 2585.31,-542.26"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2586.58,-544.58 2591.14,-538.07 2583.52,-540.31 2586.58,-544.58"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2512.42,-604.8 2512.42,-644.4 2734.73,-644.4 2734.73,-604.8 2512.42,-604.8"/>
-<text xml:space="preserve" text-anchor="start" x="2515.42" y="-628.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Gets trusted Fulcio root certificates</text>
-<text xml:space="preserve" text-anchor="start" x="2515.42" y="-612" font-family="Arial" font-size="14.00" fill="#c9c9c9">and Rekor public key from</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2383.5,-712.83C2448.84,-660.91 2531.25,-595.43 2597.86,-542.49"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2599.3,-544.71 2603.54,-537.99 2596.03,-540.6 2599.3,-544.71"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2521.24,-604.8 2521.24,-644.4 2743.54,-644.4 2743.54,-604.8 2521.24,-604.8"/>
+<text xml:space="preserve" text-anchor="start" x="2524.24" y="-628.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Gets trusted Fulcio root certificates</text>
+<text xml:space="preserve" text-anchor="start" x="2524.24" y="-612" font-family="Arial" font-size="14.00" fill="#c9c9c9">and Rekor public key from</text>
 </g>
-<!-- verificationengine&#45;&gt;rekor -->
+<!-- verificationengine&#45;&gt;rekorclient -->
 <g id="edge14" class="edge">
-<title>verificationengine&#45;&gt;rekor</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2433.97,-800.37C2729.86,-794.81 3328.07,-769.07 3496.73,-652.8 3533.58,-627.4 3558.78,-585.36 3575.51,-545.91"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3577.92,-546.96 3578.33,-539.02 3573.06,-544.97 3577.92,-546.96"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="3547.72,-604.8 3547.72,-644.4 3775.48,-644.4 3775.48,-604.8 3547.72,-604.8"/>
-<text xml:space="preserve" text-anchor="start" x="3550.72" y="-628.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Confirms log entry exists and digest</text>
-<text xml:space="preserve" text-anchor="start" x="3550.72" y="-612" font-family="Arial" font-size="14.00" fill="#c9c9c9">matches in &#45;&#45;strict mode</text>
+<title>verificationengine&#45;&gt;rekorclient</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2439.56,-797.62C2645.54,-787.92 3002.59,-756.15 3289.54,-652.8 3363.42,-626.19 3438.75,-582.36 3499.49,-542.01"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3500.67,-544.37 3505.45,-538.02 3497.75,-540.01 3500.67,-544.37"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="3407.38,-604.8 3407.38,-644.4 3625.78,-644.4 3625.78,-604.8 3407.38,-604.8"/>
+<text xml:space="preserve" text-anchor="start" x="3410.38" y="-628.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Queries Rekor log entries for strict</text>
+<text xml:space="preserve" text-anchor="start" x="3410.38" y="-612" font-family="Arial" font-size="14.00" fill="#c9c9c9">mode verification</text>
 </g>
 <!-- authhandler&#45;&gt;github -->
 <g id="edge15" class="edge">
 <title>authhandler&#45;&gt;github</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M617.55,-356.41C646.61,-340.17 678.25,-325.49 709.73,-316.4 780.32,-296 1307.98,-334.63 1370.73,-296.4 1409.98,-272.48 1436.77,-229.81 1454.46,-189.53"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1456.85,-190.62 1457.36,-182.69 1452.02,-188.57 1456.85,-190.62"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1424.35,-248.4 1424.35,-288 1687.89,-288 1687.89,-248.4 1424.35,-248.4"/>
-<text xml:space="preserve" text-anchor="start" x="1427.35" y="-272.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Detects ambient OIDC token from GitHub</text>
-<text xml:space="preserve" text-anchor="start" x="1427.35" y="-255.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">Actions runtime (CI path)</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M3153.4,-356.74C3149.91,-336.97 3146.8,-316.05 3145,-296.4 3141.83,-261.78 3144.15,-223.91 3148.25,-190.23"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3150.84,-190.7 3149.2,-182.92 3145.63,-190.03 3150.84,-190.7"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="3145,-248.4 3145,-288 3408.54,-288 3408.54,-248.4 3145,-248.4"/>
+<text xml:space="preserve" text-anchor="start" x="3148" y="-272.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Detects ambient OIDC token from GitHub</text>
+<text xml:space="preserve" text-anchor="start" x="3148" y="-255.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">Actions runtime (CI path)</text>
 </g>
 <!-- authhandler&#45;&gt;sigstoredex -->
 <g id="edge16" class="edge">
 <title>authhandler&#45;&gt;sigstoredex</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M616.23,-356.55C645.62,-340.07 677.73,-325.27 709.73,-316.4 771.75,-299.2 2969.85,-326.54 3026.73,-296.4 3070.53,-273.19 3103.54,-229.73 3126.65,-188.74"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3128.81,-190.25 3130.12,-182.42 3124.21,-187.73 3128.81,-190.25"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="3088.12,-240 3088.12,-296.4 3352.46,-296.4 3352.46,-240 3088.12,-240"/>
-<text xml:space="preserve" text-anchor="start" x="3091.12" y="-280.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Opens browser for OAuth login via Dex —</text>
-<text xml:space="preserve" text-anchor="start" x="3091.12" y="-264" font-family="Arial" font-size="14.00" fill="#c9c9c9">user picks Google, GitHub, or Microsoft</text>
-<text xml:space="preserve" text-anchor="start" x="3091.12" y="-247.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">(interactive path)</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M3345.16,-356.42C3375.07,-338.15 3405.04,-317.88 3431.54,-296.4 3470.77,-264.6 3508.92,-224.12 3540.21,-187.53"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3541.97,-189.51 3544.82,-182.09 3537.97,-186.11 3541.97,-189.51"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="3487.23,-240 3487.23,-296.4 3751.57,-296.4 3751.57,-240 3487.23,-240"/>
+<text xml:space="preserve" text-anchor="start" x="3490.23" y="-280.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Opens browser for OAuth login via Dex —</text>
+<text xml:space="preserve" text-anchor="start" x="3490.23" y="-264" font-family="Arial" font-size="14.00" fill="#c9c9c9">user picks Google, GitHub, or Microsoft</text>
+<text xml:space="preserve" text-anchor="start" x="3490.23" y="-247.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">(interactive path)</text>
 </g>
 <!-- manifestreader&#45;&gt;skillfiles -->
 <g id="edge17" class="edge">
 <title>manifestreader&#45;&gt;skillfiles</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M797.63,-356.54C769.76,-340.72 739.62,-326.18 709.73,-316.4 663.78,-301.37 525.68,-332.12 493.11,-296.4 467.43,-268.25 466.8,-228.08 474.84,-190.72"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="477.32,-191.63 476.49,-183.73 472.21,-190.42 477.32,-191.63"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="493.11,-256.8 493.11,-279.6 689.73,-279.6 689.73,-256.8 493.11,-256.8"/>
-<text xml:space="preserve" text-anchor="start" x="496.11" y="-264" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads skillsign.yaml manifests</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M920.54,-356.43C920.54,-306.16 920.54,-243.18 920.54,-191.18"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="923.16,-191.46 920.54,-183.96 917.91,-191.46 923.16,-191.46"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="920.54,-256.8 920.54,-279.6 1117.16,-279.6 1117.16,-256.8 920.54,-256.8"/>
+<text xml:space="preserve" text-anchor="start" x="923.54" y="-264" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads skillsign.yaml manifests</text>
 </g>
 <!-- policyengine&#45;&gt;skillfiles -->
 <g id="edge18" class="edge">
 <title>policyengine&#45;&gt;skillfiles</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1681.27,-356.46C1651.09,-340.15 1618.26,-325.45 1585.73,-316.4 1418.4,-269.88 969.24,-351.22 804.44,-296.4 785.12,-289.97 708.57,-235.46 639.01,-184.22"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="640.59,-182.12 633,-179.78 637.47,-186.35 640.59,-182.12"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="804.44,-248.4 804.44,-288 1012.73,-288 1012.73,-248.4 804.44,-248.4"/>
-<text xml:space="preserve" text-anchor="start" x="807.44" y="-272.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads .skillsign&#45;policy.yaml trust</text>
-<text xml:space="preserve" text-anchor="start" x="807.44" y="-255.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">policies [Phase 2]</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1274.92,-356.41C1236.3,-318.9 1189.53,-275.74 1144.54,-240 1119.51,-220.12 1091.86,-200.23 1064.78,-181.74"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1066.58,-179.79 1058.9,-177.75 1063.63,-184.14 1066.58,-179.79"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1207.23,-248.4 1207.23,-288 1415.52,-288 1415.52,-248.4 1207.23,-248.4"/>
+<text xml:space="preserve" text-anchor="start" x="1210.23" y="-272.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads .skillsign&#45;policy.yaml trust</text>
+<text xml:space="preserve" text-anchor="start" x="1210.23" y="-255.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">policies [Phase 2]</text>
 </g>
 <!-- sidecarmanager&#45;&gt;skillfiles -->
 <g id="edge19" class="edge">
 <title>sidecarmanager&#45;&gt;skillfiles</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2137.52,-356.52C2106.59,-340.16 2072.98,-325.41 2039.73,-316.4 1941.47,-289.77 1221.13,-326.08 1123.75,-296.4 1079.3,-282.85 1078.07,-259.12 1035.73,-240 923.39,-189.27 789.57,-151.43 685.68,-126.59"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="686.57,-124.1 678.66,-124.92 685.36,-129.21 686.57,-124.1"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1123.75,-248.4 1123.75,-288 1343.73,-288 1343.73,-248.4 1123.75,-248.4"/>
-<text xml:space="preserve" text-anchor="start" x="1126.75" y="-272.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads and writes .skillsign sidecar</text>
-<text xml:space="preserve" text-anchor="start" x="1126.75" y="-255.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">files</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2123.52,-356.42C2095.09,-341.43 2064.94,-327.25 2035.54,-316.4 1713.23,-197.48 1314.12,-136.1 1091.4,-108.97"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1092.02,-106.4 1084.26,-108.11 1091.39,-111.62 1092.02,-106.4"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1977.87,-248.4 1977.87,-288 2197.85,-288 2197.85,-248.4 1977.87,-248.4"/>
+<text xml:space="preserve" text-anchor="start" x="1980.87" y="-272.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads and writes .skillsign sidecar</text>
+<text xml:space="preserve" text-anchor="start" x="1980.87" y="-255.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">files</text>
 </g>
 <!-- tufclient&#45;&gt;tuf -->
 <g id="edge20" class="edge">
 <title>tufclient&#45;&gt;tuf</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2580.16,-356.46C2555.13,-342.24 2528.99,-328.3 2503.73,-316.4 2480.04,-305.24 2469.6,-311.63 2448.3,-296.4 2407.87,-267.49 2372.09,-226.07 2344.31,-187.99"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2346.78,-186.93 2340.27,-182.38 2342.52,-190 2346.78,-186.93"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2448.3,-248.4 2448.3,-288 2694.73,-288 2694.73,-248.4 2448.3,-248.4"/>
-<text xml:space="preserve" text-anchor="start" x="2451.3" y="-272.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Fetches current TUF root metadata via</text>
-<text xml:space="preserve" text-anchor="start" x="2451.3" y="-255.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">HTTPS</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2575.97,-356.46C2550.94,-342.24 2524.8,-328.3 2499.54,-316.4 2475.84,-305.24 2465.41,-311.63 2444.11,-296.4 2403.68,-267.49 2367.9,-226.07 2340.12,-187.99"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2342.59,-186.93 2336.08,-182.38 2338.33,-190 2342.59,-186.93"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2444.11,-248.4 2444.11,-288 2690.54,-288 2690.54,-248.4 2444.11,-248.4"/>
+<text xml:space="preserve" text-anchor="start" x="2447.11" y="-272.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Fetches current TUF root metadata via</text>
+<text xml:space="preserve" text-anchor="start" x="2447.11" y="-255.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">HTTPS</text>
 </g>
 <!-- tufclient&#45;&gt;tufcache -->
 <g id="edge21" class="edge">
 <title>tufclient&#45;&gt;tufcache</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2721.73,-356.43C2721.73,-306.16 2721.73,-243.18 2721.73,-191.18"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2724.35,-191.46 2721.73,-183.96 2719.1,-191.46 2724.35,-191.46"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2721.73,-248.4 2721.73,-288 3000.08,-288 3000.08,-248.4 2721.73,-248.4"/>
-<text xml:space="preserve" text-anchor="start" x="2724.73" y="-272.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads and writes cached TUF metadata via</text>
-<text xml:space="preserve" text-anchor="start" x="2724.73" y="-255.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">local filesystem</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2717.54,-356.43C2717.54,-306.16 2717.54,-243.18 2717.54,-191.18"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2720.16,-191.46 2717.54,-183.96 2714.91,-191.46 2720.16,-191.46"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2717.54,-248.4 2717.54,-288 2995.89,-288 2995.89,-248.4 2717.54,-248.4"/>
+<text xml:space="preserve" text-anchor="start" x="2720.54" y="-272.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads and writes cached TUF metadata via</text>
+<text xml:space="preserve" text-anchor="start" x="2720.54" y="-255.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">local filesystem</text>
+</g>
+<!-- rekorclient&#45;&gt;rekor -->
+<g id="edge22" class="edge">
+<title>rekorclient&#45;&gt;rekor</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M3742.06,-356.6C3790.83,-319.63 3848.76,-276.82 3902.43,-240 3928.86,-221.86 3957.4,-203.19 3985.21,-185.45"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="3986.35,-187.84 3991.27,-181.6 3983.53,-183.41 3986.35,-187.84"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="3902.43,-248.4 3902.43,-288 4132.54,-288 4132.54,-248.4 3902.43,-248.4"/>
+<text xml:space="preserve" text-anchor="start" x="3905.43" y="-272.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Queries transparency log entries via</text>
+<text xml:space="preserve" text-anchor="start" x="3905.43" y="-255.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">HTTPS/JSON</text>
 </g>
 <!-- skillauthor&#45;&gt;signingengine -->
 <g id="edge1" class="edge">
 <title>skillauthor&#45;&gt;signingengine</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M924.73,-1061.74C924.73,-1013.31 924.73,-953.23 924.73,-903.24"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="927.35,-903.26 924.73,-895.76 922.1,-903.26 927.35,-903.26"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="924.73,-970.4 924.73,-993.2 1107.36,-993.2 1107.36,-970.4 924.73,-970.4"/>
-<text xml:space="preserve" text-anchor="start" x="927.73" y="-977.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">Signs SKILL.md files via CLI</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1724.54,-1061.74C1724.54,-1013.31 1724.54,-953.23 1724.54,-903.24"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1727.16,-903.26 1724.54,-895.76 1721.91,-903.26 1727.16,-903.26"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1724.54,-970.4 1724.54,-993.2 1907.17,-993.2 1907.17,-970.4 1724.54,-970.4"/>
+<text xml:space="preserve" text-anchor="start" x="1727.54" y="-977.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">Signs SKILL.md files via CLI</text>
 </g>
 <!-- skillconsumer&#45;&gt;verificationengine -->
 <g id="edge2" class="edge">
 <title>skillconsumer&#45;&gt;verificationengine</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2092.78,-1061.61C2108.91,-1029.57 2128.18,-993.56 2147.88,-962 2160.49,-941.79 2174.95,-920.88 2189.33,-901.15"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2191.36,-902.81 2193.68,-895.21 2187.13,-899.7 2191.36,-902.81"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2147.88,-970.4 2147.88,-993.2 2343.73,-993.2 2343.73,-970.4 2147.88,-970.4"/>
-<text xml:space="preserve" text-anchor="start" x="2150.88" y="-977.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">Verifies skill signatures via CLI</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2232.12,-1061.74C2239.53,-1013.21 2248.74,-952.97 2256.39,-902.92"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2258.95,-903.53 2257.49,-895.72 2253.76,-902.74 2258.95,-903.53"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2246.62,-970.4 2246.62,-993.2 2442.47,-993.2 2442.47,-970.4 2246.62,-970.4"/>
+<text xml:space="preserve" text-anchor="start" x="2249.62" y="-977.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">Verifies skill signatures via CLI</text>
 </g>
 <!-- claudecode&#45;&gt;verificationengine -->
 <g id="edge3" class="edge">
 <title>claudecode&#45;&gt;verificationengine</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2427.82,-1062.05C2408.73,-1030.39 2386.92,-994.5 2366.73,-962 2354.52,-942.35 2341.31,-921.43 2328.6,-901.46"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2330.87,-900.13 2324.63,-895.22 2326.44,-902.95 2330.87,-900.13"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2388.86,-962 2388.86,-1001.6 2606.54,-1001.6 2606.54,-962 2388.86,-962"/>
-<text xml:space="preserve" text-anchor="start" x="2391.86" y="-986" font-family="Arial" font-size="14.00" fill="#c9c9c9">Invokes verification before loading</text>
-<text xml:space="preserve" text-anchor="start" x="2391.86" y="-969.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">skills</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M2568.96,-1061.77C2538.76,-1029.41 2503.45,-993.14 2469.54,-962 2446.51,-940.85 2421.01,-919.26 2396.18,-899.09"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2397.98,-897.17 2390.5,-894.5 2394.68,-901.25 2397.98,-897.17"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2510.65,-962 2510.65,-1001.6 2728.33,-1001.6 2728.33,-962 2510.65,-962"/>
+<text xml:space="preserve" text-anchor="start" x="2513.65" y="-986" font-family="Arial" font-size="14.00" fill="#c9c9c9">Invokes verification before loading</text>
+<text xml:space="preserve" text-anchor="start" x="2513.65" y="-969.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">skills</text>
 </g>
 </g>
 </svg>
@@ -2996,23 +3040,23 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <!-- Generated by graphviz version 14.0.4 (0)
  -->
 <!-- Pages: 1 -->
-<svg width="3107pt" height="963pt"
- viewBox="0.00 0.00 3107.00 963.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(15.05 948.25)">
+<svg width="3107pt" height="946pt"
+ viewBox="0.00 0.00 3107.00 946.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(15.05 931.45)">
 <g id="clust1" class="cluster">
 <title>cluster_skillsign</title>
-<polygon fill="#0d4b6c" stroke="#0b3c57" points="64.81,-8 64.81,-645.6 910.81,-645.6 910.81,-8 64.81,-8"/>
-<text xml:space="preserve" text-anchor="start" x="72.81" y="-632.7" font-family="Arial" font-weight="bold" font-size="11.00" fill="#b6ecf7" fill-opacity="0.701961">SKILLSIGN</text>
+<polygon fill="#0d4b6c" stroke="#0b3c57" points="64.81,-8 64.81,-628.8 910.81,-628.8 910.81,-8 64.81,-8"/>
+<text xml:space="preserve" text-anchor="start" x="72.81" y="-615.9" font-family="Arial" font-weight="bold" font-size="11.00" fill="#b6ecf7" fill-opacity="0.701961">SKILLSIGN</text>
 </g>
 <!-- cli -->
 <g id="node1" class="node">
 <title>cli</title>
-<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="793.96,-584.4 433.67,-584.4 433.67,-404.4 793.96,-404.4 793.96,-584.4"/>
-<text xml:space="preserve" text-anchor="start" x="557.12" y="-527.2" font-family="Arial" font-size="20.00" fill="#eff6ff">SkillSign CLI</text>
-<text xml:space="preserve" text-anchor="start" x="575.88" y="-505.5" font-family="Arial" font-size="13.00" fill="#bfdbfe">Python, Click</text>
-<text xml:space="preserve" text-anchor="start" x="469.57" y="-484.1" font-family="Arial" font-size="15.00" fill="#bfdbfe">Command&#45;line tool for signing and verifying</text>
-<text xml:space="preserve" text-anchor="start" x="475.41" y="-466.1" font-family="Arial" font-size="15.00" fill="#bfdbfe">SKILL.md files. Also provides auth status,</text>
-<text xml:space="preserve" text-anchor="start" x="453.72" y="-448.1" font-family="Arial" font-size="15.00" fill="#bfdbfe">inspect, and unsign subcommands (Section 9.1)</text>
+<polygon fill="#3b82f6" stroke="#2563eb" stroke-width="0" points="793.96,-567.6 433.67,-567.6 433.67,-387.6 793.96,-387.6 793.96,-567.6"/>
+<text xml:space="preserve" text-anchor="start" x="557.12" y="-510.4" font-family="Arial" font-size="20.00" fill="#eff6ff">SkillSign CLI</text>
+<text xml:space="preserve" text-anchor="start" x="575.88" y="-488.7" font-family="Arial" font-size="13.00" fill="#bfdbfe">Python, Click</text>
+<text xml:space="preserve" text-anchor="start" x="469.57" y="-467.3" font-family="Arial" font-size="15.00" fill="#bfdbfe">Command&#45;line tool for signing and verifying</text>
+<text xml:space="preserve" text-anchor="start" x="475.41" y="-449.3" font-family="Arial" font-size="15.00" fill="#bfdbfe">SKILL.md files. Also provides auth status,</text>
+<text xml:space="preserve" text-anchor="start" x="453.72" y="-431.3" font-family="Arial" font-size="15.00" fill="#bfdbfe">inspect, and unsign subcommands (Section 9.1)</text>
 </g>
 <!-- skillfiles -->
 <g id="node2" class="node">
@@ -3039,26 +3083,26 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <!-- skillauthor -->
 <g id="node4" class="node">
 <title>skillauthor</title>
-<polygon fill="#a35829" stroke="#7e451d" stroke-width="0" points="343.62,-933.2 0,-933.2 0,-753.2 343.62,-753.2 343.62,-933.2"/>
-<text xml:space="preserve" text-anchor="start" x="121.23" y="-857.2" font-family="Arial" font-size="20.00" fill="#ffe0c2">Skill Author</text>
-<text xml:space="preserve" text-anchor="start" x="20.06" y="-833.7" font-family="Arial" font-size="15.00" fill="#f9b27c">A developer who creates and signs SKILL.md</text>
-<text xml:space="preserve" text-anchor="start" x="109.28" y="-815.7" font-family="Arial" font-size="15.00" fill="#f9b27c">files for distribution</text>
+<polygon fill="#a35829" stroke="#7e451d" stroke-width="0" points="343.62,-916.4 0,-916.4 0,-736.4 343.62,-736.4 343.62,-916.4"/>
+<text xml:space="preserve" text-anchor="start" x="121.23" y="-840.4" font-family="Arial" font-size="20.00" fill="#ffe0c2">Skill Author</text>
+<text xml:space="preserve" text-anchor="start" x="20.06" y="-816.9" font-family="Arial" font-size="15.00" fill="#f9b27c">A developer who creates and signs SKILL.md</text>
+<text xml:space="preserve" text-anchor="start" x="109.28" y="-798.9" font-family="Arial" font-size="15.00" fill="#f9b27c">files for distribution</text>
 </g>
 <!-- skillconsumer -->
 <g id="node5" class="node">
 <title>skillconsumer</title>
-<polygon fill="#a35829" stroke="#7e451d" stroke-width="0" points="773.83,-933.2 453.79,-933.2 453.79,-753.2 773.83,-753.2 773.83,-933.2"/>
-<text xml:space="preserve" text-anchor="start" x="546.57" y="-857.2" font-family="Arial" font-size="20.00" fill="#ffe0c2">Skill Consumer</text>
-<text xml:space="preserve" text-anchor="start" x="476.22" y="-833.7" font-family="Arial" font-size="15.00" fill="#f9b27c">A developer who installs and uses signed</text>
-<text xml:space="preserve" text-anchor="start" x="543.78" y="-815.7" font-family="Arial" font-size="15.00" fill="#f9b27c">skills in Claude Code</text>
+<polygon fill="#a35829" stroke="#7e451d" stroke-width="0" points="773.83,-916.4 453.79,-916.4 453.79,-736.4 773.83,-736.4 773.83,-916.4"/>
+<text xml:space="preserve" text-anchor="start" x="546.57" y="-840.4" font-family="Arial" font-size="20.00" fill="#ffe0c2">Skill Consumer</text>
+<text xml:space="preserve" text-anchor="start" x="476.22" y="-816.9" font-family="Arial" font-size="15.00" fill="#f9b27c">A developer who installs and uses signed</text>
+<text xml:space="preserve" text-anchor="start" x="543.78" y="-798.9" font-family="Arial" font-size="15.00" fill="#f9b27c">skills in Claude Code</text>
 </g>
 <!-- claudecode -->
 <g id="node6" class="node">
 <title>claudecode</title>
-<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="1203.83,-933.2 883.79,-933.2 883.79,-753.2 1203.83,-753.2 1203.83,-933.2"/>
-<text xml:space="preserve" text-anchor="start" x="985.44" y="-857.2" font-family="Arial" font-size="20.00" fill="#f8fafc">Claude Code</text>
-<text xml:space="preserve" text-anchor="start" x="917.06" y="-833.7" font-family="Arial" font-size="15.00" fill="#cbd5e1">Anthropic CLI that loads and executes</text>
-<text xml:space="preserve" text-anchor="start" x="945.43" y="-815.7" font-family="Arial" font-size="15.00" fill="#cbd5e1">SKILL.md files as instructions</text>
+<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="1203.83,-916.4 883.79,-916.4 883.79,-736.4 1203.83,-736.4 1203.83,-916.4"/>
+<text xml:space="preserve" text-anchor="start" x="985.44" y="-840.4" font-family="Arial" font-size="20.00" fill="#f8fafc">Claude Code</text>
+<text xml:space="preserve" text-anchor="start" x="917.06" y="-816.9" font-family="Arial" font-size="15.00" fill="#cbd5e1">Anthropic CLI that loads and executes</text>
+<text xml:space="preserve" text-anchor="start" x="945.43" y="-798.9" font-family="Arial" font-size="15.00" fill="#cbd5e1">SKILL.md files as instructions</text>
 </g>
 <!-- github -->
 <g id="node7" class="node">
@@ -3111,89 +3155,88 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <!-- cli&#45;&gt;skillfiles -->
 <g id="edge4" class="edge">
 <title>cli&#45;&gt;skillfiles</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M482.23,-404.48C458.31,-385.86 434.38,-365.44 413.6,-344.4 381.89,-312.27 351.71,-272.93 326.92,-237.31"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="329.2,-235.99 322.79,-231.31 324.88,-238.97 329.2,-235.99"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="413.6,-296.4 413.6,-336 625.81,-336 625.81,-296.4 413.6,-296.4"/>
-<text xml:space="preserve" text-anchor="start" x="416.6" y="-320.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads and writes SKILL.md files,</text>
-<text xml:space="preserve" text-anchor="start" x="416.6" y="-303.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">manifests, sidecars, and policies</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M486.4,-387.64C462.33,-368.83 438.01,-348.36 416.6,-327.6 388.21,-300.07 360.19,-267.3 336.09,-236.86"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="338.3,-235.41 331.6,-231.14 334.17,-238.66 338.3,-235.41"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="416.6,-288 416.6,-327.6 628.81,-327.6 628.81,-288 416.6,-288"/>
+<text xml:space="preserve" text-anchor="start" x="419.6" y="-312" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads and writes SKILL.md files,</text>
+<text xml:space="preserve" text-anchor="start" x="419.6" y="-295.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">manifests, sidecars, and policies</text>
 </g>
 <!-- cli&#45;&gt;tufcache -->
 <g id="edge5" class="edge">
 <title>cli&#45;&gt;tufcache</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M636.15,-404.43C648.8,-354.06 664.66,-290.91 677.73,-238.85"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="680.21,-239.78 679.49,-231.87 675.12,-238.5 680.21,-239.78"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="663.64,-304.8 663.64,-327.6 920.2,-327.6 920.2,-304.8 663.64,-304.8"/>
-<text xml:space="preserve" text-anchor="start" x="666.64" y="-312" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads and writes cached TUF metadata</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M637.19,-387.9C649.26,-342.12 664.03,-286.11 676.5,-238.82"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="678.97,-239.72 678.35,-231.79 673.9,-238.38 678.97,-239.72"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="660.98,-296.4 660.98,-319.2 917.54,-319.2 917.54,-296.4 660.98,-296.4"/>
+<text xml:space="preserve" text-anchor="start" x="663.98" y="-303.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads and writes cached TUF metadata</text>
 </g>
 <!-- cli&#45;&gt;github -->
 <g id="edge6" class="edge">
 <title>cli&#45;&gt;github</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M793.94,-427.13C845.4,-404.46 900.14,-376.57 946.81,-344.4 991.34,-313.71 1034.57,-272.64 1069.76,-235.29"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1071.42,-237.36 1074.62,-230.09 1067.58,-233.78 1071.42,-237.36"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1014.85,-296.4 1014.85,-336 1210.7,-336 1210.7,-296.4 1014.85,-296.4"/>
-<text xml:space="preserve" text-anchor="start" x="1017.85" y="-320.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Authenticates CI workflows via</text>
-<text xml:space="preserve" text-anchor="start" x="1017.85" y="-303.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">OIDC/HTTPS</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M793.61,-408.02C844.24,-385.46 898.19,-358.21 944.81,-327.6 985.05,-301.18 1025.13,-266.99 1059.15,-234.98"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1060.93,-236.91 1064.56,-229.85 1057.32,-233.1 1060.93,-236.91"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="994.25,-288 994.25,-327.6 1190.1,-327.6 1190.1,-288 994.25,-288"/>
+<text xml:space="preserve" text-anchor="start" x="997.25" y="-312" font-family="Arial" font-size="14.00" fill="#c9c9c9">Authenticates CI workflows via</text>
+<text xml:space="preserve" text-anchor="start" x="997.25" y="-295.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">OIDC/HTTPS</text>
 </g>
 <!-- cli&#45;&gt;sigstoredex -->
 <g id="edge7" class="edge">
 <title>cli&#45;&gt;sigstoredex</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M793.7,-464.3C920.61,-440.47 1093.08,-401.31 1237.81,-344.4 1313.1,-314.79 1391.82,-271.9 1456.63,-232.96"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1457.62,-235.43 1462.69,-229.31 1454.91,-230.94 1457.62,-235.43"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1352.06,-288 1352.06,-344.4 1616.4,-344.4 1616.4,-288 1352.06,-288"/>
-<text xml:space="preserve" text-anchor="start" x="1355.06" y="-328.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Opens browser for OAuth login via Dex —</text>
-<text xml:space="preserve" text-anchor="start" x="1355.06" y="-312" font-family="Arial" font-size="14.00" fill="#c9c9c9">user picks Google, GitHub, or Microsoft</text>
-<text xml:space="preserve" text-anchor="start" x="1355.06" y="-295.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">(interactive path)</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M793.91,-442.66C915.36,-417.22 1078.13,-378.13 1216.81,-327.6 1288.63,-301.43 1364.76,-265.83 1430.13,-232.6"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1431.1,-235.05 1436.58,-229.3 1428.71,-230.38 1431.1,-235.05"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1303.66,-288 1303.66,-327.6 1495.62,-327.6 1495.62,-288 1303.66,-288"/>
+<text xml:space="preserve" text-anchor="start" x="1306.66" y="-312" font-family="Arial" font-size="14.00" fill="#c9c9c9">Authenticates developers via</text>
+<text xml:space="preserve" text-anchor="start" x="1306.66" y="-295.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">browser&#45;based OAuth/HTTPS</text>
 </g>
 <!-- cli&#45;&gt;fulcio -->
 <g id="edge8" class="edge">
 <title>cli&#45;&gt;fulcio</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M793.77,-485.61C1002.64,-472.44 1355.31,-437.32 1643.81,-344.4 1728.12,-317.24 1816.1,-273.24 1887.58,-232.92"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1888.79,-235.24 1894.02,-229.26 1886.2,-230.68 1888.79,-235.24"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1779.47,-296.4 1779.47,-336 2021.24,-336 2021.24,-296.4 1779.47,-296.4"/>
-<text xml:space="preserve" text-anchor="start" x="1782.47" y="-320.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Obtains short&#45;lived signing certificates</text>
-<text xml:space="preserve" text-anchor="start" x="1782.47" y="-303.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">via HTTPS</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M793.58,-455.61C978.17,-432.08 1272.98,-389.01 1522.81,-327.6 1659.65,-293.97 1691.73,-277.11 1823.81,-228 1838.7,-222.46 1854.1,-216.52 1869.49,-210.44"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1870.25,-212.96 1876.25,-207.75 1868.31,-208.08 1870.25,-212.96"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1660.04,-288 1660.04,-327.6 1901.81,-327.6 1901.81,-288 1660.04,-288"/>
+<text xml:space="preserve" text-anchor="start" x="1663.04" y="-312" font-family="Arial" font-size="14.00" fill="#c9c9c9">Obtains short&#45;lived signing certificates</text>
+<text xml:space="preserve" text-anchor="start" x="1663.04" y="-295.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">via HTTPS</text>
 </g>
 <!-- cli&#45;&gt;rekor -->
 <g id="edge9" class="edge">
 <title>cli&#45;&gt;rekor</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M793.86,-482.38C1124.64,-460.86 1816.37,-409.59 2047.81,-344.4 2140.21,-318.37 2237.18,-273.74 2315.6,-232.72"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2316.49,-235.22 2321.91,-229.41 2314.05,-230.58 2316.49,-235.22"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2195.01,-296.4 2195.01,-336 2436.03,-336 2436.03,-296.4 2195.01,-296.4"/>
-<text xml:space="preserve" text-anchor="start" x="2198.01" y="-320.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Submits and queries transparency log</text>
-<text xml:space="preserve" text-anchor="start" x="2198.01" y="-303.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">entries via HTTPS</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M793.87,-466.75C1048.73,-450.42 1528.27,-410.92 1928.81,-327.6 2055.47,-301.25 2193.14,-253.91 2298.94,-213.25"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2299.88,-215.7 2305.93,-210.55 2297.99,-210.8 2299.88,-215.7"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2067.48,-288 2067.48,-327.6 2308.5,-327.6 2308.5,-288 2067.48,-288"/>
+<text xml:space="preserve" text-anchor="start" x="2070.48" y="-312" font-family="Arial" font-size="14.00" fill="#c9c9c9">Submits and queries transparency log</text>
+<text xml:space="preserve" text-anchor="start" x="2070.48" y="-295.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">entries via HTTPS</text>
 </g>
 <!-- cli&#45;&gt;tuf -->
 <g id="edge10" class="edge">
 <title>cli&#45;&gt;tuf</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M793.89,-486.76C1194.87,-470.7 2150.5,-425.02 2462.81,-344.4 2560.91,-319.08 2664.26,-273.94 2747.53,-232.41"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2748.58,-234.82 2754.11,-229.12 2746.23,-230.13 2748.58,-234.82"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2617.89,-304.8 2617.89,-327.6 2866.63,-327.6 2866.63,-304.8 2617.89,-304.8"/>
-<text xml:space="preserve" text-anchor="start" x="2620.89" y="-312" font-family="Arial" font-size="14.00" fill="#c9c9c9">Fetches TUF root metadata via HTTPS</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M793.68,-471.64C1108.5,-460.61 1778.91,-426.64 2335.81,-327.6 2501.79,-298.08 2542.27,-282.48 2701.81,-228 2716.69,-222.92 2732.02,-217.32 2747.31,-211.49"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2747.94,-214.06 2753.99,-208.92 2746.05,-209.16 2747.94,-214.06"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="2515.12,-296.4 2515.12,-319.2 2763.87,-319.2 2763.87,-296.4 2515.12,-296.4"/>
+<text xml:space="preserve" text-anchor="start" x="2518.12" y="-303.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">Fetches TUF root metadata via HTTPS</text>
 </g>
 <!-- skillauthor&#45;&gt;cli -->
 <g id="edge1" class="edge">
 <title>skillauthor&#45;&gt;cli</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M279.64,-753.37C318.63,-721.59 363.16,-685.71 404.18,-653.6 430.65,-632.88 459.26,-610.98 486.58,-590.29"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="487.81,-592.64 492.21,-586.02 484.65,-588.45 487.81,-592.64"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="404.18,-662 404.18,-684.8 586.81,-684.8 586.81,-662 404.18,-662"/>
-<text xml:space="preserve" text-anchor="start" x="407.18" y="-669.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">Signs SKILL.md files via CLI</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M279.64,-736.57C318.63,-704.79 363.16,-668.91 404.18,-636.8 430.65,-616.08 459.26,-594.18 486.58,-573.49"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="487.81,-575.84 492.21,-569.22 484.65,-571.65 487.81,-575.84"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="404.18,-645.2 404.18,-668 586.81,-668 586.81,-645.2 404.18,-645.2"/>
+<text xml:space="preserve" text-anchor="start" x="407.18" y="-652.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Signs SKILL.md files via CLI</text>
 </g>
 <!-- skillconsumer&#45;&gt;cli -->
 <g id="edge2" class="edge">
 <title>skillconsumer&#45;&gt;cli</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M613.81,-753.34C613.81,-704.91 613.81,-644.83 613.81,-594.84"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="616.44,-594.86 613.81,-587.36 611.19,-594.86 616.44,-594.86"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="613.81,-662 613.81,-684.8 809.66,-684.8 809.66,-662 613.81,-662"/>
-<text xml:space="preserve" text-anchor="start" x="616.81" y="-669.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">Verifies skill signatures via CLI</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M613.81,-736.54C613.81,-688.11 613.81,-628.03 613.81,-578.04"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="616.44,-578.06 613.81,-570.56 611.19,-578.06 616.44,-578.06"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="613.81,-645.2 613.81,-668 809.66,-668 809.66,-645.2 613.81,-645.2"/>
+<text xml:space="preserve" text-anchor="start" x="616.81" y="-652.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Verifies skill signatures via CLI</text>
 </g>
 <!-- claudecode&#45;&gt;cli -->
 <g id="edge3" class="edge">
 <title>claudecode&#45;&gt;cli</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M951.14,-753.33C916.14,-720.96 875.43,-684.7 836.81,-653.6 810.4,-632.33 781.36,-610.61 753.21,-590.35"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="754.99,-588.39 747.37,-586.15 751.93,-592.66 754.99,-588.39"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="883.84,-653.6 883.84,-693.2 1101.52,-693.2 1101.52,-653.6 883.84,-653.6"/>
-<text xml:space="preserve" text-anchor="start" x="886.84" y="-677.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">Invokes verification before loading</text>
-<text xml:space="preserve" text-anchor="start" x="886.84" y="-660.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">skills</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M951.14,-736.53C916.14,-704.16 875.43,-667.9 836.81,-636.8 810.4,-615.53 781.36,-593.81 753.21,-573.55"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="754.99,-571.59 747.37,-569.35 751.93,-575.86 754.99,-571.59"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="883.84,-636.8 883.84,-676.4 1101.52,-676.4 1101.52,-636.8 883.84,-636.8"/>
+<text xml:space="preserve" text-anchor="start" x="886.84" y="-660.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Invokes verification before loading</text>
+<text xml:space="preserve" text-anchor="start" x="886.84" y="-644" font-family="Arial" font-size="14.00" fill="#c9c9c9">skills</text>
 </g>
 </g>
 </svg>
@@ -4254,8 +4297,8 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <!-- Generated by graphviz version 14.0.4 (0)
  -->
 <!-- Pages: 1 -->
-<svg width="1816pt" height="939pt"
- viewBox="0.00 0.00 1816.00 939.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="1841pt" height="939pt"
+ viewBox="0.00 0.00 1841.00 939.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(15.05 923.85)">
 <!-- skillauthor -->
 <g id="node1" class="node">
@@ -4280,32 +4323,32 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <!-- authhandler -->
 <g id="node3" class="node">
 <title>authhandler</title>
-<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="1781,-760 1452.45,-760 1452.45,-580 1781,-580 1781,-760"/>
-<text xml:space="preserve" text-anchor="start" x="1558.36" y="-720.8" font-family="Arial" font-size="20.00" fill="#eef2ff">Auth Handler</text>
-<text xml:space="preserve" text-anchor="start" x="1600.48" y="-699.1" font-family="Arial" font-size="13.00" fill="#c7d2fe">OIDC</text>
-<text xml:space="preserve" text-anchor="start" x="1485" y="-677.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Obtains OIDC identity token for signing.</text>
-<text xml:space="preserve" text-anchor="start" x="1472.51" y="-659.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Detects ambient CI credentials first (GitHub</text>
-<text xml:space="preserve" text-anchor="start" x="1477.92" y="-641.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Actions OIDC via detect_credential). Falls</text>
-<text xml:space="preserve" text-anchor="start" x="1477.5" y="-623.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">back to interactive browser&#45;based flow via</text>
-<text xml:space="preserve" text-anchor="start" x="1543.78" y="-605.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Sigstore OAuth issuer</text>
+<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="1811.18,-760 1447.41,-760 1447.41,-580 1811.18,-580 1811.18,-760"/>
+<text xml:space="preserve" text-anchor="start" x="1570.92" y="-720.8" font-family="Arial" font-size="20.00" fill="#eef2ff">Auth Handler</text>
+<text xml:space="preserve" text-anchor="start" x="1613.04" y="-699.1" font-family="Arial" font-size="13.00" fill="#c7d2fe">OIDC</text>
+<text xml:space="preserve" text-anchor="start" x="1497.56" y="-677.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Obtains OIDC identity token for signing.</text>
+<text xml:space="preserve" text-anchor="start" x="1485.08" y="-659.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Detects ambient CI credentials first (GitHub</text>
+<text xml:space="preserve" text-anchor="start" x="1572.19" y="-641.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Actions OIDC via</text>
+<text xml:space="preserve" text-anchor="start" x="1490.99" y="-623.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">detect_credential(&quot;sigstore&quot;) with client ID</text>
+<text xml:space="preserve" text-anchor="start" x="1467.46" y="-605.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">_SIGSTORE_CLIENT_ID=&quot;sigstore&quot;). Falls back</text>
 </g>
 <!-- fulcio -->
 <g id="node4" class="node">
 <title>fulcio</title>
-<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="1776.75,-470 1456.71,-470 1456.71,-290 1776.75,-290 1776.75,-470"/>
-<text xml:space="preserve" text-anchor="start" x="1573.38" y="-412" font-family="Arial" font-size="20.00" fill="#f8fafc">Fulcio CA</text>
-<text xml:space="preserve" text-anchor="start" x="1486.25" y="-388.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Sigstore certificate authority that issues</text>
-<text xml:space="preserve" text-anchor="start" x="1485.41" y="-370.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">short&#45;lived certificates binding a verified</text>
-<text xml:space="preserve" text-anchor="start" x="1494.15" y="-352.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">GitHub identity to a signer&#45;generated</text>
-<text xml:space="preserve" text-anchor="start" x="1545.85" y="-334.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">ephemeral public key</text>
+<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="1789.31,-470 1469.27,-470 1469.27,-290 1789.31,-290 1789.31,-470"/>
+<text xml:space="preserve" text-anchor="start" x="1585.95" y="-412" font-family="Arial" font-size="20.00" fill="#f8fafc">Fulcio CA</text>
+<text xml:space="preserve" text-anchor="start" x="1498.82" y="-388.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Sigstore certificate authority that issues</text>
+<text xml:space="preserve" text-anchor="start" x="1497.98" y="-370.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">short&#45;lived certificates binding a verified</text>
+<text xml:space="preserve" text-anchor="start" x="1506.72" y="-352.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">GitHub identity to a signer&#45;generated</text>
+<text xml:space="preserve" text-anchor="start" x="1558.42" y="-334.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">ephemeral public key</text>
 </g>
 <!-- rekor -->
 <g id="node5" class="node">
 <title>rekor</title>
-<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="1786.04,-180 1447.41,-180 1447.41,0 1786.04,0 1786.04,-180"/>
-<text xml:space="preserve" text-anchor="start" x="1506.67" y="-104" font-family="Arial" font-size="20.00" fill="#f8fafc">Rekor Transparency Log</text>
-<text xml:space="preserve" text-anchor="start" x="1467.46" y="-80.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Append&#45;only, publicly auditable log recording</text>
-<text xml:space="preserve" text-anchor="start" x="1499.58" y="-62.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">signatures, certificates, and digests</text>
+<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="1798.61,-180 1459.97,-180 1459.97,0 1798.61,0 1798.61,-180"/>
+<text xml:space="preserve" text-anchor="start" x="1519.24" y="-104" font-family="Arial" font-size="20.00" fill="#f8fafc">Rekor Transparency Log</text>
+<text xml:space="preserve" text-anchor="start" x="1480.03" y="-80.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Append&#45;only, publicly auditable log recording</text>
+<text xml:space="preserve" text-anchor="start" x="1512.15" y="-62.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">signatures, certificates, and digests</text>
 </g>
 <!-- skillauthor&#45;&gt;signingengine -->
 <g id="edge1" class="edge">
@@ -4342,18 +4385,18 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <!-- signingengine&#45;&gt;authhandler -->
 <g id="edge2" class="edge">
 <title>signingengine&#45;&gt;authhandler</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1053.11,-446.17C1169.7,-492.56 1325.17,-554.41 1443.13,-601.34"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1441.88,-603.66 1449.82,-604 1443.82,-598.78 1441.88,-603.66"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1139.36,-579.2 1139.36,-612 1163.36,-612 1163.36,-579.2 1139.36,-579.2"/>
-<text xml:space="preserve" text-anchor="start" x="1147.46" y="-592.4" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">2</text>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1166.36,-579.2 1166.36,-612 1361.46,-612 1361.46,-579.2 1166.36,-579.2"/>
-<text xml:space="preserve" text-anchor="start" x="1169.36" y="-591.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Requests OIDC authentication</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1053.2,-445.08C1167.32,-489.71 1319,-549.04 1437.93,-595.55"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1436.76,-597.91 1444.7,-598.2 1438.67,-593.02 1436.76,-597.91"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1139.36,-570.92 1139.36,-603.72 1163.36,-603.72 1163.36,-570.92 1139.36,-570.92"/>
+<text xml:space="preserve" text-anchor="start" x="1147.46" y="-584.12" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">2</text>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1166.36,-570.92 1166.36,-603.72 1361.46,-603.72 1361.46,-570.92 1166.36,-570.92"/>
+<text xml:space="preserve" text-anchor="start" x="1169.36" y="-583.12" font-family="Arial" font-size="14.00" fill="#c9c9c9">Requests OIDC authentication</text>
 </g>
 <!-- signingengine&#45;&gt;fulcio -->
 <g id="edge4" class="edge">
 <title>signingengine&#45;&gt;fulcio</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1053.11,-380C1170.9,-380 1328.36,-380 1446.75,-380"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1446.47,-382.63 1453.97,-380 1446.47,-377.38 1446.47,-382.63"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1053.2,-380C1174.26,-380 1337.6,-380 1459.27,-380"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1458.9,-382.63 1466.4,-380 1458.9,-377.38 1458.9,-382.63"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1120.69,-383 1120.69,-422.6 1144.69,-422.6 1144.69,-383 1120.69,-383"/>
 <text xml:space="preserve" text-anchor="start" x="1128.8" y="-399.6" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">4</text>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1147.69,-383 1147.69,-422.6 1380.13,-422.6 1380.13,-383 1147.69,-383"/>
@@ -4363,8 +4406,8 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <!-- signingengine&#45;&gt;rekor -->
 <g id="edge6" class="edge">
 <title>signingengine&#45;&gt;rekor</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1053.11,-313.83C1168.07,-268.1 1320.82,-207.33 1438.14,-160.65"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1438.79,-163.22 1444.78,-158.01 1436.84,-158.34 1438.79,-163.22"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1053.2,-314.92C1171.37,-268.7 1329.82,-206.73 1450.48,-159.54"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1451.35,-162.02 1457.38,-156.84 1449.44,-157.13 1451.35,-162.02"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1116.41,-289.2 1116.41,-322 1140.41,-322 1140.41,-289.2 1116.41,-289.2"/>
 <text xml:space="preserve" text-anchor="start" x="1124.52" y="-302.4" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">6</text>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1143.41,-289.2 1143.41,-322 1384.41,-322 1384.41,-289.2 1143.41,-289.2"/>
@@ -4373,12 +4416,12 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <!-- authhandler&#45;&gt;authhandler -->
 <g id="edge3" class="edge">
 <title>authhandler&#45;&gt;authhandler</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1553.03,-759.98C1537.36,-816.28 1558.59,-870 1616.73,-870 1671.34,-870 1693.38,-822.58 1682.86,-770.17"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1685.42,-769.61 1681.12,-762.93 1680.32,-770.83 1685.42,-769.61"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1475.33,-873 1475.33,-905.8 1499.33,-905.8 1499.33,-873 1475.33,-873"/>
-<text xml:space="preserve" text-anchor="start" x="1483.43" y="-886.2" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">3</text>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1502.33,-873 1502.33,-905.8 1758.12,-905.8 1758.12,-873 1502.33,-873"/>
-<text xml:space="preserve" text-anchor="start" x="1505.33" y="-885.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">OIDC authentication fails — exit code 10</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1563.41,-759.98C1547.21,-816.28 1569.17,-870 1629.29,-870 1685.78,-870 1708.58,-822.58 1697.7,-770.17"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1700.25,-769.57 1695.9,-762.92 1695.16,-770.83 1700.25,-769.57"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1487.89,-873 1487.89,-905.8 1511.89,-905.8 1511.89,-873 1487.89,-873"/>
+<text xml:space="preserve" text-anchor="start" x="1496" y="-886.2" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">3</text>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1514.89,-873 1514.89,-905.8 1770.69,-905.8 1770.69,-873 1514.89,-873"/>
+<text xml:space="preserve" text-anchor="start" x="1517.89" y="-885.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">OIDC authentication fails — exit code 10</text>
 </g>
 </g>
 </svg>
@@ -4671,8 +4714,8 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <!-- Generated by graphviz version 14.0.4 (0)
  -->
 <!-- Pages: 1 -->
-<svg width="2535pt" height="512pt"
- viewBox="0.00 0.00 2535.00 512.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="2583pt" height="512pt"
+ viewBox="0.00 0.00 2583.00 512.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(15.05 497.05)">
 <!-- skillconsumer -->
 <g id="node1" class="node">
@@ -4694,16 +4737,28 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <text xml:space="preserve" text-anchor="start" x="779.36" y="-184.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">public key, validates cert chain against</text>
 <text xml:space="preserve" text-anchor="start" x="786.05" y="-166.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Fulcio root via TUF TrustedRoot and</text>
 </g>
-<!-- rekor -->
+<!-- rekorclient -->
 <g id="node3" class="node">
+<title>rekorclient</title>
+<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="1814.39,-482 1488.32,-482 1488.32,-302 1814.39,-302 1814.39,-482"/>
+<text xml:space="preserve" text-anchor="start" x="1596.33" y="-442.8" font-family="Arial" font-size="20.00" fill="#eef2ff">Rekor Client</text>
+<text xml:space="preserve" text-anchor="start" x="1609.1" y="-421.1" font-family="Arial" font-size="13.00" fill="#c7d2fe">HTTPS, JSON</text>
+<text xml:space="preserve" text-anchor="start" x="1511.71" y="-399.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Wraps Rekor transparency log queries via</text>
+<text xml:space="preserve" text-anchor="start" x="1508.37" y="-381.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">infra/rekor.py. Fetches log entries by log ID</text>
+<text xml:space="preserve" text-anchor="start" x="1560.06" y="-363.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">using the Rekor search API</text>
+<text xml:space="preserve" text-anchor="start" x="1528.8" y="-345.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">(/api/v1/log/entries/retrieve). Used by</text>
+<text xml:space="preserve" text-anchor="start" x="1530.88" y="-327.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">verification engine in &#45;&#45;strict mode to</text>
+</g>
+<!-- rekor -->
+<g id="node4" class="node">
 <title>rekor</title>
-<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="1820.67,-482 1482.03,-482 1482.03,-302 1820.67,-302 1820.67,-482"/>
-<text xml:space="preserve" text-anchor="start" x="1541.3" y="-406" font-family="Arial" font-size="20.00" fill="#f8fafc">Rekor Transparency Log</text>
-<text xml:space="preserve" text-anchor="start" x="1502.09" y="-382.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Append&#45;only, publicly auditable log recording</text>
-<text xml:space="preserve" text-anchor="start" x="1534.21" y="-364.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">signatures, certificates, and digests</text>
+<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="2553.07,-482 2214.43,-482 2214.43,-302 2553.07,-302 2553.07,-482"/>
+<text xml:space="preserve" text-anchor="start" x="2273.7" y="-406" font-family="Arial" font-size="20.00" fill="#f8fafc">Rekor Transparency Log</text>
+<text xml:space="preserve" text-anchor="start" x="2234.49" y="-382.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Append&#45;only, publicly auditable log recording</text>
+<text xml:space="preserve" text-anchor="start" x="2266.61" y="-364.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">signatures, certificates, and digests</text>
 </g>
 <!-- policyengine -->
-<g id="node4" class="node">
+<g id="node5" class="node">
 <title>policyengine</title>
 <polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="1823.56,-180 1479.14,-180 1479.14,0 1823.56,0 1823.56,-180"/>
 <text xml:space="preserve" text-anchor="start" x="1590.76" y="-140.8" font-family="Arial" font-size="20.00" fill="#eef2ff">Policy Engine</text>
@@ -4715,15 +4770,15 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <text xml:space="preserve" text-anchor="start" x="1499.2" y="-25.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">enforcement against verified rekor_timestamp</text>
 </g>
 <!-- skillfiles -->
-<g id="node5" class="node">
+<g id="node6" class="node">
 <title>skillfiles</title>
-<path fill="#3b82f6" stroke="#2563eb" stroke-width="2" d="M2504.88,-163.64C2504.88,-172.67 2433.16,-180 2344.86,-180 2256.57,-180 2184.84,-172.67 2184.84,-163.64 2184.84,-163.64 2184.84,-16.36 2184.84,-16.36 2184.84,-7.33 2256.57,0 2344.86,0 2433.16,0 2504.88,-7.33 2504.88,-16.36 2504.88,-16.36 2504.88,-163.64 2504.88,-163.64"/>
-<path fill="none" stroke="#2563eb" stroke-width="2" d="M2504.88,-163.64C2504.88,-154.61 2433.16,-147.27 2344.86,-147.27 2256.57,-147.27 2184.84,-154.61 2184.84,-163.64"/>
-<text xml:space="preserve" text-anchor="start" x="2280.96" y="-122.8" font-family="Arial" font-size="20.00" fill="#eff6ff">Skill File Store</text>
-<text xml:space="preserve" text-anchor="start" x="2293.57" y="-101.1" font-family="Arial" font-size="13.00" fill="#bfdbfe">Local File System</text>
-<text xml:space="preserve" text-anchor="start" x="2211.9" y="-79.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">SKILL.md files, skillsign.yaml manifests,</text>
-<text xml:space="preserve" text-anchor="start" x="2269.83" y="-61.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">.skillsign sidecars, and</text>
-<text xml:space="preserve" text-anchor="start" x="2207.32" y="-43.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">.skillsign&#45;policy.yaml trust policies on disk</text>
+<path fill="#3b82f6" stroke="#2563eb" stroke-width="2" d="M2543.77,-163.64C2543.77,-172.67 2472.05,-180 2383.75,-180 2295.45,-180 2223.73,-172.67 2223.73,-163.64 2223.73,-163.64 2223.73,-16.36 2223.73,-16.36 2223.73,-7.33 2295.45,0 2383.75,0 2472.05,0 2543.77,-7.33 2543.77,-16.36 2543.77,-16.36 2543.77,-163.64 2543.77,-163.64"/>
+<path fill="none" stroke="#2563eb" stroke-width="2" d="M2543.77,-163.64C2543.77,-154.61 2472.05,-147.27 2383.75,-147.27 2295.45,-147.27 2223.73,-154.61 2223.73,-163.64"/>
+<text xml:space="preserve" text-anchor="start" x="2319.84" y="-122.8" font-family="Arial" font-size="20.00" fill="#eff6ff">Skill File Store</text>
+<text xml:space="preserve" text-anchor="start" x="2332.45" y="-101.1" font-family="Arial" font-size="13.00" fill="#bfdbfe">Local File System</text>
+<text xml:space="preserve" text-anchor="start" x="2250.79" y="-79.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">SKILL.md files, skillsign.yaml manifests,</text>
+<text xml:space="preserve" text-anchor="start" x="2308.72" y="-61.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">.skillsign sidecars, and</text>
+<text xml:space="preserve" text-anchor="start" x="2246.2" y="-43.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">.skillsign&#45;policy.yaml trust policies on disk</text>
 </g>
 <!-- skillconsumer&#45;&gt;verificationengine -->
 <g id="edge1" class="edge">
@@ -4738,12 +4793,12 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <text xml:space="preserve" text-anchor="start" x="508.34" y="-241.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">./SKILL.md</text>
 </g>
 <!-- skillconsumer&#45;&gt;verificationengine -->
-<g id="edge7" class="edge">
+<g id="edge8" class="edge">
 <title>skillconsumer&#45;&gt;verificationengine</title>
 <path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M329.71,-169.18C346.54,-164.8 363.51,-161.07 380.04,-158.4 511.16,-137.23 547.65,-137.96 678.89,-158.4 698.65,-161.48 719.04,-165.97 739.13,-171.24"/>
 <polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="329.32,-166.57 322.75,-171.04 330.68,-171.64 329.32,-166.57"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="383.04,-161.4 383.04,-201 407.04,-201 407.04,-161.4 383.04,-161.4"/>
-<text xml:space="preserve" text-anchor="start" x="391.15" y="-178" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">7</text>
+<text xml:space="preserve" text-anchor="start" x="391.15" y="-178" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">8</text>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="410.04,-161.4 410.04,-201 675.89,-201 675.89,-161.4 410.04,-161.4"/>
 <text xml:space="preserve" text-anchor="start" x="413.04" y="-185.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Returns VERIFIED (0), POLICY_FAIL (3),</text>
 <text xml:space="preserve" text-anchor="start" x="469.83" y="-168.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">or verification failure (1)</text>
@@ -4759,49 +4814,60 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <text xml:space="preserve" text-anchor="start" x="832.53" y="-458" font-family="Arial" font-size="14.00" fill="#c9c9c9">Completes full cryptographic</text>
 <text xml:space="preserve" text-anchor="start" x="887.39" y="-441.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">verification</text>
 </g>
-<!-- verificationengine&#45;&gt;rekor -->
+<!-- verificationengine&#45;&gt;rekorclient -->
 <g id="edge3" class="edge">
-<title>verificationengine&#45;&gt;rekor</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1075.79,-267.33C1193.87,-292.95 1351.78,-327.22 1472.17,-353.34"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1471.39,-355.85 1479.28,-354.88 1472.5,-350.72 1471.39,-355.85"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1144.66,-342.92 1144.66,-399.32 1168.66,-399.32 1168.66,-342.92 1144.66,-342.92"/>
-<text xml:space="preserve" text-anchor="start" x="1152.77" y="-367.92" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">3</text>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1171.66,-342.92 1171.66,-399.32 1410.28,-399.32 1410.28,-342.92 1171.66,-342.92"/>
-<text xml:space="preserve" text-anchor="start" x="1180.1" y="-383.72" font-family="Arial" font-size="14.00" fill="#c9c9c9">Confirms rekor_log_id exists, digest</text>
-<text xml:space="preserve" text-anchor="start" x="1174.66" y="-366.92" font-family="Arial" font-size="14.00" fill="#c9c9c9">matches, and timestamp valid (&#45;&#45;strict</text>
-<text xml:space="preserve" text-anchor="start" x="1271.13" y="-350.12" font-family="Arial" font-size="14.00" fill="#c9c9c9">mode)</text>
+<title>verificationengine&#45;&gt;rekorclient</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1075.79,-267.33C1195.94,-293.4 1357.35,-328.42 1478.49,-354.71"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1477.77,-357.24 1485.66,-356.26 1478.88,-352.11 1477.77,-357.24"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1150.1,-342.92 1150.1,-382.52 1174.1,-382.52 1174.1,-342.92 1150.1,-342.92"/>
+<text xml:space="preserve" text-anchor="start" x="1158.21" y="-359.52" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">3</text>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1177.1,-342.92 1177.1,-382.52 1404.85,-382.52 1404.85,-342.92 1177.1,-342.92"/>
+<text xml:space="preserve" text-anchor="start" x="1180.1" y="-366.92" font-family="Arial" font-size="14.00" fill="#c9c9c9">Delegates live Rekor query for strict</text>
+<text xml:space="preserve" text-anchor="start" x="1238.06" y="-350.12" font-family="Arial" font-size="14.00" fill="#c9c9c9">mode verification</text>
 </g>
 <!-- verificationengine&#45;&gt;policyengine -->
-<g id="edge4" class="edge">
+<g id="edge5" class="edge">
 <title>verificationengine&#45;&gt;policyengine</title>
 <path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1075.79,-199.18C1192.93,-176.92 1349.28,-147.21 1469.3,-124.4"/>
 <polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1469.48,-127.04 1476.36,-123.06 1468.5,-121.88 1469.48,-127.04"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1138.81,-188.39 1138.81,-227.99 1162.81,-227.99 1162.81,-188.39 1138.81,-188.39"/>
-<text xml:space="preserve" text-anchor="start" x="1146.91" y="-204.99" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">4</text>
+<text xml:space="preserve" text-anchor="start" x="1146.91" y="-204.99" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">5</text>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1165.81,-188.39 1165.81,-227.99 1416.14,-227.99 1416.14,-188.39 1165.81,-188.39"/>
 <text xml:space="preserve" text-anchor="start" x="1196.43" y="-212.39" font-family="Arial" font-size="14.00" fill="#c9c9c9">Passes verified signer identity,</text>
 <text xml:space="preserve" text-anchor="start" x="1168.81" y="-195.59" font-family="Arial" font-size="14.00" fill="#c9c9c9">rekor_timestamp, and skill_id [Phase 2]</text>
 </g>
 <!-- verificationengine&#45;&gt;policyengine -->
-<g id="edge6" class="edge">
+<g id="edge7" class="edge">
 <title>verificationengine&#45;&gt;policyengine</title>
 <path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1015.2,-135.18C1051.02,-108.87 1092.85,-83.85 1135.81,-70.2 1246.46,-35.04 1377.27,-40.65 1479.31,-54.71"/>
 <polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1014.04,-132.77 1009.6,-139.36 1017.18,-136.98 1014.04,-132.77"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1163.7,-73.2 1163.7,-106 1187.7,-106 1187.7,-73.2 1163.7,-73.2"/>
-<text xml:space="preserve" text-anchor="start" x="1171.81" y="-86.4" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">6</text>
+<text xml:space="preserve" text-anchor="start" x="1171.81" y="-86.4" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">7</text>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1190.7,-73.2 1190.7,-106 1391.25,-106 1391.25,-73.2 1190.7,-73.2"/>
 <text xml:space="preserve" text-anchor="start" x="1193.7" y="-85.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Returns policy evaluation result</text>
 </g>
+<!-- rekorclient&#45;&gt;rekor -->
+<g id="edge4" class="edge">
+<title>rekorclient&#45;&gt;rekor</title>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1814,-392C1929.54,-392 2085.04,-392 2204.23,-392"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2204.03,-394.63 2211.53,-392 2204.03,-389.38 2204.03,-394.63"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1886.56,-395 1886.56,-451.4 1910.56,-451.4 1910.56,-395 1886.56,-395"/>
+<text xml:space="preserve" text-anchor="start" x="1894.67" y="-420" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">4</text>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1913.56,-395 1913.56,-451.4 2151.43,-451.4 2151.43,-395 1913.56,-395"/>
+<text xml:space="preserve" text-anchor="start" x="1927.44" y="-435.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">Queries log entry by rekor_log_id,</text>
+<text xml:space="preserve" text-anchor="start" x="1916.56" y="-419" font-family="Arial" font-size="14.00" fill="#c9c9c9">confirms digest match and timestamp</text>
+<text xml:space="preserve" text-anchor="start" x="1954.7" y="-402.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">validity via HTTPS/JSON</text>
+</g>
 <!-- policyengine&#45;&gt;skillfiles -->
-<g id="edge5" class="edge">
+<g id="edge6" class="edge">
 <title>policyengine&#45;&gt;skillfiles</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1823.29,-90C1930.13,-90 2067.19,-90 2173.86,-90"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2173.56,-92.63 2181.06,-90 2173.56,-87.38 2173.56,-92.63"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1886.56,-93 1886.56,-132.6 1910.56,-132.6 1910.56,-93 1886.56,-93"/>
-<text xml:space="preserve" text-anchor="start" x="1894.67" y="-109.6" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">5</text>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1913.56,-93 1913.56,-132.6 2121.84,-132.6 2121.84,-93 1913.56,-93"/>
-<text xml:space="preserve" text-anchor="start" x="1916.56" y="-117" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads .skillsign&#45;policy.yaml trust</text>
-<text xml:space="preserve" text-anchor="start" x="1999.81" y="-100.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">policy</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1823.14,-90C1940.38,-90 2095.37,-90 2212.5,-90"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2212.47,-92.63 2219.97,-90 2212.47,-87.38 2212.47,-92.63"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1901.35,-93 1901.35,-132.6 1925.35,-132.6 1925.35,-93 1901.35,-93"/>
+<text xml:space="preserve" text-anchor="start" x="1909.46" y="-109.6" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">6</text>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1928.35,-93 1928.35,-132.6 2136.64,-132.6 2136.64,-93 1928.35,-93"/>
+<text xml:space="preserve" text-anchor="start" x="1931.35" y="-117" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads .skillsign&#45;policy.yaml trust</text>
+<text xml:space="preserve" text-anchor="start" x="2014.6" y="-100.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">policy</text>
 </g>
 </g>
 </svg>
@@ -4811,8 +4877,8 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <!-- Generated by graphviz version 14.0.4 (0)
  -->
 <!-- Pages: 1 -->
-<svg width="2616pt" height="2380pt"
- viewBox="0.00 0.00 2616.00 2380.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="2625pt" height="2380pt"
+ viewBox="0.00 0.00 2625.00 2380.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(15.05 2365.05)">
 <!-- skillauthor -->
 <g id="node1" class="node">
@@ -4837,100 +4903,100 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <!-- manifestreader -->
 <g id="node3" class="node">
 <title>manifestreader</title>
-<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="1809.25,-2350 1489.02,-2350 1489.02,-2170 1809.25,-2170 1809.25,-2350"/>
-<text xml:space="preserve" text-anchor="start" x="1575.77" y="-2301.8" font-family="Arial" font-size="20.00" fill="#eef2ff">Manifest Reader</text>
-<text xml:space="preserve" text-anchor="start" x="1620.59" y="-2280.1" font-family="Arial" font-size="13.00" fill="#c7d2fe">YAML 1.2</text>
-<text xml:space="preserve" text-anchor="start" x="1509.08" y="-2258.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Reads skillsign.yaml to extract skill_id and</text>
-<text xml:space="preserve" text-anchor="start" x="1519.92" y="-2240.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">skill_version at signing time, with same</text>
-<text xml:space="preserve" text-anchor="start" x="1523.26" y="-2222.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">strict YAML parsing restrictions as the</text>
-<text xml:space="preserve" text-anchor="start" x="1580.35" y="-2204.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">sidecar (Section 7.3)</text>
+<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="1813.93,-2350 1493.7,-2350 1493.7,-2170 1813.93,-2170 1813.93,-2350"/>
+<text xml:space="preserve" text-anchor="start" x="1580.45" y="-2301.8" font-family="Arial" font-size="20.00" fill="#eef2ff">Manifest Reader</text>
+<text xml:space="preserve" text-anchor="start" x="1625.27" y="-2280.1" font-family="Arial" font-size="13.00" fill="#c7d2fe">YAML 1.2</text>
+<text xml:space="preserve" text-anchor="start" x="1513.76" y="-2258.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Reads skillsign.yaml to extract skill_id and</text>
+<text xml:space="preserve" text-anchor="start" x="1524.6" y="-2240.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">skill_version at signing time, with same</text>
+<text xml:space="preserve" text-anchor="start" x="1527.94" y="-2222.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">strict YAML parsing restrictions as the</text>
+<text xml:space="preserve" text-anchor="start" x="1585.04" y="-2204.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">sidecar (Section 7.3)</text>
 </g>
 <!-- sidecarmanager -->
 <g id="node4" class="node">
 <title>sidecarmanager</title>
-<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="1826.34,-1252 1471.93,-1252 1471.93,-1072 1826.34,-1072 1826.34,-1252"/>
-<text xml:space="preserve" text-anchor="start" x="1572.98" y="-1212.8" font-family="Arial" font-size="20.00" fill="#eef2ff">Sidecar Manager</text>
-<text xml:space="preserve" text-anchor="start" x="1620.59" y="-1191.1" font-family="Arial" font-size="13.00" fill="#c7d2fe">YAML 1.2</text>
-<text xml:space="preserve" text-anchor="start" x="1504.89" y="-1169.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Implemented as a single sidecar.py module</text>
-<text xml:space="preserve" text-anchor="start" x="1529.93" y="-1151.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">combining reader and writer. Writer:</text>
-<text xml:space="preserve" text-anchor="start" x="1491.98" y="-1133.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">assembles canonical field&#45;ordered YAML (PEM</text>
-<text xml:space="preserve" text-anchor="start" x="1517.42" y="-1115.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">fields as literal block scalars) and writes</text>
-<text xml:space="preserve" text-anchor="start" x="1515.33" y="-1097.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">atomically via temp file rename. Reader:</text>
+<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="1831.02,-1252 1476.61,-1252 1476.61,-1072 1831.02,-1072 1831.02,-1252"/>
+<text xml:space="preserve" text-anchor="start" x="1577.66" y="-1212.8" font-family="Arial" font-size="20.00" fill="#eef2ff">Sidecar Manager</text>
+<text xml:space="preserve" text-anchor="start" x="1625.27" y="-1191.1" font-family="Arial" font-size="13.00" fill="#c7d2fe">YAML 1.2</text>
+<text xml:space="preserve" text-anchor="start" x="1509.57" y="-1169.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Implemented as a single sidecar.py module</text>
+<text xml:space="preserve" text-anchor="start" x="1534.61" y="-1151.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">combining reader and writer. Writer:</text>
+<text xml:space="preserve" text-anchor="start" x="1496.66" y="-1133.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">assembles canonical field&#45;ordered YAML (PEM</text>
+<text xml:space="preserve" text-anchor="start" x="1522.1" y="-1115.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">fields as literal block scalars) and writes</text>
+<text xml:space="preserve" text-anchor="start" x="1520.01" y="-1097.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">atomically via temp file rename. Reader:</text>
 </g>
 <!-- skillfiles -->
 <g id="node5" class="node">
 <title>skillfiles</title>
-<path fill="#3b82f6" stroke="#2563eb" stroke-width="2" d="M2575.02,-1965.64C2575.02,-1974.67 2503.3,-1982 2415,-1982 2326.7,-1982 2254.98,-1974.67 2254.98,-1965.64 2254.98,-1965.64 2254.98,-1818.36 2254.98,-1818.36 2254.98,-1809.33 2326.7,-1802 2415,-1802 2503.3,-1802 2575.02,-1809.33 2575.02,-1818.36 2575.02,-1818.36 2575.02,-1965.64 2575.02,-1965.64"/>
-<path fill="none" stroke="#2563eb" stroke-width="2" d="M2575.02,-1965.64C2575.02,-1956.61 2503.3,-1949.27 2415,-1949.27 2326.7,-1949.27 2254.98,-1956.61 2254.98,-1965.64"/>
-<text xml:space="preserve" text-anchor="start" x="2351.1" y="-1924.8" font-family="Arial" font-size="20.00" fill="#eff6ff">Skill File Store</text>
-<text xml:space="preserve" text-anchor="start" x="2363.71" y="-1903.1" font-family="Arial" font-size="13.00" fill="#bfdbfe">Local File System</text>
-<text xml:space="preserve" text-anchor="start" x="2282.04" y="-1881.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">SKILL.md files, skillsign.yaml manifests,</text>
-<text xml:space="preserve" text-anchor="start" x="2339.97" y="-1863.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">.skillsign sidecars, and</text>
-<text xml:space="preserve" text-anchor="start" x="2277.46" y="-1845.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">.skillsign&#45;policy.yaml trust policies on disk</text>
+<path fill="#3b82f6" stroke="#2563eb" stroke-width="2" d="M2584.38,-1965.64C2584.38,-1974.67 2512.66,-1982 2424.36,-1982 2336.07,-1982 2264.34,-1974.67 2264.34,-1965.64 2264.34,-1965.64 2264.34,-1818.36 2264.34,-1818.36 2264.34,-1809.33 2336.07,-1802 2424.36,-1802 2512.66,-1802 2584.38,-1809.33 2584.38,-1818.36 2584.38,-1818.36 2584.38,-1965.64 2584.38,-1965.64"/>
+<path fill="none" stroke="#2563eb" stroke-width="2" d="M2584.38,-1965.64C2584.38,-1956.61 2512.66,-1949.27 2424.36,-1949.27 2336.07,-1949.27 2264.34,-1956.61 2264.34,-1965.64"/>
+<text xml:space="preserve" text-anchor="start" x="2360.46" y="-1924.8" font-family="Arial" font-size="20.00" fill="#eff6ff">Skill File Store</text>
+<text xml:space="preserve" text-anchor="start" x="2373.07" y="-1903.1" font-family="Arial" font-size="13.00" fill="#bfdbfe">Local File System</text>
+<text xml:space="preserve" text-anchor="start" x="2291.4" y="-1881.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">SKILL.md files, skillsign.yaml manifests,</text>
+<text xml:space="preserve" text-anchor="start" x="2349.33" y="-1863.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">.skillsign sidecars, and</text>
+<text xml:space="preserve" text-anchor="start" x="2286.82" y="-1845.7" font-family="Arial" font-size="15.00" fill="#bfdbfe">.skillsign&#45;policy.yaml trust policies on disk</text>
 </g>
 <!-- canonicalprocessor -->
 <g id="node6" class="node">
 <title>canonicalprocessor</title>
-<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="1816.77,-1542 1481.5,-1542 1481.5,-1362 1816.77,-1362 1816.77,-1542"/>
-<text xml:space="preserve" text-anchor="start" x="1530.76" y="-1502.8" font-family="Arial" font-size="20.00" fill="#eef2ff">Canonical Form Processor</text>
-<text xml:space="preserve" text-anchor="start" x="1600.74" y="-1481.1" font-family="Arial" font-size="13.00" fill="#c7d2fe">UTF&#45;8, SHA&#45;256</text>
-<text xml:space="preserve" text-anchor="start" x="1523.23" y="-1459.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Implemented across canonical.py and</text>
-<text xml:space="preserve" text-anchor="start" x="1501.56" y="-1441.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">digest.py. canonical.py: 8&#45;step normalization</text>
-<text xml:space="preserve" text-anchor="start" x="1516.6" y="-1423.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">(BOM strip, CRLF normalization, trailing</text>
-<text xml:space="preserve" text-anchor="start" x="1519.49" y="-1405.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">whitespace trim, single trailing newline,</text>
-<text xml:space="preserve" text-anchor="start" x="1533.67" y="-1387.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">UTF&#45;8 encode, null&#45;byte rejection).</text>
+<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="1821.45,-1542 1486.18,-1542 1486.18,-1362 1821.45,-1362 1821.45,-1542"/>
+<text xml:space="preserve" text-anchor="start" x="1535.44" y="-1502.8" font-family="Arial" font-size="20.00" fill="#eef2ff">Canonical Form Processor</text>
+<text xml:space="preserve" text-anchor="start" x="1605.42" y="-1481.1" font-family="Arial" font-size="13.00" fill="#c7d2fe">UTF&#45;8, SHA&#45;256</text>
+<text xml:space="preserve" text-anchor="start" x="1527.91" y="-1459.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Implemented across canonical.py and</text>
+<text xml:space="preserve" text-anchor="start" x="1506.24" y="-1441.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">digest.py. canonical.py: 8&#45;step normalization</text>
+<text xml:space="preserve" text-anchor="start" x="1521.28" y="-1423.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">(BOM strip, CRLF normalization, trailing</text>
+<text xml:space="preserve" text-anchor="start" x="1524.17" y="-1405.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">whitespace trim, single trailing newline,</text>
+<text xml:space="preserve" text-anchor="start" x="1538.35" y="-1387.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">UTF&#45;8 encode, null&#45;byte rejection).</text>
 </g>
 <!-- authhandler -->
 <g id="node7" class="node">
 <title>authhandler</title>
-<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="1813.41,-325 1484.86,-325 1484.86,-145 1813.41,-145 1813.41,-325"/>
-<text xml:space="preserve" text-anchor="start" x="1590.77" y="-285.8" font-family="Arial" font-size="20.00" fill="#eef2ff">Auth Handler</text>
-<text xml:space="preserve" text-anchor="start" x="1632.89" y="-264.1" font-family="Arial" font-size="13.00" fill="#c7d2fe">OIDC</text>
-<text xml:space="preserve" text-anchor="start" x="1517.41" y="-242.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Obtains OIDC identity token for signing.</text>
-<text xml:space="preserve" text-anchor="start" x="1504.92" y="-224.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Detects ambient CI credentials first (GitHub</text>
-<text xml:space="preserve" text-anchor="start" x="1510.33" y="-206.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Actions OIDC via detect_credential). Falls</text>
-<text xml:space="preserve" text-anchor="start" x="1509.91" y="-188.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">back to interactive browser&#45;based flow via</text>
-<text xml:space="preserve" text-anchor="start" x="1576.19" y="-170.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Sigstore OAuth issuer</text>
+<polygon fill="#6366f1" stroke="#4f46e5" stroke-width="0" points="1835.71,-325 1471.93,-325 1471.93,-145 1835.71,-145 1835.71,-325"/>
+<text xml:space="preserve" text-anchor="start" x="1595.45" y="-285.8" font-family="Arial" font-size="20.00" fill="#eef2ff">Auth Handler</text>
+<text xml:space="preserve" text-anchor="start" x="1637.57" y="-264.1" font-family="Arial" font-size="13.00" fill="#c7d2fe">OIDC</text>
+<text xml:space="preserve" text-anchor="start" x="1522.09" y="-242.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Obtains OIDC identity token for signing.</text>
+<text xml:space="preserve" text-anchor="start" x="1509.6" y="-224.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Detects ambient CI credentials first (GitHub</text>
+<text xml:space="preserve" text-anchor="start" x="1596.72" y="-206.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">Actions OIDC via</text>
+<text xml:space="preserve" text-anchor="start" x="1515.52" y="-188.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">detect_credential(&quot;sigstore&quot;) with client ID</text>
+<text xml:space="preserve" text-anchor="start" x="1491.98" y="-170.7" font-family="Arial" font-size="15.00" fill="#c7d2fe">_SIGSTORE_CLIENT_ID=&quot;sigstore&quot;). Falls back</text>
 </g>
 <!-- github -->
 <g id="node8" class="node">
 <title>github</title>
-<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="2585.56,-470 2244.45,-470 2244.45,-290 2585.56,-290 2585.56,-470"/>
-<text xml:space="preserve" text-anchor="start" x="2320.53" y="-421" font-family="Arial" font-size="20.00" fill="#f8fafc">GitHub Actions OIDC</text>
-<text xml:space="preserve" text-anchor="start" x="2271.19" y="-397.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">CI identity provider: GitHub Actions runtime</text>
-<text xml:space="preserve" text-anchor="start" x="2264.5" y="-379.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">issues OIDC tokens encoding the exact repo,</text>
-<text xml:space="preserve" text-anchor="start" x="2273.69" y="-361.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">workflow, and branch. Fulcio verifies these</text>
-<text xml:space="preserve" text-anchor="start" x="2265.36" y="-343.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">tokens and issues certificates with URI SANs</text>
-<text xml:space="preserve" text-anchor="start" x="2397.91" y="-325.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">(e.g.,</text>
+<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="2594.92,-470 2253.81,-470 2253.81,-290 2594.92,-290 2594.92,-470"/>
+<text xml:space="preserve" text-anchor="start" x="2329.89" y="-421" font-family="Arial" font-size="20.00" fill="#f8fafc">GitHub Actions OIDC</text>
+<text xml:space="preserve" text-anchor="start" x="2280.55" y="-397.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">CI identity provider: GitHub Actions runtime</text>
+<text xml:space="preserve" text-anchor="start" x="2273.86" y="-379.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">issues OIDC tokens encoding the exact repo,</text>
+<text xml:space="preserve" text-anchor="start" x="2283.05" y="-361.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">workflow, and branch. Fulcio verifies these</text>
+<text xml:space="preserve" text-anchor="start" x="2274.72" y="-343.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">tokens and issues certificates with URI SANs</text>
+<text xml:space="preserve" text-anchor="start" x="2407.27" y="-325.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">(e.g.,</text>
 </g>
 <!-- sigstoredex -->
 <g id="node9" class="node">
 <title>sigstoredex</title>
-<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="2583.46,-180 2246.55,-180 2246.55,0 2583.46,0 2583.46,-180"/>
-<text xml:space="preserve" text-anchor="start" x="2319.97" y="-131" font-family="Arial" font-size="20.00" fill="#f8fafc">Sigstore Dex (OAuth)</text>
-<text xml:space="preserve" text-anchor="start" x="2323.29" y="-107.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Interactive identity provider:</text>
-<text xml:space="preserve" text-anchor="start" x="2317.03" y="-89.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Sigstore&#45;hosted Dex instance</text>
-<text xml:space="preserve" text-anchor="start" x="2271.58" y="-71.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">(oauth2.sigstore.dev/auth) that federates to</text>
-<text xml:space="preserve" text-anchor="start" x="2266.6" y="-53.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Google, GitHub, and Microsoft OAuth. Fulcio</text>
-<text xml:space="preserve" text-anchor="start" x="2280.77" y="-35.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">verifies the Dex&#45;issued token and issues</text>
+<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="2592.82,-180 2255.91,-180 2255.91,0 2592.82,0 2592.82,-180"/>
+<text xml:space="preserve" text-anchor="start" x="2329.33" y="-131" font-family="Arial" font-size="20.00" fill="#f8fafc">Sigstore Dex (OAuth)</text>
+<text xml:space="preserve" text-anchor="start" x="2332.65" y="-107.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Interactive identity provider:</text>
+<text xml:space="preserve" text-anchor="start" x="2326.39" y="-89.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Sigstore&#45;hosted Dex instance</text>
+<text xml:space="preserve" text-anchor="start" x="2280.94" y="-71.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">(oauth2.sigstore.dev/auth) that federates to</text>
+<text xml:space="preserve" text-anchor="start" x="2275.96" y="-53.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Google, GitHub, and Microsoft OAuth. Fulcio</text>
+<text xml:space="preserve" text-anchor="start" x="2290.13" y="-35.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">verifies the Dex&#45;issued token and issues</text>
 </g>
 <!-- fulcio -->
 <g id="node10" class="node">
 <title>fulcio</title>
-<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="1809.16,-962 1489.12,-962 1489.12,-782 1809.16,-782 1809.16,-962"/>
-<text xml:space="preserve" text-anchor="start" x="1605.79" y="-904" font-family="Arial" font-size="20.00" fill="#f8fafc">Fulcio CA</text>
-<text xml:space="preserve" text-anchor="start" x="1518.66" y="-880.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Sigstore certificate authority that issues</text>
-<text xml:space="preserve" text-anchor="start" x="1517.82" y="-862.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">short&#45;lived certificates binding a verified</text>
-<text xml:space="preserve" text-anchor="start" x="1526.57" y="-844.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">GitHub identity to a signer&#45;generated</text>
-<text xml:space="preserve" text-anchor="start" x="1578.26" y="-826.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">ephemeral public key</text>
+<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="1813.84,-962 1493.8,-962 1493.8,-782 1813.84,-782 1813.84,-962"/>
+<text xml:space="preserve" text-anchor="start" x="1610.47" y="-904" font-family="Arial" font-size="20.00" fill="#f8fafc">Fulcio CA</text>
+<text xml:space="preserve" text-anchor="start" x="1523.34" y="-880.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Sigstore certificate authority that issues</text>
+<text xml:space="preserve" text-anchor="start" x="1522.5" y="-862.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">short&#45;lived certificates binding a verified</text>
+<text xml:space="preserve" text-anchor="start" x="1531.25" y="-844.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">GitHub identity to a signer&#45;generated</text>
+<text xml:space="preserve" text-anchor="start" x="1582.94" y="-826.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">ephemeral public key</text>
 </g>
 <!-- rekor -->
 <g id="node11" class="node">
 <title>rekor</title>
-<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="1818.46,-672 1479.82,-672 1479.82,-492 1818.46,-492 1818.46,-672"/>
-<text xml:space="preserve" text-anchor="start" x="1539.08" y="-596" font-family="Arial" font-size="20.00" fill="#f8fafc">Rekor Transparency Log</text>
-<text xml:space="preserve" text-anchor="start" x="1499.87" y="-572.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Append&#45;only, publicly auditable log recording</text>
-<text xml:space="preserve" text-anchor="start" x="1531.99" y="-554.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">signatures, certificates, and digests</text>
+<polygon fill="#64748b" stroke="#475569" stroke-width="0" points="1823.14,-672 1484.5,-672 1484.5,-492 1823.14,-492 1823.14,-672"/>
+<text xml:space="preserve" text-anchor="start" x="1543.76" y="-596" font-family="Arial" font-size="20.00" fill="#f8fafc">Rekor Transparency Log</text>
+<text xml:space="preserve" text-anchor="start" x="1504.55" y="-572.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">Append&#45;only, publicly auditable log recording</text>
+<text xml:space="preserve" text-anchor="start" x="1536.67" y="-554.5" font-family="Arial" font-size="15.00" fill="#cbd5e1">signatures, certificates, and digests</text>
 </g>
 <!-- skillauthor&#45;&gt;signingengine -->
 <g id="edge1" class="edge">
@@ -4977,38 +5043,38 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <!-- signingengine&#45;&gt;manifestreader -->
 <g id="edge2" class="edge">
 <title>signingengine&#45;&gt;manifestreader</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M879.03,-1541.79C892.75,-1682.02 939.68,-1952.61 1100,-2104 1201.88,-2200.21 1358.79,-2237.71 1478.66,-2252.02"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1478.29,-2254.62 1486.04,-2252.87 1478.89,-2249.4 1478.29,-2254.62"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1147.63,-2243.02 1147.63,-2275.82 1171.63,-2275.82 1171.63,-2243.02 1147.63,-2243.02"/>
-<text xml:space="preserve" text-anchor="start" x="1155.74" y="-2256.22" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">2</text>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1174.63,-2243.02 1174.63,-2275.82 1364.29,-2275.82 1364.29,-2243.02 1174.63,-2243.02"/>
-<text xml:space="preserve" text-anchor="start" x="1177.63" y="-2255.22" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads and validates manifest</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M878.99,-1541.83C892.65,-1682.12 939.51,-1952.79 1100,-2104 1203.33,-2201.36 1362.71,-2238.68 1483.84,-2252.63"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1483.21,-2255.2 1490.96,-2253.42 1483.79,-2249.98 1483.21,-2255.2"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1147.63,-2243.5 1147.63,-2276.3 1171.63,-2276.3 1171.63,-2243.5 1147.63,-2243.5"/>
+<text xml:space="preserve" text-anchor="start" x="1155.74" y="-2256.7" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">2</text>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1174.63,-2243.5 1174.63,-2276.3 1364.29,-2276.3 1364.29,-2243.5 1174.63,-2243.5"/>
+<text xml:space="preserve" text-anchor="start" x="1177.63" y="-2255.7" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads and validates manifest</text>
 </g>
 <!-- signingengine&#45;&gt;skillfiles -->
 <g id="edge4" class="edge">
 <title>signingengine&#45;&gt;skillfiles</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M897.26,-1541.98C927.45,-1635.84 989.33,-1778.4 1100,-1845 1458.93,-2061 1978.5,-1991.47 2243.95,-1934.78"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2244.33,-1937.39 2251.11,-1933.24 2243.22,-1932.25 2244.33,-1937.39"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1523.32,-1995.27 1523.32,-2028.07 1547.32,-2028.07 1547.32,-1995.27 1523.32,-1995.27"/>
-<text xml:space="preserve" text-anchor="start" x="1531.42" y="-2008.47" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">4</text>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1550.32,-1995.27 1550.32,-2028.07 1774.96,-2028.07 1774.96,-1995.27 1550.32,-1995.27"/>
-<text xml:space="preserve" text-anchor="start" x="1553.32" y="-2007.47" font-family="Arial" font-size="14.00" fill="#c9c9c9">Checks for existing sidecar (step 3)</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M897.26,-1541.99C927.44,-1635.85 989.32,-1778.41 1100,-1845 1462,-2062.79 1986.18,-1992.13 2253.18,-1934.91"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2253.62,-1937.5 2260.4,-1933.35 2252.51,-1932.37 2253.62,-1937.5"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1528,-1996.19 1528,-2028.99 1552,-2028.99 1552,-1996.19 1528,-1996.19"/>
+<text xml:space="preserve" text-anchor="start" x="1536.1" y="-2009.39" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">4</text>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1555,-1996.19 1555,-2028.99 1779.64,-2028.99 1779.64,-1996.19 1555,-1996.19"/>
+<text xml:space="preserve" text-anchor="start" x="1558" y="-2008.39" font-family="Arial" font-size="14.00" fill="#c9c9c9">Checks for existing sidecar (step 3)</text>
 </g>
 <!-- signingengine&#45;&gt;skillfiles -->
 <g id="edge6" class="edge">
 <title>signingengine&#45;&gt;skillfiles</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1039.91,-1506.47C1060.12,-1512.83 1080.5,-1519.14 1100,-1525 1508.79,-1647.87 1993.22,-1779.63 2244.2,-1846.86"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2243.29,-1849.33 2251.21,-1848.74 2244.64,-1844.26 2243.29,-1849.33"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1524.48,-1732.59 1524.48,-1765.39 1548.48,-1765.39 1548.48,-1732.59 1524.48,-1732.59"/>
-<text xml:space="preserve" text-anchor="start" x="1532.58" y="-1745.79" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">6</text>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1551.48,-1732.59 1551.48,-1765.39 1773.8,-1765.39 1773.8,-1732.59 1551.48,-1732.59"/>
-<text xml:space="preserve" text-anchor="start" x="1554.48" y="-1744.79" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads SKILL.md file bytes (step 4)</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1039.9,-1506.5C1060.11,-1512.86 1080.5,-1519.16 1100,-1525 1512.17,-1648.48 2000.86,-1780.24 2253.36,-1847.25"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2252.51,-1849.74 2260.43,-1849.13 2253.85,-1844.67 2252.51,-1849.74"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1529.16,-1732.85 1529.16,-1765.65 1553.16,-1765.65 1553.16,-1732.85 1529.16,-1732.85"/>
+<text xml:space="preserve" text-anchor="start" x="1537.26" y="-1746.05" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">6</text>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1556.16,-1732.85 1556.16,-1765.65 1778.48,-1765.65 1778.48,-1732.85 1556.16,-1732.85"/>
+<text xml:space="preserve" text-anchor="start" x="1559.16" y="-1745.05" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads SKILL.md file bytes (step 4)</text>
 </g>
 <!-- signingengine&#45;&gt;canonicalprocessor -->
 <g id="edge5" class="edge">
 <title>signingengine&#45;&gt;canonicalprocessor</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1039.58,-1452C1166.64,-1452 1341.44,-1452 1471.11,-1452"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1471.01,-1454.63 1478.51,-1452 1471.01,-1449.38 1471.01,-1454.63"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1039.63,-1452C1168.06,-1452 1345.41,-1452 1476.35,-1452"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1475.96,-1454.63 1483.46,-1452 1475.96,-1449.38 1475.96,-1454.63"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1128.18,-1455 1128.18,-1494.6 1152.18,-1494.6 1152.18,-1455 1128.18,-1455"/>
 <text xml:space="preserve" text-anchor="start" x="1136.29" y="-1471.6" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">5</text>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1155.18,-1455 1155.18,-1494.6 1383.75,-1494.6 1383.75,-1455 1155.18,-1455"/>
@@ -5018,8 +5084,8 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <!-- signingengine&#45;&gt;authhandler -->
 <g id="edge7" class="edge">
 <title>signingengine&#45;&gt;authhandler</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M880.17,-1362.07C895.86,-1204.98 945.96,-875.85 1100,-650.2 1195.72,-509.98 1354.25,-397.42 1476.26,-325.06"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1477.24,-327.53 1482.37,-321.46 1474.58,-323 1477.24,-327.53"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M880.08,-1362.01C895.61,-1204.82 945.5,-875.54 1100,-650.2 1194.21,-512.8 1348.76,-402.34 1470.53,-330"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1471.51,-332.47 1476.63,-326.4 1468.84,-327.95 1471.51,-332.47"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1119.24,-653.2 1119.24,-686 1143.24,-686 1143.24,-653.2 1119.24,-653.2"/>
 <text xml:space="preserve" text-anchor="start" x="1127.34" y="-666.4" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">7</text>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1146.24,-653.2 1146.24,-686 1392.69,-686 1392.69,-653.2 1146.24,-653.2"/>
@@ -5028,8 +5094,8 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <!-- signingengine&#45;&gt;fulcio -->
 <g id="edge11" class="edge">
 <title>signingengine&#45;&gt;fulcio</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M993.58,-1362.01C1136.35,-1255.13 1373.52,-1077.59 1519.77,-968.1"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1521.11,-970.37 1525.54,-963.78 1517.97,-966.17 1521.11,-970.37"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M994.31,-1362.01C1137.94,-1255.13 1376.54,-1077.59 1523.68,-968.1"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1525.04,-970.35 1529.49,-963.77 1521.91,-966.14 1525.04,-970.35"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1103,-1283.62 1103,-1323.22 1134.57,-1323.22 1134.57,-1283.62 1103,-1283.62"/>
 <text xml:space="preserve" text-anchor="start" x="1111" y="-1300.22" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">11</text>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1137.57,-1283.62 1137.57,-1323.22 1408.93,-1323.22 1408.93,-1283.62 1137.57,-1283.62"/>
@@ -5039,8 +5105,8 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <!-- signingengine&#45;&gt;rekor -->
 <g id="edge13" class="edge">
 <title>signingengine&#45;&gt;rekor</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M900.14,-1362.18C934.11,-1259.22 1000.52,-1089.41 1100,-970.6 1203.1,-847.46 1353.85,-744.37 1471.17,-675.38"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1472.15,-677.85 1477.3,-671.8 1469.5,-673.32 1472.15,-677.85"/>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M900.05,-1362.11C933.94,-1259.08 1000.29,-1089.21 1100,-970.6 1204.39,-846.42 1357.32,-743 1475.88,-674.16"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1476.91,-676.59 1482.09,-670.57 1474.29,-672.05 1476.91,-676.59"/>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1113.5,-973.6 1113.5,-1030 1145.07,-1030 1145.07,-973.6 1113.5,-973.6"/>
 <text xml:space="preserve" text-anchor="start" x="1121.5" y="-998.6" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">13</text>
 <polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1148.07,-973.6 1148.07,-1030 1398.43,-1030 1398.43,-973.6 1148.07,-973.6"/>
@@ -5051,56 +5117,56 @@ function t(e){switch(e){case"cliComponents":return`digraph {
 <!-- manifestreader&#45;&gt;skillfiles -->
 <g id="edge3" class="edge">
 <title>manifestreader&#45;&gt;skillfiles</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1809.08,-2233.6C1919.53,-2210.59 2067.33,-2170.26 2184.45,-2104 2236.9,-2074.33 2287.05,-2030.49 2327.03,-1990.36"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2328.85,-1992.26 2332.25,-1985.07 2325.11,-1988.57 2328.85,-1992.26"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1927.09,-2218.07 1927.09,-2250.87 1951.09,-2250.87 1951.09,-2218.07 1927.09,-2218.07"/>
-<text xml:space="preserve" text-anchor="start" x="1935.19" y="-2231.27" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">3</text>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1954.09,-2218.07 1954.09,-2250.87 2143.71,-2250.87 2143.71,-2218.07 1954.09,-2218.07"/>
-<text xml:space="preserve" text-anchor="start" x="1957.09" y="-2230.27" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads skillsign.yaml manifest</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1813.66,-2234.16C1925.23,-2211.32 2075.13,-2170.96 2193.81,-2104 2246.29,-2074.39 2296.45,-2030.56 2336.42,-1990.42"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2338.24,-1992.31 2341.64,-1985.13 2334.5,-1988.63 2338.24,-1992.31"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1936.45,-2218.38 1936.45,-2251.18 1960.45,-2251.18 1960.45,-2218.38 1936.45,-2218.38"/>
+<text xml:space="preserve" text-anchor="start" x="1944.55" y="-2231.58" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">3</text>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1963.45,-2218.38 1963.45,-2251.18 2153.07,-2251.18 2153.07,-2218.38 1963.45,-2218.38"/>
+<text xml:space="preserve" text-anchor="start" x="1966.45" y="-2230.58" font-family="Arial" font-size="14.00" fill="#c9c9c9">Reads skillsign.yaml manifest</text>
 </g>
 <!-- sidecarmanager&#45;&gt;skillfiles -->
 <g id="edge15" class="edge">
 <title>sidecarmanager&#45;&gt;skillfiles</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1759.99,-1251.7C1782.04,-1269.9 1805,-1288.99 1826.34,-1307 1987.16,-1442.65 2037.03,-1466.5 2184.45,-1616.6 2238.9,-1672.04 2294.83,-1738.9 2337.85,-1792.86"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2335.77,-1794.46 2342.49,-1798.7 2339.88,-1791.19 2335.77,-1794.46"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1901.51,-1619.6 1901.51,-1676 1933.08,-1676 1933.08,-1619.6 1901.51,-1619.6"/>
-<text xml:space="preserve" text-anchor="start" x="1909.51" y="-1644.6" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">15</text>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1936.08,-1619.6 1936.08,-1676 2169.28,-1676 2169.28,-1619.6 1936.08,-1619.6"/>
-<text xml:space="preserve" text-anchor="start" x="1949.21" y="-1660.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Writes SKILL.md.skillsign sidecar</text>
-<text xml:space="preserve" text-anchor="start" x="1939.08" y="-1643.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">atomically via temp file rename (step</text>
-<text xml:space="preserve" text-anchor="start" x="2042.57" y="-1626.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">11)</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1768.24,-1251.86C1790.72,-1269.96 1814.05,-1288.97 1835.71,-1307 1997.39,-1441.62 2046.39,-1466.5 2193.81,-1616.6 2248.26,-1672.04 2304.19,-1738.9 2347.21,-1792.86"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2345.13,-1794.46 2351.85,-1798.7 2349.24,-1791.19 2345.13,-1794.46"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1910.87,-1619.6 1910.87,-1676 1942.44,-1676 1942.44,-1619.6 1910.87,-1619.6"/>
+<text xml:space="preserve" text-anchor="start" x="1918.87" y="-1644.6" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">15</text>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1945.44,-1619.6 1945.44,-1676 2178.64,-1676 2178.64,-1619.6 1945.44,-1619.6"/>
+<text xml:space="preserve" text-anchor="start" x="1958.57" y="-1660.4" font-family="Arial" font-size="14.00" fill="#c9c9c9">Writes SKILL.md.skillsign sidecar</text>
+<text xml:space="preserve" text-anchor="start" x="1948.44" y="-1643.6" font-family="Arial" font-size="14.00" fill="#c9c9c9">atomically via temp file rename (step</text>
+<text xml:space="preserve" text-anchor="start" x="2051.93" y="-1626.8" font-family="Arial" font-size="14.00" fill="#c9c9c9">11)</text>
 </g>
 <!-- authhandler&#45;&gt;authhandler -->
 <g id="edge8" class="edge">
 <title>authhandler&#45;&gt;authhandler</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1581.97,-324.98C1565.45,-381.28 1587.84,-435 1649.14,-435 1706.72,-435 1729.97,-387.58 1718.87,-335.17"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1721.42,-334.55 1717.04,-327.92 1716.33,-335.83 1721.42,-334.55"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1543.92,-438 1543.92,-470.8 1567.92,-470.8 1567.92,-438 1543.92,-438"/>
-<text xml:space="preserve" text-anchor="start" x="1552.02" y="-451.2" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">8</text>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1570.92,-438 1570.92,-470.8 1754.36,-470.8 1754.36,-438 1570.92,-438"/>
-<text xml:space="preserve" text-anchor="start" x="1573.92" y="-450.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">Detects authentication mode</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1585.84,-324.98C1569.12,-381.28 1591.78,-435 1653.82,-435 1712.1,-435 1735.63,-387.58 1724.4,-335.17"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="1726.94,-334.53 1722.54,-327.91 1721.86,-335.83 1726.94,-334.53"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1548.6,-438 1548.6,-470.8 1572.6,-470.8 1572.6,-438 1548.6,-438"/>
+<text xml:space="preserve" text-anchor="start" x="1556.7" y="-451.2" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">8</text>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1575.6,-438 1575.6,-470.8 1759.04,-470.8 1759.04,-438 1575.6,-438"/>
+<text xml:space="preserve" text-anchor="start" x="1578.6" y="-450.2" font-family="Arial" font-size="14.00" fill="#c9c9c9">Detects authentication mode</text>
 </g>
 <!-- authhandler&#45;&gt;github -->
 <g id="edge9" class="edge">
 <title>authhandler&#45;&gt;github</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1813.07,-265.93C1936.78,-289.41 2106.81,-321.69 2234.43,-345.91"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2233.88,-348.48 2241.73,-347.3 2234.86,-343.32 2233.88,-348.48"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1889.34,-336.1 1889.34,-375.7 1913.34,-375.7 1913.34,-336.1 1889.34,-336.1"/>
-<text xml:space="preserve" text-anchor="start" x="1897.45" y="-352.7" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">9</text>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1916.34,-336.1 1916.34,-375.7 2181.45,-375.7 2181.45,-336.1 1916.34,-336.1"/>
-<text xml:space="preserve" text-anchor="start" x="1919.34" y="-360.1" font-family="Arial" font-size="14.00" fill="#c9c9c9">CI path: ambient OIDC token from GitHub</text>
-<text xml:space="preserve" text-anchor="start" x="2025.94" y="-343.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Actions</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1835.49,-269.09C1958.6,-292.31 2120.92,-322.94 2243.79,-346.12"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2243.23,-348.69 2251.09,-347.5 2244.2,-343.53 2243.23,-348.69"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1898.71,-336.1 1898.71,-375.7 1922.71,-375.7 1922.71,-336.1 1898.71,-336.1"/>
+<text xml:space="preserve" text-anchor="start" x="1906.81" y="-352.7" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">9</text>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1925.71,-336.1 1925.71,-375.7 2190.81,-375.7 2190.81,-336.1 1925.71,-336.1"/>
+<text xml:space="preserve" text-anchor="start" x="1928.71" y="-360.1" font-family="Arial" font-size="14.00" fill="#c9c9c9">CI path: ambient OIDC token from GitHub</text>
+<text xml:space="preserve" text-anchor="start" x="2035.3" y="-343.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">Actions</text>
 </g>
 <!-- authhandler&#45;&gt;sigstoredex -->
 <g id="edge10" class="edge">
 <title>authhandler&#45;&gt;sigstoredex</title>
-<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1813.07,-204.07C1937.42,-180.47 2108.57,-147.98 2236.41,-123.71"/>
-<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2236.85,-126.3 2243.73,-122.32 2235.87,-121.14 2236.85,-126.3"/>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1895.27,-191.1 1895.27,-230.7 1926.84,-230.7 1926.84,-191.1 1895.27,-191.1"/>
-<text xml:space="preserve" text-anchor="start" x="1903.27" y="-207.7" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">10</text>
-<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1929.84,-191.1 1929.84,-230.7 2175.52,-230.7 2175.52,-191.1 1929.84,-191.1"/>
-<text xml:space="preserve" text-anchor="start" x="1932.84" y="-215.1" font-family="Arial" font-size="14.00" fill="#c9c9c9">Interactive path: browser&#45;based OAuth</text>
-<text xml:space="preserve" text-anchor="start" x="2001.72" y="-198.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">via Sigstore Dex</text>
+<path fill="none" stroke="#8d8d8d" stroke-width="2" stroke-dasharray="5,2" d="M1835.49,-200.91C1959.25,-177.56 2122.62,-146.74 2245.73,-123.51"/>
+<polygon fill="#8d8d8d" stroke="#8d8d8d" stroke-width="2" points="2246.15,-126.1 2253.04,-122.13 2245.18,-120.95 2246.15,-126.1"/>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1904.63,-191.1 1904.63,-230.7 1936.2,-230.7 1936.2,-191.1 1904.63,-191.1"/>
+<text xml:space="preserve" text-anchor="start" x="1912.63" y="-207.7" font-family="Arial" font-weight="bold" font-size="14.00" fill="#c9c9c9">10</text>
+<polygon fill="#18191b" fill-opacity="0.627451" stroke="none" points="1939.2,-191.1 1939.2,-230.7 2184.88,-230.7 2184.88,-191.1 1939.2,-191.1"/>
+<text xml:space="preserve" text-anchor="start" x="1942.2" y="-215.1" font-family="Arial" font-size="14.00" fill="#c9c9c9">Interactive path: browser&#45;based OAuth</text>
+<text xml:space="preserve" text-anchor="start" x="2011.08" y="-198.3" font-family="Arial" font-size="14.00" fill="#c9c9c9">via Sigstore Dex</text>
 </g>
 </g>
 </svg>
