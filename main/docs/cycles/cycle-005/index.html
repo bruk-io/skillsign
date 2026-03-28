@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://bruk-io.github.io/skillsign/cycles/cycle-003/">
+        <link rel="canonical" href="https://bruk-io.github.io/skillsign/cycles/cycle-005/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>Cycle 003 - SkillSign</title>
+        <title>Cycle 005 - SkillSign</title>
       
     
     
@@ -74,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#cycle-003" class="md-skip">
+        <a href="#cycle-005" class="md-skip">
           Skip to content
         </a>
       
@@ -108,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Cycle 003
+              Cycle 005
             
           </span>
         </div>
@@ -547,10 +547,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#previous-retro-check-cycle-002" class="md-nav__link">
+  <a href="#previous-retro-check-cycle-004" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Previous Retro Check (Cycle 002)
+        Previous Retro Check (Cycle 004)
       
     </span>
   </a>
@@ -567,17 +567,6 @@
     <span class="md-ellipsis">
       
         Hypotheses
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#structural-learning-vertical-slices" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Structural Learning: Vertical Slices
       
     </span>
   </a>
@@ -615,75 +604,68 @@
   
 
 
-<h1 id="cycle-003">Cycle 003<a class="headerlink" href="#cycle-003" title="Permanent link">&para;</a></h1>
+<h1 id="cycle-005">Cycle 005<a class="headerlink" href="#cycle-005" title="Permanent link">&para;</a></h1>
 <h2 id="batch">Batch<a class="headerlink" href="#batch" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Issues: #7, #8, #9 (sidecar writer, sidecar reader, verification engine)</li>
-<li>Agents: 2 implementation (parallel sidecar writer + reader, then verification engine), 5 reviewers (code, crypto, identity, input-surface, consistency)</li>
+<li>Issues: #19 (C4 architecture fixes), #13 (auth login/status commands), #15 (integration test suite)</li>
+<li>Agents: 1 implementation (team lead direct), 2 reviewers (code, c4)</li>
 </ul>
 <h2 id="results">Results<a class="headerlink" href="#results" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Completed: #7 (sidecar writer), #8 (sidecar reader), #9 (verification engine)</li>
-<li>Failed: none (4 review fix tasks created and completed in-cycle)</li>
+<li>Completed: #19, #13, #15</li>
+<li>Failed: none</li>
 <li>Deferred: none</li>
 </ul>
 <h2 id="metrics">Metrics<a class="headerlink" href="#metrics" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Files added: 4 (sidecar.py, verify.py, test_sidecar.py, test_verify.py)</li>
-<li>Files modified: 1 (signing.py — added <code>force</code> parameter)</li>
-<li>Lines added: ~1800</li>
-<li>Tests added: 113 (219 total, up from 106)</li>
-<li>Review findings: 6 actionable (2 security, 3 important, 1 minor)</li>
-<li>Review fixes: 4 tasks, 10 new tests</li>
+<li>Files added: 1 (test_integration.py)</li>
+<li>Files modified: 10 (7 .likec4, cli.py, signing.py, test_cli.py)</li>
+<li>Lines added: ~477</li>
+<li>Tests added: 7 (253 total, up from 246)</li>
+<li>Review findings: 1 false positive (PEP 758), 1 non-blocking (stderr assertion), 3 C4 warnings fixed</li>
+<li>Review fixes: 4 C4 annotation fixes (SET step, Phase 2 labels, identity-mismatch notes)</li>
 </ul>
 <h2 id="review-findings-summary">Review Findings Summary<a class="headerlink" href="#review-findings-summary" title="Permanent link">&para;</a></h2>
 <ol>
-<li><strong>SKILL_ID_MISMATCH missing</strong> (security) — spec step 11 completely absent, allows namespace squatting. Fixed.</li>
-<li><strong>Writer YAML injection</strong> (security) — <code>_append_scalar</code> bare f-string allows newline injection. Fixed with input validation.</li>
-<li><strong>OSError → TAMPERED</strong> (important) — I/O error mapped to wrong result code. Fixed to raise SkillSignError(exit_code=10).</li>
-<li><strong>No P-256 curve pinning</strong> (important) — no algorithm check before ECDSA verify. Fixed with isinstance checks.</li>
-<li><strong>Impossible timestamps accepted</strong> (important) — regex-only validation. Fixed with datetime.fromisoformat() parsing.</li>
-<li><strong>Wrong-key test coverage</strong> (minor) — only garbled bytes tested, not wrong-key scenario. Fixed with additional test.</li>
+<li><strong>PEP 758 false positive</strong> — code reviewer flagged <code>except AttributeError, TypeError:</code> as SyntaxError despite explicit prompt context. Confirmed: valid Python 3.14 syntax, ruff enforces bare form.</li>
+<li><strong>stderr assertion quality</strong> (non-blocking) — <code>test_auth_login_failure</code> asserts error in <code>result.output</code> but error goes to stderr. Works because Click CliRunner defaults to <code>mix_stderr=True</code>.</li>
+<li><strong>C4 W1</strong> — <code>error-invalid-cert.likec4</code> missing SET verification self-loop step. Fixed.</li>
+<li><strong>C4 W2</strong> — Policy views (<code>error-policy-fail</code>, <code>policy-verification-flow</code>) missing <code>[Phase 2]</code> annotations on policyEngine steps. Fixed.</li>
+<li><strong>C4 S2</strong> — <code>error-identity-mismatch.likec4</code> notes overclaimed cert chain validation. Fixed to hedge with Phase 2.</li>
 </ol>
 <h2 id="retro">Retro<a class="headerlink" href="#retro" title="Permanent link">&para;</a></h2>
 <h3 id="what-worked">What Worked<a class="headerlink" href="#what-worked" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Parallel agent execution: sidecar writer + reader ran concurrently, merged cleanly</li>
-<li>5-reviewer parallel dispatch: found 6 actionable issues including a security gap</li>
-<li>Review-fix loop completed in single pass: 4 fix tasks, 10 new tests, all passing first run</li>
-<li>C4 model was pre-built — no architecture updates needed</li>
-<li>Test count grew from 106 to 219 across the sprint</li>
+<li>C4-first prioritization: user correctly identified architecture as critical for agent understanding</li>
+<li>Lean 2-reviewer dispatch: no crypto changes meant no crypto reviewer needed</li>
+<li>Integration test audit-first: Haiku agent found only 1 gap in 9 criteria, avoided duplicate work</li>
+<li>Clean micro-batch flow: 3 tasks, 0 rework, CI green between each</li>
+<li>PEP 758 graduated rule: correctly identified reviewer false positive without investigation</li>
 </ul>
 <h3 id="what-didnt-work">What Didn't Work<a class="headerlink" href="#what-didnt-work" title="Permanent link">&para;</a></h3>
 <ul>
-<li>PEP 758 false positive again (second occurrence — now graduated to a rule)</li>
-<li>Worktree copies of .likec4 files caused validation failures (63 duplicate elements)</li>
-<li>Implementation agent omitted spec step 11 (SKILL_ID_MISMATCH) entirely</li>
-<li>OSError mapped to TAMPERED (semantic error caught by 2 reviewers)</li>
+<li>ruff format reverted <code>except (A, B):</code> back to <code>except A, B:</code> twice across C4-C5</li>
+<li>Code reviewer ignored explicit PEP 758 context in prompt (flagged as 100% confidence critical)</li>
+<li>Issues not closed during INTEGRATE — had to close during RETRO</li>
 </ul>
-<h3 id="previous-retro-check-cycle-002">Previous Retro Check (Cycle 002)<a class="headerlink" href="#previous-retro-check-cycle-002" title="Permanent link">&para;</a></h3>
+<h3 id="previous-retro-check-cycle-004">Previous Retro Check (Cycle 004)<a class="headerlink" href="#previous-retro-check-cycle-004" title="Permanent link">&para;</a></h3>
 <ul>
-<li>PEP 758 hypothesis: <strong>Confirmed</strong> — happened again. Graduated to <code>.claude/rules/python314-syntax.md</code></li>
-<li>SDK assumption hypothesis: No new observation. Keeping as hypothesis.</li>
-<li>Tight-loop micro-batch: Still effective for this batch size (3 issues)</li>
+<li>PEP 758 rule: working — false positive detected and dismissed quickly</li>
+<li>Vertical slice gate: effective — shipped <code>auth login</code>/<code>auth status</code> user-facing commands</li>
+<li>Worktree pollution (#20): not triggered (no agent worktrees this cycle)</li>
+<li>Fail-open hypothesis: no new observations</li>
 </ul>
 <h2 id="hypotheses">Hypotheses<a class="headerlink" href="#hypotheses" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Spec step omission</strong>: Implementation agents may skip verification steps that lack obvious test scaffolding. Step 11 had an enum value and exit code mapping but no test, and the agent skipped it. (First observation)</li>
-<li><strong>Worktree architecture pollution</strong>: Agent worktrees copy architecture files, causing likec4 validation conflicts when the main workspace is validated. Consider adding <code>.likec4ignore</code> or cleaning architecture from worktrees. (First observation)</li>
-<li><strong>Redundant reviewer findings</strong>: Multiple reviewers independently flag the same issue (OSError→TAMPERED caught by code-reviewer and consistency-checker). This is expected defense-in-depth, not waste. (Confirmed — second observation)</li>
+<li><strong>ruff format revert loop</strong> — first observation. Formatter intentionally changes code; manual edits get silently reverted. Stop fighting the formatter.</li>
+<li><strong>Reviewer ignoring prompt context</strong> — first observation. Explicit "this is NOT a bug" in review prompt was ignored.</li>
 </ul>
-<h2 id="structural-learning-vertical-slices">Structural Learning: Vertical Slices<a class="headerlink" href="#structural-learning-vertical-slices" title="Permanent link">&para;</a></h2>
-<p>After 3 cycles of pure library code, the CLI is still entirely stubs. The user cannot run anything. This is a <strong>horizontal layering anti-pattern</strong> — building all internals before any user-facing wiring.</p>
-<p><strong>Root cause:</strong> The roadmap (issues #1-15) was structured layer-by-layer: canonical → digest → manifest → auth → signing engine → sidecar → verification engine → TUF → CLI commands. Each cycle shipped tested internal modules but zero runnable functionality.</p>
-<p><strong>Fix:</strong> Every cycle must deliver a <strong>vertical slice</strong> — a thin path from user input to visible output. Even if it's minimal, the user should be able to run something new after each cycle. The sprint-planning skill needs to enforce this: "Does this batch include a user-facing entry point?"</p>
-<p><strong>Applied:</strong> Updated sprint-planning skill with vertical slice gate. Wired up <code>sign</code> and <code>verify</code> CLI commands immediately after this retro.</p>
 <h2 id="changes-applied">Changes Applied<a class="headerlink" href="#changes-applied" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Rules: <code>.claude/rules/python314-syntax.md</code> — graduated PEP 758 pattern</li>
-<li>Process: sprint-planning skill updated with vertical slice requirement</li>
-<li>Issues created: none</li>
-<li>Memory: updated with Sprint 3 results + vertical slice lesson</li>
+<li>Issues closed: #13, #15, #19</li>
+<li>Memory: updated with Sprint 5 results</li>
+<li>Patterns: updated <code>docs/cycles/patterns.md</code></li>
+<li>Process: close issues during INTEGRATE, not RETRO</li>
 </ul>
 
 
