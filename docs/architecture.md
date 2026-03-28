@@ -10,7 +10,7 @@ The model covers four levels:
 
 - **System Context** — Actors (skill author, skill consumer, CI pipeline), the SkillSign system, and external systems (Sigstore, GitHub OIDC, TUF)
 - **Containers** — CLI tool, skill files, TUF cache
-- **Components** — 8 components inside the CLI (canonical processor, digest engine, signing engine, verification engine, policy engine, sidecar manager, TUF client, OIDC authenticator)
+- **Components** — 9 components inside the CLI (canonical form processor, signing engine, verification engine, policy engine, sidecar manager, manifest reader, TUF client, Rekor client, auth handler)
 - **Dynamic Views** — 14 flows covering signing, verification, policy evaluation, and all error paths
 
 ## Verification Results

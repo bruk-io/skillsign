@@ -19,10 +19,12 @@ views {
       '''
     }
 
-    skillsign.cli.verificationEngine -> rekor {
-      title 'Confirms rekor_log_id exists, digest matches, and timestamp valid (--strict mode)'
+    skillsign.cli.verificationEngine -> skillsign.cli.rekorClient 'Delegates live Rekor query for strict mode verification'
+
+    skillsign.cli.rekorClient -> rekor {
+      title 'Queries log entry by rekor_log_id, confirms digest match and timestamp validity via HTTPS/JSON'
       notes '''
-        In strict mode, the CLI queries Rekor live to confirm the log entry
+        In strict mode, rekorClient queries Rekor live to confirm the log entry
         exists as a hashedrekord/v0.0.1, the entry digest matches, and the
         rekor_timestamp falls within the certificate notBefore/notAfter window.
         Provides a public audit trail guarantee beyond SET verification.

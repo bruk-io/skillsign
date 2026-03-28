@@ -55,11 +55,7 @@ Model assignment:
 
 ## Architecture
 
-The C4 model lives in `architecture/` and covers:
-- **Level 1 (Context):** Actors (skill author, skill consumer, CI pipeline), SkillSign system, external systems (Sigstore, GitHub OIDC, TUF)
-- **Level 2 (Containers):** CLI tool, skill files, TUF cache
-- **Level 3 (Components):** 8 components inside the CLI (canonical processor, digest engine, signing engine, verification engine, policy engine, sidecar manager, TUF client, OIDC authenticator)
-- **Dynamic views:** 14 flows covering happy paths and all error codes
+The C4 model lives in `architecture/` — see `docs/architecture.md` for the full overview.
 
 Validate with: `npx likec4 validate ./architecture`
 

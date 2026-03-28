@@ -4,7 +4,7 @@ model {
 
     component authHandler 'Auth Handler' {
       technology 'OIDC'
-      description 'Obtains OIDC identity token for signing. Detects ambient CI credentials first (GitHub Actions OIDC via detect_credential). Falls back to interactive browser-based flow via Sigstore OAuth issuer (oauth2.sigstore.dev/auth). Returns IdentityToken for use with Sigstore SigningContext.'
+      description 'Obtains OIDC identity token for signing. Detects ambient CI credentials first (GitHub Actions OIDC via detect_credential("sigstore") with client ID _SIGSTORE_CLIENT_ID="sigstore"). Falls back to interactive browser-based flow via Sigstore OAuth issuer (oauth2.sigstore.dev/auth). Returns IdentityToken for use with Sigstore SigningContext.'
     }
 
     component canonicalProcessor 'Canonical Form Processor' {
@@ -19,7 +19,7 @@ model {
 
     component verificationEngine 'Verification Engine' {
       technology 'ECDSA P-256, X.509'
-      description 'Orchestrates verification: reads sidecar via SidecarManager, recomputes digest, verifies ECDSA P-256 signature using certificate public key, validates cert chain against Fulcio root via TUF TrustedRoot and pyOpenSSL, checks EKU id-kp-codeSigning OID, verifies SAN identity match (URI or email), checks temporal binding (rekor_timestamp within cert validity), and checks SKILL_ID_MISMATCH owner-path consistency (skipped for email signers). Phase 2: SET cryptographic verification against Rekor public key.'
+      description 'Orchestrates verification: reads sidecar via SidecarManager, recomputes digest, verifies ECDSA P-256 signature using certificate public key, validates cert chain against Fulcio root via TUF TrustedRoot and pyOpenSSL, checks EKU id-kp-codeSigning OID, verifies SAN identity match (URI or email), checks temporal binding (rekor_timestamp within cert validity), and checks SKILL_ID_MISMATCH owner-path consistency (skipped for email signers). In --strict mode, delegates live Rekor queries to rekorClient to confirm log entry existence and digest match. Phase 2: SET cryptographic verification against Rekor public key.'
     }
 
     component policyEngine 'Policy Engine' {
@@ -42,6 +42,11 @@ model {
       description 'Wraps Sigstore SDK TrustedRoot via infra/tuf.py. Fetches production TUF root metadata including Fulcio root certificates and Rekor public key. Falls back to cached metadata when offline. Used by verification engine for cert chain validation.'
     }
 
+    component rekorClient 'Rekor Client' {
+      technology 'HTTPS, JSON'
+      description 'Wraps Rekor transparency log queries via infra/rekor.py. Fetches log entries by log ID using the Rekor search API (/api/v1/log/entries/retrieve). Used by verification engine in --strict mode to confirm the log entry exists and the digest and cert match.'
+    }
+
     // Signing path
     signingEngine -> authHandler 'Gets OIDC identity token from'
     signingEngine -> canonicalProcessor 'Gets SHA-256 digest from'
@@ -53,6 +58,7 @@ model {
     verificationEngine -> canonicalProcessor 'Recomputes digest via'
     verificationEngine -> sidecarManager 'Reads sidecar fields via'
     verificationEngine -> tufClient 'Gets trusted Fulcio root certificates and Rekor public key from'
+    verificationEngine -> rekorClient 'Queries Rekor log entries for strict mode verification'
     // Phase 2: policy evaluation (no policy.py yet)
     verificationEngine -> policyEngine 'Passes verified signer identity, rekor_timestamp, and skill_id for policy evaluation [Phase 2]'
 
@@ -68,7 +74,7 @@ model {
   skillsign.cli.authHandler -> sigstoreDex 'Opens browser for OAuth login via Dex — user picks Google, GitHub, or Microsoft (interactive path)'
   skillsign.cli.signingEngine -> fulcio 'Submits ephemeral public key and OIDC token via Sigstore SDK, receives short-lived X.509 certificate'
   skillsign.cli.signingEngine -> rekor 'Submits signature, certificate, and digest as hashedrekord/v0.0.1 entry via Sigstore SDK'
-  skillsign.cli.verificationEngine -> rekor 'Confirms log entry exists and digest matches in --strict mode'
+  skillsign.cli.rekorClient -> rekor 'Queries transparency log entries via HTTPS/JSON'
   skillsign.cli.tufClient -> tuf 'Fetches current TUF root metadata via HTTPS'
   skillsign.cli.tufClient -> skillsign.tufCache 'Reads and writes cached TUF metadata via local filesystem'
   skillsign.cli.sidecarManager -> skillsign.skillFiles 'Reads and writes .skillsign sidecar files'

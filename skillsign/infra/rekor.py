@@ -1,26 +1,15 @@
-"""Rekor transparency log — signing submissions and live queries."""
+"""Rekor transparency log queries for strict mode verification."""
 
 import json
 import logging
 import urllib.request
 from typing import Any
 
-from sigstore.hashes import HashAlgorithm, Hashed  # type: ignore[attr-defined]
-
 from skillsign.errors import SkillSignError
 
 _logger = logging.getLogger(__name__)
 
 _REKOR_BASE_URL = "https://rekor.sigstore.dev"
-
-
-def sign_and_log(signer: Any, digest_bytes: bytes) -> Any:
-    """Sign the digest and submit to Rekor.
-
-    Return the Sigstore Bundle containing signature, cert, and log entry.
-    """
-    hashed = Hashed(algorithm=HashAlgorithm.SHA2_256, digest=digest_bytes)
-    return signer.sign_artifact(hashed)
 
 
 def query_rekor_entry(log_id: str) -> dict[str, Any]:

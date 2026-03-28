@@ -126,9 +126,7 @@ def _verify_cert_chain(
     on any chain validation error.
 
     When the Sigstore TUF root is unreachable and offline=False, falls back to
-    offline TUF cache. If neither succeeds, skips chain validation and logs a
-    warning rather than failing hard — preserving the MVP behaviour for
-    environments without Sigstore network access.
+    offline TUF cache. If neither succeeds, returns INVALID_CERT (fail-closed).
 
     If trusted_root is provided it is used directly, bypassing TUF I/O.
     """
