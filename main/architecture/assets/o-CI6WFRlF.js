@@ -1,0 +1,1 @@
+const s={View:"likec4-view"};let t="/main/architecture/";t.endsWith("/")||(t=t+"/");const i="LikeC4",e=t,o="https://kroki.io/d2/svg",a="https://kroki.io/plantuml/svg";export{s as C,o as a,e as b,a as k,i as p};
