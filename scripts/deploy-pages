@@ -31,6 +31,8 @@ if ! git show-ref --verify --quiet refs/heads/gh-pages 2>/dev/null && \
     echo "Created orphan gh-pages branch."
 fi
 
+# Ensure we have the latest gh-pages from remote
+git fetch origin gh-pages 2>/dev/null || true
 git worktree add "$WORK_DIR" gh-pages
 
 # Copy build into version directory
