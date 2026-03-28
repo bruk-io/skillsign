@@ -2,7 +2,7 @@ BUILD_DIR := _build
 VERSION ?= main
 # Base path prefix for GitHub Pages (e.g. /skillsign for bruk-io.github.io/skillsign)
 # Set to empty string when using a custom domain (skillsign.ai)
-BASE_PREFIX ?= /skillsign
+BASE_PREFIX ?=
 
 .PHONY: build build-site build-docs build-architecture clean deploy
 
