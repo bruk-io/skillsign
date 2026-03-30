@@ -31,14 +31,23 @@ def _expand_paths(args: tuple[str, ...]) -> list[str]:
     - Otherwise treat it as a literal path (existence checked later)
     """
     result: list[str] = []
+    seen: set[str] = set()
     for arg in args:
         if any(c in arg for c in _GLOB_CHARS):
             matched = _glob.glob(arg, recursive=True)
-            result.extend(sorted(matched))
+            for p in sorted(matched):
+                if p not in seen:
+                    seen.add(p)
+                    result.append(p)
         elif Path(arg).is_dir():
-            result.extend(sorted(str(p) for p in Path(arg).glob("*.md")))
+            for p in sorted(str(f) for f in Path(arg).glob("*.md")):
+                if p not in seen:
+                    seen.add(p)
+                    result.append(p)
         else:
-            result.append(arg)
+            if arg not in seen:
+                seen.add(arg)
+                result.append(arg)
     return result
 
 
@@ -78,10 +87,9 @@ class _SkillSignGroup(click.Group):
             sys.exit(EXIT_CLI_ERROR)
 
 
-def _not_implemented() -> None:
-    """Exit with code 10 for unimplemented commands."""
-    click.echo("Not yet implemented.", err=True)
-    sys.exit(EXIT_CLI_ERROR)
+def _is_quiet(ctx: click.Context) -> bool:
+    """Return True if --quiet was set."""
+    return bool(ctx.obj and ctx.obj.get("quiet"))
 
 
 def _output(ctx: click.Context, text_fn: Callable[[], str], json_obj: Any) -> None:
@@ -89,13 +97,19 @@ def _output(ctx: click.Context, text_fn: Callable[[], str], json_obj: Any) -> No
 
     Suppresses all stdout output when --quiet is set.
     """
-    if ctx.obj and ctx.obj.get("quiet"):
+    if _is_quiet(ctx):
         return
     fmt = ctx.obj.get("format", "text") if ctx.obj else "text"
     if fmt == "json":
         click.echo(json.dumps(json_obj, indent=2))
     else:
         click.echo(text_fn())
+
+
+def _error(ctx: click.Context, message: str) -> None:
+    """Print an error to stderr unless --quiet is set."""
+    if not _is_quiet(ctx):
+        click.echo(message, err=True)
 
 
 @click.group(cls=_SkillSignGroup)
@@ -135,7 +149,7 @@ def login(ctx: click.Context) -> None:
     try:
         token = get_identity_token()
     except SkillSignError as e:
-        click.echo(f"Error: {e}", err=True)
+        _error(ctx, f"Error: {e}")
         sys.exit(e.exit_code)
 
     _output(
@@ -171,8 +185,8 @@ def status(ctx: click.Context) -> None:
 
     try:
         token = IdentityToken(raw_token, client_id=_SIGSTORE_CLIENT_ID)
-    except Exception as e:
-        click.echo(f"Error: failed to process ambient token: {e}", err=True)
+    except (ValueError, Exception) as e:
+        _error(ctx, f"Error: failed to process ambient token: {e}")
         sys.exit(EXIT_CLI_ERROR)
 
     if token.in_validity_period():
@@ -216,10 +230,10 @@ def sign(ctx: click.Context, file: str, *, force: bool = False) -> None:
         sidecar_path = Path(str(skill_path) + ".skillsign")
         write_sidecar(sidecar_data, sidecar_path)
     except SkillSignError as e:
-        click.echo(f"Error: {e}", err=True)
+        _error(ctx, f"Error: {e}")
         sys.exit(e.exit_code)
 
-    sidecar_path_str = str(Path(str(skill_path) + ".skillsign"))
+    sidecar_path_str = str(sidecar_path)
     signer = sidecar_data["signer"]
     _output(
         ctx,
@@ -273,9 +287,10 @@ def _extract_cert_names(pem: str) -> tuple[str, str]:
     return str(subject_cn), str(issuer_cn)
 
 
-def _format_inspect_output(file: str, data: dict[str, Any]) -> str:
+def _format_inspect_output(
+    file: str, data: dict[str, Any], subject_cn: str, issuer_cn: str
+) -> str:
     """Format inspect metadata for display."""
-    subject_cn, issuer_cn = _extract_cert_names(data["certificate"])
     lines = [
         f"{file}: SIGNED",
         f"  Signer:           {data['signer']}",
@@ -318,7 +333,7 @@ def verify(ctx: click.Context, files: tuple[str, ...], *, strict: bool = False) 
 
     expanded = _expand_paths(files)
     if not expanded:
-        click.echo("Error: no files matched", err=True)
+        _error(ctx, "Error: no files matched")
         sys.exit(EXIT_CLI_ERROR)
 
     worst_exit = 0
@@ -331,10 +346,11 @@ def verify(ctx: click.Context, files: tuple[str, ...], *, strict: bool = False) 
             result, meta = verify_skill(skill_path, strict=strict)
         except SkillSignError as e:
             if e.exit_code == EXIT_CLI_ERROR:
-                click.echo(f"Error: {e}", err=True)
+                _error(ctx, f"Error: {e}")
                 sys.exit(EXIT_CLI_ERROR)
-            click.echo(f"{file}: ERROR — {e}", err=True)
-            if _EXIT_SEVERITY[e.exit_code] > _EXIT_SEVERITY[worst_exit]:
+            _error(ctx, f"{file}: ERROR — {e}")
+            severity = _EXIT_SEVERITY.get(e.exit_code, 0)
+            if severity > _EXIT_SEVERITY.get(worst_exit, 0):
                 worst_exit = e.exit_code
             results.append(
                 {
@@ -350,7 +366,7 @@ def verify(ctx: click.Context, files: tuple[str, ...], *, strict: bool = False) 
             continue
 
         code = exit_code_for(result)
-        if _EXIT_SEVERITY[code] > _EXIT_SEVERITY[worst_exit]:
+        if _EXIT_SEVERITY.get(code, 0) > _EXIT_SEVERITY.get(worst_exit, 0):
             worst_exit = code
         text_lines.append(_format_verification_output(file, result.value, meta))
         results.append(
@@ -365,8 +381,7 @@ def verify(ctx: click.Context, files: tuple[str, ...], *, strict: bool = False) 
             }
         )
 
-    json_out: Any = results[0] if len(results) == 1 else results
-    _output(ctx, lambda: "\n".join(text_lines), json_out)
+    _output(ctx, lambda: "\n".join(text_lines), results)
     sys.exit(worst_exit)
 
 
@@ -391,13 +406,13 @@ def inspect(ctx: click.Context, file: str) -> None:
     try:
         data = read_sidecar(sidecar_path)
     except SkillSignError as e:
-        click.echo(f"Error: {e}", err=True)
+        _error(ctx, f"Error: {e}")
         sys.exit(e.exit_code)
 
     subject_cn, issuer_cn = _extract_cert_names(data["certificate"])
     _output(
         ctx,
-        lambda: _format_inspect_output(file, data),
+        lambda: _format_inspect_output(file, data, subject_cn, issuer_cn),
         {
             "file": file,
             "signed": True,
@@ -433,7 +448,7 @@ def unsign(ctx: click.Context, file: str) -> None:
     try:
         sidecar_path.unlink()
     except OSError as e:
-        click.echo(f"Error: {e}", err=True)
+        _error(ctx, f"Error: {e}")
         sys.exit(EXIT_CLI_ERROR)
 
     sidecar_path_str = str(sidecar_path)

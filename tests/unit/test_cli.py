@@ -1,4 +1,4 @@
-"""Unit tests for the SkillSign CLI — no mocked I/O, Click CliRunner only."""
+"""Unit tests for the SkillSign CLI."""
 
 import json
 import tempfile
@@ -310,7 +310,9 @@ def test_format_inspect_output_contains_all_fields() -> None:
         "rekor_timestamp": "2026-01-01T00:00:01Z",
         "certificate": pem,
     }
-    output = _format_inspect_output("SKILL.md", data)
+    output = _format_inspect_output(
+        "SKILL.md", data, "SkillSign Test", "SkillSign Issuer"
+    )
 
     assert "SKILL.md: SIGNED" in output
     assert "https://github.com/test-org/repo" in output
@@ -337,7 +339,10 @@ def test_format_inspect_output_label_alignment() -> None:
         "rekor_timestamp": "2026-01-01T00:00:01Z",
         "certificate": pem,
     }
-    output = _format_inspect_output("SKILL.md", data)
+    from skillsign.cli import _extract_cert_names
+
+    subject_cn, issuer_cn = _extract_cert_names(pem)
+    output = _format_inspect_output("SKILL.md", data, subject_cn, issuer_cn)
     lines = output.splitlines()
 
     # First line is the file header
@@ -401,9 +406,11 @@ def test_verify_json_unsigned(runner: CliRunner) -> None:
 
         assert result.exit_code == 2
         data = json.loads(result.output)
-        assert data["file"] == str(skill)
-        assert data["result"] == "UNSIGNED"
-        assert data["exit_code"] == 2
+        assert isinstance(data, list)
+        assert len(data) == 1
+        assert data[0]["file"] == str(skill)
+        assert data[0]["result"] == "UNSIGNED"
+        assert data[0]["exit_code"] == 2
 
 
 def test_verify_json_verified(runner: CliRunner) -> None:
@@ -426,11 +433,13 @@ def test_verify_json_verified(runner: CliRunner) -> None:
 
         assert result.exit_code == 0
         data = json.loads(result.output)
-        assert data["result"] == "VERIFIED"
-        assert data["exit_code"] == 0
-        assert data["signer"] == "https://github.com/test-org/repo"
-        assert data["skill_id"] == "github.com/test-org/my-skill"
-        assert data["skill_version"] == "1.0.0"
+        assert isinstance(data, list)
+        assert len(data) == 1
+        assert data[0]["result"] == "VERIFIED"
+        assert data[0]["exit_code"] == 0
+        assert data[0]["signer"] == "https://github.com/test-org/repo"
+        assert data[0]["skill_id"] == "github.com/test-org/my-skill"
+        assert data[0]["skill_version"] == "1.0.0"
 
 
 def test_verify_json_multi_file(runner: CliRunner) -> None:
