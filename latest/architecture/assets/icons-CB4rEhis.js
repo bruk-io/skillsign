@@ -1,0 +1,1 @@
+import{j as t}from"./vendors-BU59UKzi.js";const r={};function c(n){const o=r[n.node.icon??""];return o?t.jsx(o,n):null}function s(n){switch(n){case"default":return c;default:throw new Error("Unknown projectId: "+n)}}function i({projectId:n,...o}){const e=s(n);return t.jsx(e,o)}export{i as ProjectIcons};

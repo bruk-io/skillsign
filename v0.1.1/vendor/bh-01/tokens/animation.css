@@ -1,0 +1,21 @@
+:root {
+  /* Durations */
+  --bh-duration-fast: 100ms;
+  --bh-duration-normal: 200ms;
+  --bh-duration-slow: 400ms;
+
+  /* Easing */
+  --bh-ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --bh-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --bh-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --bh-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Backdrop blur */
+  --bh-blur-sm: 8px;
+  --bh-blur-md: 20px;
+
+  /* Composite transitions */
+  --bh-transition-fast: var(--bh-duration-fast) var(--bh-ease-default);
+  --bh-transition-normal: var(--bh-duration-normal) var(--bh-ease-default);
+  --bh-transition-slow: var(--bh-duration-slow) var(--bh-ease-default);
+}
