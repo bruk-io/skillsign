@@ -15,6 +15,7 @@ build/
 .pytest_cache/
 .coverage
 htmlcov/
+tests/e2e/.cache/
 
 # mypy
 .mypy_cache/

@@ -1,12 +1,13 @@
 """E2E test configuration — skips unless SKILLSIGN_E2E=1.
 
 Provides a session-scoped ``signed_artifacts`` fixture that performs ONE
-real Sigstore signing. All verification-path tests copy these artifacts
-to their own tmp_path and manipulate as needed, avoiding repeated OIDC
-browser prompts.
+real Sigstore signing, then caches the artifacts to disk for 24 hours.
+Subsequent test runs within 24h reuse the cache — no browser prompt needed.
 """
 
+import json
 import os
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -25,6 +26,10 @@ This skill exists solely for automated end-to-end testing.
 SKILL_ID = "github.com/bruk-io/skillsign-e2e-test"
 SKILL_VERSION = "0.0.1"
 MANIFEST_CONTENT = f"skill_id: {SKILL_ID}\nskill_version: {SKILL_VERSION}\n"
+
+_CACHE_DIR = Path(__file__).resolve().parent / ".cache"
+_CACHE_FILE = _CACHE_DIR / "signed_artifacts.json"
+_CACHE_MAX_AGE = 24 * 60 * 60  # 24 hours
 
 
 def pytest_collection_modifyitems(
@@ -48,15 +53,56 @@ class SignedArtifacts:
     sidecar_fields: dict[str, Any] = field(default_factory=dict)
 
 
+def _load_cached() -> SignedArtifacts | None:
+    """Load cached artifacts if they exist and are fresh enough."""
+    if not _CACHE_FILE.exists():
+        return None
+    try:
+        raw = json.loads(_CACHE_FILE.read_text())
+        if time.time() - raw["timestamp"] > _CACHE_MAX_AGE:
+            return None
+        return SignedArtifacts(
+            skill_content=raw["skill_content"],
+            manifest_content=raw["manifest_content"],
+            sidecar_text=raw["sidecar_text"],
+            signer=raw["signer"],
+            sidecar_fields=raw["sidecar_fields"],
+        )
+    except json.JSONDecodeError, KeyError, OSError:
+        return None
+
+
+def _save_cache(artifacts: SignedArtifacts) -> None:
+    """Save artifacts to disk cache."""
+    _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    _CACHE_FILE.write_text(
+        json.dumps(
+            {
+                "timestamp": time.time(),
+                "skill_content": artifacts.skill_content,
+                "manifest_content": artifacts.manifest_content,
+                "sidecar_text": artifacts.sidecar_text,
+                "signer": artifacts.signer,
+                "sidecar_fields": artifacts.sidecar_fields,
+            },
+            indent=2,
+        )
+    )
+
+
 @pytest.fixture(scope="session")
 def signed_artifacts(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> SignedArtifacts:
-    """Sign a SKILL.md once for the entire test session.
+    """Sign a SKILL.md once, cached to disk for 24 hours.
 
-    Returns artifacts that verification tests can copy and manipulate
-    without needing additional OIDC authentication.
+    First run: signs with real Sigstore (browser prompt), caches result.
+    Subsequent runs within 24h: loads from cache, no auth needed.
     """
+    cached = _load_cached()
+    if cached is not None:
+        return cached
+
     base = tmp_path_factory.mktemp("signed")
     skill_file = base / "SKILL.md"
     skill_file.write_text(SKILL_CONTENT)
@@ -69,13 +115,16 @@ def signed_artifacts(
 
     parsed = read_sidecar(sidecar_path)
 
-    return SignedArtifacts(
+    artifacts = SignedArtifacts(
         skill_content=SKILL_CONTENT,
         manifest_content=MANIFEST_CONTENT,
         sidecar_text=sidecar_path.read_text(),
         signer=sidecar_data["signer"],
         sidecar_fields=parsed,
     )
+
+    _save_cache(artifacts)
+    return artifacts
 
 
 def setup_signed_copy(signed: SignedArtifacts, dest: Path) -> Path:

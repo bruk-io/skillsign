@@ -2,10 +2,11 @@
 
 These tests are skipped by default. Set SKILLSIGN_E2E=1 to run them.
 
-The ``signed_artifacts`` session fixture signs ONCE. CLI verify tests
-copy those artifacts and invoke the CLI, avoiding repeated OIDC prompts.
+The ``signed_artifacts`` session fixture signs ONCE (cached 24h).
+All tests copy those artifacts and invoke the CLI.
 """
 
+import json
 from pathlib import Path
 
 import pytest
@@ -135,3 +136,139 @@ def test_verify_output_format(
     assert "Signer:" in result.output
     assert "github.com/bruk-io/skillsign-e2e-test" in result.output
     assert "0.0.1" in result.output
+
+
+# --- Inspect tests ---
+
+
+def test_inspect_signed_file(
+    runner: CliRunner,
+    signed_artifacts: SignedArtifacts,
+    tmp_path: Path,
+) -> None:
+    """inspect shows metadata from real Sigstore signature."""
+    skill_path = setup_signed_copy(signed_artifacts, tmp_path)
+
+    result = runner.invoke(cli, ["inspect", str(skill_path)])
+
+    assert result.exit_code == 0, (
+        f"Expected exit 0, got {result.exit_code}:\n{result.output}"
+    )
+    assert "SIGNED" in result.output
+    assert "Signer:" in result.output
+    assert "Skill ID:" in result.output
+    assert "Rekor Log ID:" in result.output
+    assert "Cert Subject CN:" in result.output
+
+
+def test_inspect_unsigned_file(runner: CliRunner, tmp_path: Path) -> None:
+    """inspect on unsigned file exits 2."""
+    skill_path = tmp_path / "SKILL.md"
+    skill_path.write_text(SKILL_CONTENT)
+
+    result = runner.invoke(cli, ["inspect", str(skill_path)])
+
+    assert result.exit_code == 2
+    assert "UNSIGNED" in result.output
+
+
+# --- Unsign tests ---
+
+
+def test_unsign_removes_sidecar(
+    runner: CliRunner,
+    signed_artifacts: SignedArtifacts,
+    tmp_path: Path,
+) -> None:
+    """unsign deletes the sidecar, then verify returns UNSIGNED."""
+    skill_path = setup_signed_copy(signed_artifacts, tmp_path)
+    sidecar_path = Path(str(skill_path) + ".skillsign")
+    assert sidecar_path.exists()
+
+    result = runner.invoke(cli, ["unsign", str(skill_path)])
+
+    assert result.exit_code == 0
+    assert "Removed:" in result.output
+    assert not sidecar_path.exists()
+
+    # Verify now returns UNSIGNED
+    verify_result = runner.invoke(cli, ["verify", str(skill_path)])
+    assert verify_result.exit_code == 2
+
+
+def test_unsign_no_sidecar(runner: CliRunner, tmp_path: Path) -> None:
+    """unsign on unsigned file exits 2."""
+    skill_path = tmp_path / "SKILL.md"
+    skill_path.write_text(SKILL_CONTENT)
+
+    result = runner.invoke(cli, ["unsign", str(skill_path)])
+
+    assert result.exit_code == 2
+
+
+# --- --format json tests ---
+
+
+def test_verify_format_json(
+    runner: CliRunner,
+    signed_artifacts: SignedArtifacts,
+    tmp_path: Path,
+) -> None:
+    """--format json produces valid JSON with real Sigstore data."""
+    skill_path = setup_signed_copy(signed_artifacts, tmp_path)
+
+    result = runner.invoke(cli, ["--format", "json", "verify", str(skill_path)])
+
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert isinstance(data, list)
+    assert len(data) == 1
+    assert data[0]["result"] == "VERIFIED"
+    assert data[0]["signer"]
+    assert data[0]["skill_id"] == "github.com/bruk-io/skillsign-e2e-test"
+
+
+def test_inspect_format_json(
+    runner: CliRunner,
+    signed_artifacts: SignedArtifacts,
+    tmp_path: Path,
+) -> None:
+    """inspect --format json produces valid JSON with sidecar fields."""
+    skill_path = setup_signed_copy(signed_artifacts, tmp_path)
+
+    result = runner.invoke(cli, ["--format", "json", "inspect", str(skill_path)])
+
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert data["signed"] is True
+    assert data["signer"]
+    assert data["rekor_log_id"]
+    assert data["cert_subject_cn"]
+
+
+# --- --quiet tests ---
+
+
+def test_quiet_verify_no_output(
+    runner: CliRunner,
+    signed_artifacts: SignedArtifacts,
+    tmp_path: Path,
+) -> None:
+    """--quiet suppresses all output, exit code still works."""
+    skill_path = setup_signed_copy(signed_artifacts, tmp_path)
+
+    result = runner.invoke(cli, ["--quiet", "verify", str(skill_path)])
+
+    assert result.exit_code == 0
+    assert result.output.strip() == ""
+
+
+def test_quiet_verify_unsigned_no_output(runner: CliRunner, tmp_path: Path) -> None:
+    """--quiet with unsigned file: no output, exit 2."""
+    skill_path = tmp_path / "SKILL.md"
+    skill_path.write_text(SKILL_CONTENT)
+
+    result = runner.invoke(cli, ["--quiet", "verify", str(skill_path)])
+
+    assert result.exit_code == 2
+    assert result.output.strip() == ""
