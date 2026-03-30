@@ -1,8 +1,9 @@
 """Unit tests for the SkillSign CLI — no mocked I/O, Click CliRunner only."""
 
+import json
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from click.testing import CliRunner
@@ -344,3 +345,300 @@ def test_format_inspect_output_label_alignment() -> None:
     # All subsequent lines are indented
     for line in lines[1:]:
         assert line.startswith("  ")
+
+
+# ---------------------------------------------------------------------------
+# --format json: unsign
+# ---------------------------------------------------------------------------
+
+
+def test_unsign_json_removed(runner: CliRunner) -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        skill = Path(tmpdir) / "SKILL.md"
+        sidecar = Path(str(skill) + ".skillsign")
+        skill.write_text("# SKILL\n")
+        sidecar.write_text("sidecar content")
+
+        result = runner.invoke(cli, ["--format", "json", "unsign", str(skill)])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["file"] == str(skill)
+        assert data["removed"] is True
+
+
+def test_unsign_json_no_sidecar(runner: CliRunner) -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        skill = Path(tmpdir) / "SKILL.md"
+        skill.write_text("# SKILL\n")
+
+        result = runner.invoke(cli, ["--format", "json", "unsign", str(skill)])
+
+        assert result.exit_code == 2
+        data = json.loads(result.output)
+        assert data["file"] == str(skill)
+        assert data["removed"] is False
+
+
+# ---------------------------------------------------------------------------
+# --format json: verify
+# ---------------------------------------------------------------------------
+
+
+def test_verify_json_unsigned(runner: CliRunner) -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        skill = Path(tmpdir) / "SKILL.md"
+        skill.write_text("# SKILL\n")
+
+        from skillsign.verify import VerificationResult
+
+        mock_meta: dict = {}
+        with patch(
+            "skillsign.verify.verify_skill",
+            return_value=(VerificationResult.UNSIGNED, mock_meta),
+        ):
+            result = runner.invoke(cli, ["--format", "json", "verify", str(skill)])
+
+        assert result.exit_code == 2
+        data = json.loads(result.output)
+        assert data["file"] == str(skill)
+        assert data["result"] == "UNSIGNED"
+        assert data["exit_code"] == 2
+
+
+def test_verify_json_verified(runner: CliRunner) -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        skill = Path(tmpdir) / "SKILL.md"
+        skill.write_text("# SKILL\n")
+
+        from skillsign.verify import VerificationResult
+
+        mock_meta = {
+            "signer": "https://github.com/test-org/repo",
+            "skill_id": "github.com/test-org/my-skill",
+            "skill_version": "1.0.0",
+        }
+        with patch(
+            "skillsign.verify.verify_skill",
+            return_value=(VerificationResult.VERIFIED, mock_meta),
+        ):
+            result = runner.invoke(cli, ["--format", "json", "verify", str(skill)])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["result"] == "VERIFIED"
+        assert data["exit_code"] == 0
+        assert data["signer"] == "https://github.com/test-org/repo"
+        assert data["skill_id"] == "github.com/test-org/my-skill"
+        assert data["skill_version"] == "1.0.0"
+
+
+def test_verify_json_multi_file(runner: CliRunner) -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        skill1 = Path(tmpdir) / "SKILL1.md"
+        skill2 = Path(tmpdir) / "SKILL2.md"
+        skill1.write_text("# SKILL\n")
+        skill2.write_text("# SKILL\n")
+
+        from skillsign.verify import VerificationResult
+
+        mock_meta: dict = {}
+        with patch(
+            "skillsign.verify.verify_skill",
+            return_value=(VerificationResult.UNSIGNED, mock_meta),
+        ):
+            result = runner.invoke(
+                cli, ["--format", "json", "verify", str(skill1), str(skill2)]
+            )
+
+        assert result.exit_code == 2
+        data = json.loads(result.output)
+        assert isinstance(data, list)
+        assert len(data) == 2
+        assert all(item["result"] == "UNSIGNED" for item in data)
+
+
+# ---------------------------------------------------------------------------
+# --format json: inspect
+# ---------------------------------------------------------------------------
+
+
+def test_inspect_json_unsigned(runner: CliRunner) -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        skill = Path(tmpdir) / "SKILL.md"
+        skill.write_text("# SKILL\n")
+
+        result = runner.invoke(cli, ["--format", "json", "inspect", str(skill)])
+
+        assert result.exit_code == 2
+        data = json.loads(result.output)
+        assert data["file"] == str(skill)
+        assert data["signed"] is False
+
+
+def test_inspect_json_signed(runner: CliRunner) -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        skill = Path(tmpdir) / "SKILL.md"
+        sidecar = Path(str(skill) + ".skillsign")
+        skill.write_text("# SKILL\n")
+
+        pem = _make_test_pem()
+        sidecar_data = {
+            "signer": "https://github.com/test-org/repo",
+            "skill_id": "github.com/test-org/my-skill",
+            "skill_version": "1.0.0",
+            "timestamp": "2026-01-01T00:00:00Z",
+            "digest": "sha256:" + "a" * 64,
+            "rekor_log_id": "b" * 64,
+            "rekor_timestamp": "2026-01-01T00:00:01Z",
+            "certificate": pem,
+            "signature": "c" * 64,
+            "rekor_set": "d" * 64,
+        }
+        with patch("skillsign.sidecar.read_sidecar", return_value=sidecar_data):
+            sidecar.write_text("placeholder")
+            result = runner.invoke(cli, ["--format", "json", "inspect", str(skill)])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["file"] == str(skill)
+        assert data["signed"] is True
+        assert data["signer"] == "https://github.com/test-org/repo"
+        assert data["skill_id"] == "github.com/test-org/my-skill"
+        assert data["skill_version"] == "1.0.0"
+        assert data["cert_subject_cn"] == "SkillSign Test"
+        assert data["cert_issuer_cn"] == "SkillSign Issuer"
+
+
+# ---------------------------------------------------------------------------
+# --format json: auth status
+# ---------------------------------------------------------------------------
+
+
+def test_auth_status_json_not_authenticated(runner: CliRunner) -> None:
+    with patch("skillsign.auth._detect_ambient_credential", return_value=None):
+        result = runner.invoke(cli, ["--format", "json", "auth", "status"])
+
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert data["authenticated"] is False
+    assert data["identity"] is None
+    assert data["issuer"] is None
+    assert data["expired"] is False
+
+
+def test_auth_status_json_authenticated(runner: CliRunner) -> None:
+    mock_token = MagicMock()
+    mock_token.identity = "https://github.com/test-org/test-repo"
+    mock_token.federated_issuer = "https://accounts.google.com"
+    mock_token.in_validity_period.return_value = True
+
+    with (
+        patch("skillsign.auth._detect_ambient_credential", return_value="raw-token"),
+        patch("sigstore.oidc.IdentityToken", return_value=mock_token),
+    ):
+        result = runner.invoke(cli, ["--format", "json", "auth", "status"])
+
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert data["authenticated"] is True
+    assert data["identity"] == "https://github.com/test-org/test-repo"
+    assert data["issuer"] == "https://accounts.google.com"
+    assert data["expired"] is False
+
+
+def test_auth_status_json_expired(runner: CliRunner) -> None:
+    mock_token = MagicMock()
+    mock_token.identity = "https://github.com/test-org/test-repo"
+    mock_token.federated_issuer = "https://accounts.google.com"
+    mock_token.in_validity_period.return_value = False
+
+    with (
+        patch("skillsign.auth._detect_ambient_credential", return_value="raw-token"),
+        patch("sigstore.oidc.IdentityToken", return_value=mock_token),
+    ):
+        result = runner.invoke(cli, ["--format", "json", "auth", "status"])
+
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert data["authenticated"] is False
+    assert data["expired"] is True
+
+
+# ---------------------------------------------------------------------------
+# --format json: sign
+# ---------------------------------------------------------------------------
+
+
+def test_sign_json_output(runner: CliRunner) -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        skill = Path(tmpdir) / "SKILL.md"
+        skill.write_text("# SKILL\n")
+
+        sidecar_data = {
+            "signer": "https://github.com/test-org/repo",
+            "skill_id": "github.com/test-org/my-skill",
+            "skill_version": "1.0.0",
+            "timestamp": "2026-01-01T00:00:00Z",
+            "digest": "sha256:" + "a" * 64,
+            "rekor_log_id": "b" * 64,
+            "rekor_timestamp": "2026-01-01T00:00:01Z",
+            "certificate": "pem",
+            "signature": "sig",
+            "rekor_set": "set",
+        }
+        with (
+            patch("skillsign.signing.sign_skill", return_value=sidecar_data),
+            patch("skillsign.sidecar.write_sidecar"),
+        ):
+            result = runner.invoke(cli, ["--format", "json", "sign", str(skill)])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["file"] == str(skill)
+        assert data["sidecar"] == str(skill) + ".skillsign"
+        assert data["signer"] == "https://github.com/test-org/repo"
+
+
+# ---------------------------------------------------------------------------
+# --format json: auth login
+# ---------------------------------------------------------------------------
+
+
+def test_auth_login_json_output(runner: CliRunner) -> None:
+    mock_token = MagicMock()
+    mock_token.identity = "https://github.com/test-org/test-repo"
+    mock_token.federated_issuer = "https://oauth2.sigstore.dev/auth"
+
+    with patch("skillsign.auth.get_identity_token", return_value=mock_token):
+        result = runner.invoke(cli, ["--format", "json", "auth", "login"])
+
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert data["identity"] == "https://github.com/test-org/test-repo"
+    assert data["issuer"] == "https://oauth2.sigstore.dev/auth"
+
+
+# ---------------------------------------------------------------------------
+# --format text (default): unchanged behavior
+# ---------------------------------------------------------------------------
+
+
+def test_format_text_is_default(runner: CliRunner) -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        skill = Path(tmpdir) / "SKILL.md"
+        sidecar = Path(str(skill) + ".skillsign")
+        skill.write_text("# SKILL\n")
+        sidecar.write_text("sidecar content")
+
+        result = runner.invoke(cli, ["unsign", str(skill)])
+
+        assert result.exit_code == 0
+        assert "Removed:" in result.output
+        # Must not be JSON
+        try:
+            json.loads(result.output)
+            is_json = True
+        except json.JSONDecodeError:
+            is_json = False
+        assert not is_json

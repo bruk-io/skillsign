@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import sys
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -60,10 +61,29 @@ def _not_implemented() -> None:
     sys.exit(EXIT_CLI_ERROR)
 
 
+def _output(ctx: click.Context, text_fn: Callable[[], str], json_obj: Any) -> None:
+    """Print text or JSON output depending on the --format flag in ctx."""
+    fmt = ctx.obj.get("format", "text") if ctx.obj else "text"
+    if fmt == "json":
+        click.echo(json.dumps(json_obj, indent=2))
+    else:
+        click.echo(text_fn())
+
+
 @click.group(cls=_SkillSignGroup)
 @click.version_option(version=__version__, prog_name="skillsign")
-def cli() -> None:
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format (text or json).",
+)
+@click.pass_context
+def cli(ctx: click.Context, output_format: str) -> None:
     """Cryptographic signing and verification for Claude Code SKILL.md files."""
+    ctx.ensure_object(dict)
+    ctx.obj["format"] = output_format
 
 
 @cli.group()
@@ -72,7 +92,8 @@ def auth() -> None:
 
 
 @auth.command()
-def login() -> None:
+@click.pass_context
+def login(ctx: click.Context) -> None:
     """Authenticate with GitHub via OIDC."""
     from skillsign.auth import get_identity_token
 
@@ -82,19 +103,31 @@ def login() -> None:
         click.echo(f"Error: {e}", err=True)
         sys.exit(e.exit_code)
 
-    click.echo(f"Authenticated as: {token.identity}")
-    click.echo(f"Issuer: {token.federated_issuer}")
+    _output(
+        ctx,
+        lambda: f"Authenticated as: {token.identity}\nIssuer: {token.federated_issuer}",
+        {"identity": token.identity, "issuer": token.federated_issuer},
+    )
 
 
 @auth.command()
-def status() -> None:
+@click.pass_context
+def status(ctx: click.Context) -> None:
     """Show current authentication state."""
     from skillsign.auth import _detect_ambient_credential
 
     raw_token = _detect_ambient_credential()
     if raw_token is None:
-        click.echo("Not authenticated.")
-        click.echo("Run 'skillsign auth login' to authenticate.")
+        _output(
+            ctx,
+            lambda: "Not authenticated.\nRun 'skillsign auth login' to authenticate.",
+            {
+                "authenticated": False,
+                "identity": None,
+                "issuer": None,
+                "expired": False,
+            },
+        )
         return
 
     from sigstore.oidc import IdentityToken
@@ -108,17 +141,36 @@ def status() -> None:
         sys.exit(EXIT_CLI_ERROR)
 
     if token.in_validity_period():
-        click.echo(f"Authenticated as: {token.identity}")
-        click.echo(f"Issuer: {token.federated_issuer}")
+        _output(
+            ctx,
+            lambda: (
+                f"Authenticated as: {token.identity}\nIssuer: {token.federated_issuer}"
+            ),
+            {
+                "authenticated": True,
+                "identity": token.identity,
+                "issuer": token.federated_issuer,
+                "expired": False,
+            },
+        )
     else:
-        click.echo("Token expired.")
-        click.echo("Run 'skillsign auth login' to re-authenticate.")
+        _output(
+            ctx,
+            lambda: "Token expired.\nRun 'skillsign auth login' to re-authenticate.",
+            {
+                "authenticated": False,
+                "identity": token.identity,
+                "issuer": token.federated_issuer,
+                "expired": True,
+            },
+        )
 
 
 @cli.command()
 @click.argument("file", type=click.Path(exists=True))
 @click.option("--force", is_flag=True, help="Overwrite existing sidecar.")
-def sign(file: str, *, force: bool = False) -> None:
+@click.pass_context
+def sign(ctx: click.Context, file: str, *, force: bool = False) -> None:
     """Sign a SKILL.md file, writing a detached sidecar."""
     from skillsign.sidecar import write_sidecar
     from skillsign.signing import sign_skill
@@ -132,8 +184,12 @@ def sign(file: str, *, force: bool = False) -> None:
         click.echo(f"Error: {e}", err=True)
         sys.exit(e.exit_code)
 
-    click.echo(
-        _format_sign_output(str(skill_path), str(sidecar_path), sidecar_data["signer"])
+    sidecar_path_str = str(Path(str(skill_path) + ".skillsign"))
+    signer = sidecar_data["signer"]
+    _output(
+        ctx,
+        lambda: _format_sign_output(str(skill_path), sidecar_path_str, signer),
+        {"file": str(skill_path), "sidecar": sidecar_path_str, "signer": signer},
     )
 
 
@@ -203,11 +259,14 @@ def _format_inspect_output(file: str, data: dict[str, Any]) -> str:
 @cli.command()
 @click.argument("files", nargs=-1, required=True, type=click.Path(exists=True))
 @click.option("--strict", is_flag=True, help="Live Rekor query to confirm log entry.")
-def verify(files: tuple[str, ...], *, strict: bool = False) -> None:
+@click.pass_context
+def verify(ctx: click.Context, files: tuple[str, ...], *, strict: bool = False) -> None:
     """Verify one or more SKILL.md files against their sidecars."""
     from skillsign.verify import exit_code_for, verify_skill
 
     worst_exit = 0
+    results: list[dict[str, Any]] = []
+    text_lines: list[str] = []
 
     for file in files:
         skill_path = Path(file)
@@ -217,19 +276,44 @@ def verify(files: tuple[str, ...], *, strict: bool = False) -> None:
             click.echo(f"{file}: ERROR — {e}", err=True)
             if _EXIT_SEVERITY[e.exit_code] > _EXIT_SEVERITY[worst_exit]:
                 worst_exit = e.exit_code
+            results.append(
+                {
+                    "file": file,
+                    "result": "ERROR",
+                    "exit_code": e.exit_code,
+                    "signer": None,
+                    "skill_id": None,
+                    "skill_version": None,
+                    "error": str(e),
+                }
+            )
             continue
 
         code = exit_code_for(result)
         if _EXIT_SEVERITY[code] > _EXIT_SEVERITY[worst_exit]:
             worst_exit = code
-        click.echo(_format_verification_output(file, result.value, meta))
+        text_lines.append(_format_verification_output(file, result.value, meta))
+        results.append(
+            {
+                "file": file,
+                "result": result.value,
+                "exit_code": code,
+                "signer": meta.get("signer"),
+                "skill_id": meta.get("skill_id"),
+                "skill_version": meta.get("skill_version"),
+                "error": meta.get("error"),
+            }
+        )
 
+    json_out: Any = results[0] if len(results) == 1 else results
+    _output(ctx, lambda: "\n".join(text_lines), json_out)
     sys.exit(worst_exit)
 
 
 @cli.command()
 @click.argument("file", type=click.Path(exists=True))
-def inspect(file: str) -> None:
+@click.pass_context
+def inspect(ctx: click.Context, file: str) -> None:
     """Show signature metadata without verifying."""
     from skillsign.sidecar import read_sidecar
 
@@ -237,7 +321,11 @@ def inspect(file: str) -> None:
     sidecar_path = Path(str(skill_path) + ".skillsign")
 
     if not sidecar_path.exists():
-        click.echo(f"{file}: UNSIGNED (no sidecar found)")
+        _output(
+            ctx,
+            lambda: f"{file}: UNSIGNED (no sidecar found)",
+            {"file": file, "signed": False},
+        )
         sys.exit(EXIT_UNSIGNED)
 
     try:
@@ -246,18 +334,40 @@ def inspect(file: str) -> None:
         click.echo(f"Error: {e}", err=True)
         sys.exit(e.exit_code)
 
-    click.echo(_format_inspect_output(file, data))
+    subject_cn, issuer_cn = _extract_cert_names(data["certificate"])
+    _output(
+        ctx,
+        lambda: _format_inspect_output(file, data),
+        {
+            "file": file,
+            "signed": True,
+            "signer": data["signer"],
+            "skill_id": data["skill_id"],
+            "skill_version": data["skill_version"],
+            "timestamp": data["timestamp"],
+            "digest": data["digest"],
+            "rekor_log_id": data["rekor_log_id"],
+            "rekor_timestamp": data["rekor_timestamp"],
+            "cert_subject_cn": subject_cn,
+            "cert_issuer_cn": issuer_cn,
+        },
+    )
 
 
 @cli.command()
 @click.argument("file", type=click.Path(exists=True))
-def unsign(file: str) -> None:
+@click.pass_context
+def unsign(ctx: click.Context, file: str) -> None:
     """Delete the sidecar file for a given SKILL.md."""
     skill_path = Path(file)
     sidecar_path = Path(str(skill_path) + ".skillsign")
 
     if not sidecar_path.exists():
-        click.echo(f"{file}: no sidecar found")
+        _output(
+            ctx,
+            lambda: f"{file}: no sidecar found",
+            {"file": file, "removed": False},
+        )
         sys.exit(EXIT_UNSIGNED)
 
     try:
@@ -266,4 +376,9 @@ def unsign(file: str) -> None:
         click.echo(f"Error: {e}", err=True)
         sys.exit(EXIT_CLI_ERROR)
 
-    click.echo(f"Removed: {sidecar_path}")
+    sidecar_path_str = str(sidecar_path)
+    _output(
+        ctx,
+        lambda: f"Removed: {sidecar_path_str}",
+        {"file": file, "removed": True},
+    )
