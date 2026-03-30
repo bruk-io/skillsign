@@ -47,15 +47,13 @@ Security-critical features and error handling. This is where the spec's defensiv
 |---|-------------|-------|
 | 16 | SKILL_ID_MISMATCH check (Section 8.3) | Owner-path consistency, percent-decode bypass prevention, `--allow-id-mismatch` |
 | 17 | `--strict` mode (Section 8.2 step 10) | Live Rekor confirmation of log entry |
-| 18 | `--offline` mode | Bundled TUF root fallback, skip Rekor |
-| 19 | `--offline` + `--strict` mutual exclusion | Exit code 10 with explanatory message |
-| 20 | Sidecar-exists guard (Section 7.2.1 step 3) | Prevent accidental re-signing, `--force` flag |
-| 21 | All error flows with correct exit codes | TAMPERED, INVALID_CERT, IDENTITY_MISMATCH, MALFORMED_SIDECAR, UNSIGNED |
-| 22 | `skillsign inspect` command | Show signature metadata without verifying |
-| 23 | `skillsign unsign` command | Delete sidecar file |
-| 24 | `--format json` output | Machine-readable output for all commands |
-| 25 | `--quiet` flag | Suppress output, exit codes only |
-| 26 | Multi-file verification | Glob support, per-file results, highest-severity exit code |
+| 18 | Sidecar-exists guard (Section 7.2.1 step 3) | Prevent accidental re-signing, `--force` flag |
+| 19 | All error flows with correct exit codes | TAMPERED, INVALID_CERT, IDENTITY_MISMATCH, MALFORMED_SIDECAR, UNSIGNED |
+| 20 | `skillsign inspect` command | Show signature metadata without verifying |
+| 21 | `skillsign unsign` command | Delete sidecar file |
+| 22 | `--format json` output | Machine-readable output for all commands |
+| 23 | `--quiet` flag | Suppress output, exit codes only |
+| 24 | Multi-file verification | Glob support, per-file results, highest-severity exit code |
 
 **Exit criteria:** All verification result codes from Section 8.3 are exercised by tests. Error paths match the spec exactly.
 
@@ -105,6 +103,12 @@ Features from Section 12 (Known Limitations) and Section 13 (Forward Compatibili
 **Exit criteria:** v0.2 spec draft published. Breaking changes (if any) documented with migration path.
 
 ---
+
+## Deferred
+
+Descoped from current phases — may be revisited based on user demand:
+
+- **`--offline` mode** — Bundled TUF root fallback, skip Rekor. Limited value while Sigstore is inherently online and no production users exist yet. TUF cache already handles transient network failures. Also defers `--offline` + `--strict` mutual exclusion and `--offline-age-skip`.
 
 ## Not Planned
 
