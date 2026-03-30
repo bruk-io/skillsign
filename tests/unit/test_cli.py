@@ -1,5 +1,9 @@
 """Unit tests for the SkillSign CLI — no mocked I/O, Click CliRunner only."""
 
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
+
 import pytest
 from click.testing import CliRunner
 
@@ -175,3 +179,168 @@ def test_exit_severity_unsigned_beats_verified() -> None:
     from skillsign.cli import _EXIT_SEVERITY
 
     assert _EXIT_SEVERITY[2] > _EXIT_SEVERITY[0]
+
+
+# ---------------------------------------------------------------------------
+# unsign command
+# ---------------------------------------------------------------------------
+
+
+def test_unsign_removes_sidecar_exits_zero(runner: CliRunner) -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        skill = Path(tmpdir) / "SKILL.md"
+        sidecar = Path(str(skill) + ".skillsign")
+        skill.write_text("# SKILL\n")
+        sidecar.write_text("sidecar content")
+
+        result = runner.invoke(cli, ["unsign", str(skill)])
+
+        assert result.exit_code == 0
+        assert "Removed:" in result.output
+        assert not sidecar.exists()
+
+
+def test_unsign_no_sidecar_exits_2(runner: CliRunner) -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        skill = Path(tmpdir) / "SKILL.md"
+        skill.write_text("# SKILL\n")
+
+        result = runner.invoke(cli, ["unsign", str(skill)])
+
+        assert result.exit_code == 2
+        assert "no sidecar found" in result.output
+
+
+def test_unsign_oserror_exits_10(runner: CliRunner) -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        skill = Path(tmpdir) / "SKILL.md"
+        sidecar = Path(str(skill) + ".skillsign")
+        skill.write_text("# SKILL\n")
+        sidecar.write_text("sidecar content")
+
+        with patch("pathlib.Path.unlink", side_effect=OSError("permission denied")):
+            result = runner.invoke(cli, ["unsign", str(skill)])
+
+        assert result.exit_code == 10
+        assert "Error:" in result.output
+
+
+# ---------------------------------------------------------------------------
+# _format_inspect_output and _extract_cert_names
+# ---------------------------------------------------------------------------
+
+
+def _make_test_pem() -> str:
+    """Generate a self-signed P-256 PEM cert with CN=SkillSign Test."""
+    from datetime import UTC, datetime, timedelta
+
+    from cryptography import x509
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.primitives.serialization import Encoding
+    from cryptography.x509.oid import NameOID
+
+    key = ec.generate_private_key(ec.SECP256R1())
+    subject = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "SkillSign Test")])
+    issuer = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "SkillSign Issuer")])
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(issuer)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(datetime.now(UTC) - timedelta(hours=1))
+        .not_valid_after(datetime.now(UTC) + timedelta(hours=1))
+        .sign(key, hashes.SHA256())
+    )
+    return cert.public_bytes(Encoding.PEM).decode()
+
+
+def test_extract_cert_names_returns_subject_and_issuer() -> None:
+    from skillsign.cli import _extract_cert_names
+
+    pem = _make_test_pem()
+    subject_cn, issuer_cn = _extract_cert_names(pem)
+    assert subject_cn == "SkillSign Test"
+    assert issuer_cn == "SkillSign Issuer"
+
+
+def test_extract_cert_names_no_cn_falls_back_to_unknown() -> None:
+    from datetime import UTC, datetime, timedelta
+
+    from cryptography import x509
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.primitives.serialization import Encoding
+    from cryptography.x509.oid import NameOID
+
+    from skillsign.cli import _extract_cert_names
+
+    key = ec.generate_private_key(ec.SECP256R1())
+    # Use OU instead of CN so CN is absent
+    subject = x509.Name([x509.NameAttribute(NameOID.ORGANIZATION_NAME, "TestOrg")])
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(subject)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(datetime.now(UTC) - timedelta(hours=1))
+        .not_valid_after(datetime.now(UTC) + timedelta(hours=1))
+        .sign(key, hashes.SHA256())
+    )
+    pem = cert.public_bytes(Encoding.PEM).decode()
+    subject_cn, issuer_cn = _extract_cert_names(pem)
+    assert subject_cn == "<unknown>"
+    assert issuer_cn == "<unknown>"
+
+
+def test_format_inspect_output_contains_all_fields() -> None:
+    from skillsign.cli import _format_inspect_output
+
+    pem = _make_test_pem()
+    data = {
+        "signer": "https://github.com/test-org/repo",
+        "skill_id": "github.com/test-org/my-skill",
+        "skill_version": "1.0.0",
+        "timestamp": "2026-01-01T00:00:00Z",
+        "digest": "sha256:" + "a" * 64,
+        "rekor_log_id": "b" * 64,
+        "rekor_timestamp": "2026-01-01T00:00:01Z",
+        "certificate": pem,
+    }
+    output = _format_inspect_output("SKILL.md", data)
+
+    assert "SKILL.md: SIGNED" in output
+    assert "https://github.com/test-org/repo" in output
+    assert "github.com/test-org/my-skill" in output
+    assert "1.0.0" in output
+    assert "2026-01-01T00:00:00Z" in output
+    assert "sha256:" + "a" * 64 in output
+    assert "b" * 64 in output
+    assert "SkillSign Test" in output
+    assert "SkillSign Issuer" in output
+
+
+def test_format_inspect_output_label_alignment() -> None:
+    from skillsign.cli import _format_inspect_output
+
+    pem = _make_test_pem()
+    data = {
+        "signer": "https://github.com/test-org/repo",
+        "skill_id": "github.com/test-org/my-skill",
+        "skill_version": "1.0.0",
+        "timestamp": "2026-01-01T00:00:00Z",
+        "digest": "sha256:" + "a" * 64,
+        "rekor_log_id": "b" * 64,
+        "rekor_timestamp": "2026-01-01T00:00:01Z",
+        "certificate": pem,
+    }
+    output = _format_inspect_output("SKILL.md", data)
+    lines = output.splitlines()
+
+    # First line is the file header
+    assert lines[0] == "SKILL.md: SIGNED"
+    # All subsequent lines are indented
+    for line in lines[1:]:
+        assert line.startswith("  ")

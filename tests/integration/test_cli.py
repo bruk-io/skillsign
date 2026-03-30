@@ -2,6 +2,7 @@
 
 import os
 import tempfile
+from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
@@ -41,18 +42,76 @@ def test_verify_unsigned_exits_2(runner: CliRunner, tmp_skill_file: str) -> None
 # ---------------------------------------------------------------------------
 
 
-def test_exit_10_for_not_implemented_inspect(
-    runner: CliRunner, tmp_skill_file: str
-) -> None:
+def test_inspect_no_sidecar_exits_2(runner: CliRunner, tmp_skill_file: str) -> None:
     result = runner.invoke(cli, ["inspect", tmp_skill_file])
-    assert result.exit_code == 10
+    assert result.exit_code == 2
+    assert "UNSIGNED" in result.output
 
 
-def test_exit_10_for_not_implemented_unsign(
-    runner: CliRunner, tmp_skill_file: str
-) -> None:
+def test_inspect_valid_sidecar_exits_0(runner: CliRunner) -> None:
+    """inspect command displays metadata from a valid sidecar and exits 0."""
+    from tests.conftest import write_sidecar_yaml
+    from tests.integration.conftest import make_sidecar
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        skill_path = Path(tmpdir) / "SKILL.md"
+        skill_content = b"# My Skill\n\nDoes stuff.\n"
+        skill_path.write_bytes(skill_content)
+
+        sidecar, _ = make_sidecar(skill_content)
+        sidecar_path = Path(str(skill_path) + ".skillsign")
+        write_sidecar_yaml(sidecar, sidecar_path)
+
+        result = runner.invoke(cli, ["inspect", str(skill_path)])
+
+    assert result.exit_code == 0, result.output
+    assert "SIGNED" in result.output
+    assert sidecar["signer"] in result.output
+    assert sidecar["skill_id"] in result.output
+    assert sidecar["skill_version"] in result.output
+    assert sidecar["digest"] in result.output
+    assert sidecar["rekor_log_id"] in result.output
+
+
+def test_inspect_malformed_sidecar_exits_1(runner: CliRunner) -> None:
+    """inspect command reports error and exits 1 for malformed sidecar."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        skill_path = Path(tmpdir) / "SKILL.md"
+        skill_path.write_bytes(b"# My Skill\n")
+
+        sidecar_path = Path(str(skill_path) + ".skillsign")
+        sidecar_path.write_text("version: 1\nskill_id: bad\n")
+
+        result = runner.invoke(cli, ["inspect", str(skill_path)])
+
+    assert result.exit_code == 1
+    assert "Error:" in result.output
+
+
+# ---------------------------------------------------------------------------
+# unsign command
+# ---------------------------------------------------------------------------
+
+
+def test_unsign_deletes_sidecar_and_exits_zero(runner: CliRunner) -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        skill = Path(tmpdir) / "SKILL.md"
+        sidecar = Path(str(skill) + ".skillsign")
+        skill.write_text("# SKILL\n")
+        sidecar.write_text("sidecar content")
+
+        result = runner.invoke(cli, ["unsign", str(skill)])
+
+        assert result.exit_code == 0
+        assert f"Removed: {sidecar}" in result.output
+        assert not sidecar.exists()
+        assert skill.exists()
+
+
+def test_unsign_no_sidecar_exits_2(runner: CliRunner, tmp_skill_file: str) -> None:
     result = runner.invoke(cli, ["unsign", tmp_skill_file])
-    assert result.exit_code == 10
+    assert result.exit_code == 2
+    assert "no sidecar found" in result.output
 
 
 # ---------------------------------------------------------------------------

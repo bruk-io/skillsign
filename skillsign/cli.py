@@ -8,10 +8,11 @@ from pathlib import Path
 from typing import Any
 
 import click
+from cryptography import x509
 
 from skillsign import __version__
 from skillsign.errors import SkillSignError
-from skillsign.exit_codes import EXIT_CLI_ERROR
+from skillsign.exit_codes import EXIT_CLI_ERROR, EXIT_UNSIGNED
 
 # Spec severity order: 1 (hard failure) > 3 (POLICY_FAIL) > 2 (UNSIGNED) > 0 (VERIFIED)
 _EXIT_SEVERITY: dict[int, int] = {0: 0, 2: 1, 3: 2, 1: 3}
@@ -159,6 +160,46 @@ def _format_sign_output(skill_path: str, sidecar_path: str, signer: str) -> str:
     return f"Signed: {skill_path}\nSidecar: {sidecar_path}\nSigner: {signer}"
 
 
+def _extract_cert_names(pem: str) -> tuple[str, str]:
+    """Extract subject CN and issuer CN from a PEM certificate.
+
+    Returns (subject_cn, issuer_cn). Falls back to "<unknown>" if the
+    attribute is absent.
+    """
+    cert = x509.load_pem_x509_certificate(pem.encode())
+    try:
+        subject_cn = cert.subject.get_attributes_for_oid(x509.oid.NameOID.COMMON_NAME)[
+            0
+        ].value
+    except IndexError:
+        subject_cn = "<unknown>"
+    try:
+        issuer_cn = cert.issuer.get_attributes_for_oid(x509.oid.NameOID.COMMON_NAME)[
+            0
+        ].value
+    except IndexError:
+        issuer_cn = "<unknown>"
+    return str(subject_cn), str(issuer_cn)
+
+
+def _format_inspect_output(file: str, data: dict[str, Any]) -> str:
+    """Format inspect metadata for display."""
+    subject_cn, issuer_cn = _extract_cert_names(data["certificate"])
+    lines = [
+        f"{file}: SIGNED",
+        f"  Signer:           {data['signer']}",
+        f"  Skill ID:         {data['skill_id']}",
+        f"  Skill Version:    {data['skill_version']}",
+        f"  Timestamp:        {data['timestamp']}",
+        f"  Digest:           {data['digest']}",
+        f"  Rekor Log ID:     {data['rekor_log_id']}",
+        f"  Rekor Timestamp:  {data['rekor_timestamp']}",
+        f"  Cert Subject CN:  {subject_cn}",
+        f"  Cert Issuer CN:   {issuer_cn}",
+    ]
+    return "\n".join(lines)
+
+
 @cli.command()
 @click.argument("files", nargs=-1, required=True, type=click.Path(exists=True))
 @click.option("--strict", is_flag=True, help="Live Rekor query to confirm log entry.")
@@ -190,11 +231,39 @@ def verify(files: tuple[str, ...], *, strict: bool = False) -> None:
 @click.argument("file", type=click.Path(exists=True))
 def inspect(file: str) -> None:
     """Show signature metadata without verifying."""
-    _not_implemented()
+    from skillsign.sidecar import read_sidecar
+
+    skill_path = Path(file)
+    sidecar_path = Path(str(skill_path) + ".skillsign")
+
+    if not sidecar_path.exists():
+        click.echo(f"{file}: UNSIGNED (no sidecar found)")
+        sys.exit(EXIT_UNSIGNED)
+
+    try:
+        data = read_sidecar(sidecar_path)
+    except SkillSignError as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(e.exit_code)
+
+    click.echo(_format_inspect_output(file, data))
 
 
 @cli.command()
 @click.argument("file", type=click.Path(exists=True))
 def unsign(file: str) -> None:
     """Delete the sidecar file for a given SKILL.md."""
-    _not_implemented()
+    skill_path = Path(file)
+    sidecar_path = Path(str(skill_path) + ".skillsign")
+
+    if not sidecar_path.exists():
+        click.echo(f"{file}: no sidecar found")
+        sys.exit(EXIT_UNSIGNED)
+
+    try:
+        sidecar_path.unlink()
+    except OSError as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(EXIT_CLI_ERROR)
+
+    click.echo(f"Removed: {sidecar_path}")
