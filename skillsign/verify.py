@@ -382,47 +382,6 @@ def _verify_strict_rekor(
     return None
 
 
-def _reconstruct_hashedrekord_body(
-    cert_pem: str,
-    signature_b64: str,
-    digest_hex: str,
-) -> bytes:
-    """Reconstruct the hashedrekord body JSON from sidecar fields.
-
-    The Rekor entry body for a hashedrekord/v0.0.1 contains the signature,
-    public key (cert), and data hash. This reconstructs it in the same format
-    the Sigstore signing SDK submits to Rekor, suitable for SET verification
-    when combined with the log_index and integrated_time.
-
-    Returns the JSON body as bytes (matching Rekor's stored canonicalized_body).
-    """
-    cert_bytes = cert_pem.encode("ascii")
-    cert_b64 = base64.b64encode(cert_bytes).decode("ascii")
-
-    # Strip the "sha256:" prefix from the digest field
-    raw_hex = digest_hex.removeprefix("sha256:")
-
-    body = {
-        "apiVersion": "0.0.1",
-        "kind": "hashedrekord",
-        "spec": {
-            "data": {
-                "hash": {
-                    "algorithm": "sha256",
-                    "value": raw_hex,
-                }
-            },
-            "signature": {
-                "content": signature_b64,
-                "publicKey": {
-                    "content": cert_b64,
-                },
-            },
-        },
-    }
-    return json.dumps(body, separators=(",", ":")).encode("ascii")
-
-
 def _verify_parsed_inputs(
     canonical_bytes: bytes,
     sidecar: dict[str, Any],

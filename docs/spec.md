@@ -185,8 +185,7 @@ certificate_chain: |
   -----BEGIN CERTIFICATE-----
   MIIBxTCCAWqgAwIBAgIRAK... (Fulcio intermediate)
   -----END CERTIFICATE-----
-signature: |
-  MEQCIBn9...
+signature: MEQCIBn9...
 ```
 
 Values above are illustrative. See Section 6.2 for field definitions.

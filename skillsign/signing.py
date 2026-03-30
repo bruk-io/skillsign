@@ -121,6 +121,10 @@ def _assemble_sidecar(
     # rekor_log_id: lowercase hex of key_id.
     # ProtoBytes deserializes base64 on input, so key_id is already raw bytes.
     rekor_log_id = inner.log_id.key_id.hex()
+    if len(rekor_log_id) != 64:
+        raise SkillSignError(
+            "rekor_log_id must be exactly 64 hex characters", exit_code=10
+        )
 
     # rekor_timestamp: from integrated_time (unix timestamp) to ISO 8601 UTC
     integrated_time = int(inner.integrated_time)

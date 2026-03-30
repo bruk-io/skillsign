@@ -14,7 +14,6 @@ from skillsign.canonical import canonicalize
 from skillsign.verify import (
     VerificationResult,
     _is_email_signer,
-    _reconstruct_hashedrekord_body,
     _verify_cert_chain,
     _verify_parsed_inputs,
     _verify_set_temporal_window,
@@ -71,43 +70,6 @@ def test_exit_code_skill_id_mismatch() -> None:
 
 def test_exit_code_malformed_sidecar() -> None:
     assert exit_code_for(VerificationResult.MALFORMED_SIDECAR) == 1
-
-
-# ---------------------------------------------------------------------------
-# _reconstruct_hashedrekord_body
-# ---------------------------------------------------------------------------
-
-
-def test_reconstruct_hashedrekord_body_structure() -> None:
-    import json
-
-    cert_pem = "-----BEGIN CERTIFICATE-----\nfakedata\n-----END CERTIFICATE-----\n"
-    sig_b64 = base64.b64encode(b"\xde\xad\xbe\xef").decode()
-    digest_hex = "sha256:" + "ab" * 32
-
-    body_bytes = _reconstruct_hashedrekord_body(cert_pem, sig_b64, digest_hex)
-    body = json.loads(body_bytes)
-
-    assert body["kind"] == "hashedrekord"
-    assert body["apiVersion"] == "0.0.1"
-    assert body["spec"]["data"]["hash"]["algorithm"] == "sha256"
-    assert body["spec"]["data"]["hash"]["value"] == "ab" * 32
-    assert body["spec"]["signature"]["content"] == sig_b64
-    expected_cert_b64 = base64.b64encode(cert_pem.encode("ascii")).decode("ascii")
-    assert body["spec"]["signature"]["publicKey"]["content"] == expected_cert_b64
-
-
-def test_reconstruct_hashedrekord_body_strips_sha256_prefix() -> None:
-    import json
-
-    body_bytes = _reconstruct_hashedrekord_body(
-        "-----BEGIN CERTIFICATE-----\nAA==\n-----END CERTIFICATE-----\n",
-        base64.b64encode(b"sig").decode(),
-        "sha256:" + "cc" * 32,
-    )
-    body = json.loads(body_bytes)
-    assert body["spec"]["data"]["hash"]["value"] == "cc" * 32
-    assert not body["spec"]["data"]["hash"]["value"].startswith("sha256:")
 
 
 # ---------------------------------------------------------------------------

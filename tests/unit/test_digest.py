@@ -157,7 +157,7 @@ def test_skill_version_exceeds_255_chars_rejected() -> None:
 
 
 def test_skill_version_null_byte_in_validation_rejected() -> None:
-    with pytest.raises(SkillSignError, match="invalid character"):
+    with pytest.raises(SkillSignError, match="null bytes"):
         validate_skill_version("1.0\x000")
 
 
@@ -229,7 +229,7 @@ def test_canonical_bytes_null_byte_rejected() -> None:
 
 
 def test_skill_version_null_byte_rejected() -> None:
-    with pytest.raises(SkillSignError, match="invalid char") as exc_info:
+    with pytest.raises(SkillSignError, match="null bytes") as exc_info:
         compute_digest(b"content\n", "github.com/org/skill", "1.0\x000")
     assert exc_info.value.exit_code == 10
 

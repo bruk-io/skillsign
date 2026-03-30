@@ -80,6 +80,10 @@ def validate_skill_version(skill_version: str) -> str:
     if not trimmed:
         raise SkillSignError("skill_version must not be empty", exit_code=10)
 
+    # Reject null bytes (mirrors validate_skill_id guard)
+    if "\x00" in trimmed:
+        raise SkillSignError("skill_version contains null bytes", exit_code=10)
+
     if len(trimmed) > _MAX_SKILL_VERSION_LENGTH:
         raise SkillSignError(
             f"skill_version exceeds {_MAX_SKILL_VERSION_LENGTH} characters",

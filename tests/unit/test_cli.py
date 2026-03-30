@@ -148,3 +148,30 @@ def test_skillsign_error_custom_exit_code() -> None:
 
     err = SkillSignError("cli error", exit_code=EXIT_CLI_ERROR)
     assert err.exit_code == 10
+
+
+# ---------------------------------------------------------------------------
+# Exit code severity: spec order is 1 > 3 > 2 > 0 (not numeric max)
+# ---------------------------------------------------------------------------
+
+
+def test_exit_severity_tampered_beats_policy_fail() -> None:
+    """TAMPERED(1) + POLICY_FAIL(3) must yield exit 1, not 3."""
+    from skillsign.cli import _EXIT_SEVERITY
+
+    # Severity of 1 (TAMPERED/hard failure) must be higher than 3 (POLICY_FAIL)
+    assert _EXIT_SEVERITY[1] > _EXIT_SEVERITY[3]
+
+
+def test_exit_severity_policy_fail_beats_unsigned() -> None:
+    """POLICY_FAIL(3) must rank above UNSIGNED(2)."""
+    from skillsign.cli import _EXIT_SEVERITY
+
+    assert _EXIT_SEVERITY[3] > _EXIT_SEVERITY[2]
+
+
+def test_exit_severity_unsigned_beats_verified() -> None:
+    """UNSIGNED(2) must rank above VERIFIED(0)."""
+    from skillsign.cli import _EXIT_SEVERITY
+
+    assert _EXIT_SEVERITY[2] > _EXIT_SEVERITY[0]

@@ -13,6 +13,9 @@ from skillsign import __version__
 from skillsign.errors import SkillSignError
 from skillsign.exit_codes import EXIT_CLI_ERROR
 
+# Spec severity order: 1 (hard failure) > 3 (POLICY_FAIL) > 2 (UNSIGNED) > 0 (VERIFIED)
+_EXIT_SEVERITY: dict[int, int] = {0: 0, 2: 1, 3: 2, 1: 3}
+
 
 class _SkillSignGroup(click.Group):
     """Custom group that remaps Click's UsageError exit code (2) to 10.
@@ -171,11 +174,13 @@ def verify(files: tuple[str, ...], *, strict: bool = False) -> None:
             result, meta = verify_skill(skill_path, strict=strict)
         except SkillSignError as e:
             click.echo(f"{file}: ERROR — {e}", err=True)
-            worst_exit = max(worst_exit, e.exit_code)
+            if _EXIT_SEVERITY[e.exit_code] > _EXIT_SEVERITY[worst_exit]:
+                worst_exit = e.exit_code
             continue
 
         code = exit_code_for(result)
-        worst_exit = max(worst_exit, code)
+        if _EXIT_SEVERITY[code] > _EXIT_SEVERITY[worst_exit]:
+            worst_exit = code
         click.echo(_format_verification_output(file, result.value, meta))
 
     sys.exit(worst_exit)

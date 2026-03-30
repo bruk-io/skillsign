@@ -242,6 +242,9 @@ def _validate_base64(value: str, field_name: str) -> None:
     if not value:
         raise _malformed(f"{field_name} must not be empty")
 
+    if "\n" in value or "\r" in value:
+        raise _malformed(f"{field_name} must not contain line breaks")
+
     try:
         decoded = base64.b64decode(value, validate=True)
     except Exception as e:
