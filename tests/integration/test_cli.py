@@ -178,6 +178,51 @@ def test_auth_status_with_ambient(runner: CliRunner) -> None:
     assert "Authenticated as:" in result.output
 
 
+# ---------------------------------------------------------------------------
+# --quiet flag suppresses stdout, exit codes unchanged
+# ---------------------------------------------------------------------------
+
+
+def test_quiet_verify_unsigned_suppresses_output(
+    runner: CliRunner, tmp_skill_file: str
+) -> None:
+    result = runner.invoke(cli, ["--quiet", "verify", tmp_skill_file])
+    assert result.exit_code == 2
+    assert result.output == ""
+
+
+def test_quiet_sign_suppresses_output(runner: CliRunner) -> None:
+    from unittest.mock import patch
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        skill_path = Path(tmpdir) / "SKILL.md"
+        skill_path.write_bytes(b"---\nskill_id: test/skill\nversion: '1.0'\n---\n# T\n")
+
+        mock_sidecar = {
+            "signer": "user@example.com",
+            "skill_id": "test/skill",
+            "skill_version": "1.0",
+        }
+        with (
+            patch("skillsign.signing.sign_skill", return_value=mock_sidecar),
+            patch("skillsign.sidecar.write_sidecar"),
+        ):
+            result = runner.invoke(cli, ["--quiet", "sign", str(skill_path)])
+
+    assert result.exit_code == 0
+    assert result.output == ""
+
+
+def test_quiet_with_json_format_still_suppresses(
+    runner: CliRunner, tmp_skill_file: str
+) -> None:
+    result = runner.invoke(
+        cli, ["--quiet", "--format", "json", "verify", tmp_skill_file]
+    )
+    assert result.exit_code == 2
+    assert result.output == ""
+
+
 def test_auth_status_expired_token(runner: CliRunner) -> None:
     from unittest.mock import MagicMock, patch
 
@@ -212,3 +257,90 @@ def test_verify_strict_help_text(runner: CliRunner) -> None:
     result = runner.invoke(cli, ["verify", "--help"])
     assert result.exit_code == 0
     assert "--strict" in result.output
+
+
+# ---------------------------------------------------------------------------
+# Verify: glob pattern expansion
+# ---------------------------------------------------------------------------
+
+
+def test_verify_glob_pattern_expands_multiple_files(
+    runner: CliRunner, tmp_path: Path
+) -> None:
+    """A glob pattern matching multiple .md files runs verify on all of them."""
+    (tmp_path / "a.md").write_text("# A\n")
+    (tmp_path / "b.md").write_text("# B\n")
+    pattern = str(tmp_path / "*.md")
+
+    result = runner.invoke(cli, ["verify", pattern])
+
+    # Both files are unsigned — worst exit is 2 (UNSIGNED)
+    assert result.exit_code == 2
+    assert "UNSIGNED" in result.output
+
+
+def test_verify_glob_pattern_no_match_exits_10(
+    runner: CliRunner, tmp_path: Path
+) -> None:
+    """A glob pattern that matches no files exits 10 with an error message."""
+    pattern = str(tmp_path / "*.md")
+
+    result = runner.invoke(cli, ["verify", pattern])
+
+    assert result.exit_code == 10
+    assert "no files matched" in result.output
+
+
+def test_verify_directory_arg_finds_md_files(runner: CliRunner, tmp_path: Path) -> None:
+    """Passing a directory verifies all *.md files in it."""
+    (tmp_path / "SKILL.md").write_text("# SKILL\n")
+    (tmp_path / "other.md").write_text("# other\n")
+    (tmp_path / "readme.txt").write_text("not md\n")
+
+    result = runner.invoke(cli, ["verify", str(tmp_path)])
+
+    assert result.exit_code == 2
+    assert "UNSIGNED" in result.output
+
+
+def test_verify_directory_with_no_md_files_exits_10(
+    runner: CliRunner, tmp_path: Path
+) -> None:
+    """A directory with no *.md files exits 10."""
+    (tmp_path / "readme.txt").write_text("no md files here\n")
+
+    result = runner.invoke(cli, ["verify", str(tmp_path)])
+
+    assert result.exit_code == 10
+    assert "no files matched" in result.output
+
+
+def test_verify_glob_json_output_is_array(runner: CliRunner, tmp_path: Path) -> None:
+    """--format json with a glob pattern always returns a JSON array."""
+    (tmp_path / "a.md").write_text("# A\n")
+    (tmp_path / "b.md").write_text("# B\n")
+    pattern = str(tmp_path / "*.md")
+
+    result = runner.invoke(cli, ["--format", "json", "verify", pattern])
+
+    assert result.exit_code == 2
+    import json
+
+    data = json.loads(result.output)
+    assert isinstance(data, list)
+    assert len(data) == 2
+    assert all(item["result"] == "UNSIGNED" for item in data)
+
+
+def test_verify_recursive_glob(runner: CliRunner, tmp_path: Path) -> None:
+    """A ** glob finds nested .md files recursively."""
+    sub = tmp_path / "sub"
+    sub.mkdir()
+    (tmp_path / "root.md").write_text("# root\n")
+    (sub / "nested.md").write_text("# nested\n")
+    pattern = str(tmp_path / "**" / "*.md")
+
+    result = runner.invoke(cli, ["verify", pattern])
+
+    assert result.exit_code == 2
+    assert result.output.count("UNSIGNED") == 2

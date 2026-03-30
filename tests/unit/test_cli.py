@@ -642,3 +642,123 @@ def test_format_text_is_default(runner: CliRunner) -> None:
         except json.JSONDecodeError:
             is_json = False
         assert not is_json
+
+
+# ---------------------------------------------------------------------------
+# _expand_paths: glob expansion helper
+# ---------------------------------------------------------------------------
+
+
+def test_expand_paths_literal_file(tmp_path: Path) -> None:
+    from skillsign.cli import _expand_paths
+
+    f = tmp_path / "SKILL.md"
+    f.write_text("# SKILL\n")
+    result = _expand_paths((str(f),))
+    assert result == [str(f)]
+
+
+def test_expand_paths_nonexistent_literal_passes_through(tmp_path: Path) -> None:
+    from skillsign.cli import _expand_paths
+
+    # Non-existent literal paths are passed through — existence validation
+    # happens in the verify command, not in _expand_paths
+    missing = str(tmp_path / "missing.md")
+    result = _expand_paths((missing,))
+    assert result == [missing]
+
+
+def test_expand_paths_glob_pattern(tmp_path: Path) -> None:
+    from skillsign.cli import _expand_paths
+
+    (tmp_path / "a.md").write_text("# A\n")
+    (tmp_path / "b.md").write_text("# B\n")
+    (tmp_path / "other.txt").write_text("not md\n")
+
+    pattern = str(tmp_path / "*.md")
+    result = _expand_paths((pattern,))
+    assert sorted(result) == sorted([str(tmp_path / "a.md"), str(tmp_path / "b.md")])
+
+
+def test_expand_paths_glob_no_match_returns_empty(tmp_path: Path) -> None:
+    from skillsign.cli import _expand_paths
+
+    pattern = str(tmp_path / "*.md")
+    result = _expand_paths((pattern,))
+    assert result == []
+
+
+def test_expand_paths_glob_recursive(tmp_path: Path) -> None:
+    from skillsign.cli import _expand_paths
+
+    sub = tmp_path / "sub"
+    sub.mkdir()
+    (tmp_path / "root.md").write_text("# root\n")
+    (sub / "nested.md").write_text("# nested\n")
+
+    pattern = str(tmp_path / "**" / "*.md")
+    result = _expand_paths((pattern,))
+    assert str(tmp_path / "root.md") in result
+    assert str(sub / "nested.md") in result
+
+
+def test_expand_paths_directory_finds_md_files(tmp_path: Path) -> None:
+    from skillsign.cli import _expand_paths
+
+    (tmp_path / "SKILL.md").write_text("# SKILL\n")
+    (tmp_path / "other.md").write_text("# other\n")
+    (tmp_path / "readme.txt").write_text("not md\n")
+
+    result = _expand_paths((str(tmp_path),))
+    assert str(tmp_path / "SKILL.md") in result
+    assert str(tmp_path / "other.md") in result
+    assert str(tmp_path / "readme.txt") not in result
+
+
+def test_expand_paths_directory_non_recursive(tmp_path: Path) -> None:
+    from skillsign.cli import _expand_paths
+
+    sub = tmp_path / "sub"
+    sub.mkdir()
+    (tmp_path / "top.md").write_text("# top\n")
+    (sub / "nested.md").write_text("# nested\n")
+
+    result = _expand_paths((str(tmp_path),))
+    assert str(tmp_path / "top.md") in result
+    # Subdirectory files not included in directory mode
+    assert str(sub / "nested.md") not in result
+
+
+def test_expand_paths_empty_directory_returns_empty(tmp_path: Path) -> None:
+    from skillsign.cli import _expand_paths
+
+    result = _expand_paths((str(tmp_path),))
+    assert result == []
+
+
+def test_expand_paths_multiple_args_combined(tmp_path: Path) -> None:
+    from skillsign.cli import _expand_paths
+
+    f1 = tmp_path / "explicit.md"
+    f1.write_text("# explicit\n")
+
+    subdir = tmp_path / "sub"
+    subdir.mkdir()
+    f2 = subdir / "SKILL.md"
+    f2.write_text("# sub skill\n")
+
+    result = _expand_paths((str(f1), str(subdir)))
+    assert str(f1) in result
+    assert str(f2) in result
+
+
+def test_expand_paths_sorted_output_for_globs(tmp_path: Path) -> None:
+    from skillsign.cli import _expand_paths
+
+    (tmp_path / "z.md").write_text("# z\n")
+    (tmp_path / "a.md").write_text("# a\n")
+    (tmp_path / "m.md").write_text("# m\n")
+
+    pattern = str(tmp_path / "*.md")
+    result = _expand_paths((pattern,))
+    assert result == sorted(result)

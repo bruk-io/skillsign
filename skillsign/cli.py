@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import glob as _glob
 import json
 import sys
 from collections.abc import Callable, Sequence
@@ -17,6 +18,28 @@ from skillsign.exit_codes import EXIT_CLI_ERROR, EXIT_UNSIGNED
 
 # Spec severity order: 1 (hard failure) > 3 (POLICY_FAIL) > 2 (UNSIGNED) > 0 (VERIFIED)
 _EXIT_SEVERITY: dict[int, int] = {0: 0, 2: 1, 3: 2, 1: 3}
+
+_GLOB_CHARS = frozenset("*?[")
+
+
+def _expand_paths(args: tuple[str, ...]) -> list[str]:
+    """Expand glob patterns, directories, and literal paths into a flat file list.
+
+    For each argument:
+    - If it contains glob chars (*?[), expand with glob.glob(recursive=True)
+    - If it is a directory, find all *.md files in it (non-recursive)
+    - Otherwise treat it as a literal path (existence checked later)
+    """
+    result: list[str] = []
+    for arg in args:
+        if any(c in arg for c in _GLOB_CHARS):
+            matched = _glob.glob(arg, recursive=True)
+            result.extend(sorted(matched))
+        elif Path(arg).is_dir():
+            result.extend(sorted(str(p) for p in Path(arg).glob("*.md")))
+        else:
+            result.append(arg)
+    return result
 
 
 class _SkillSignGroup(click.Group):
@@ -62,7 +85,12 @@ def _not_implemented() -> None:
 
 
 def _output(ctx: click.Context, text_fn: Callable[[], str], json_obj: Any) -> None:
-    """Print text or JSON output depending on the --format flag in ctx."""
+    """Print text or JSON output depending on the --format flag in ctx.
+
+    Suppresses all stdout output when --quiet is set.
+    """
+    if ctx.obj and ctx.obj.get("quiet"):
+        return
     fmt = ctx.obj.get("format", "text") if ctx.obj else "text"
     if fmt == "json":
         click.echo(json.dumps(json_obj, indent=2))
@@ -79,11 +107,18 @@ def _output(ctx: click.Context, text_fn: Callable[[], str], json_obj: Any) -> No
     default="text",
     help="Output format (text or json).",
 )
+@click.option(
+    "--quiet",
+    is_flag=True,
+    default=False,
+    help="Suppress all stdout output.",
+)
 @click.pass_context
-def cli(ctx: click.Context, output_format: str) -> None:
+def cli(ctx: click.Context, output_format: str, quiet: bool) -> None:
     """Cryptographic signing and verification for Claude Code SKILL.md files."""
     ctx.ensure_object(dict)
     ctx.obj["format"] = output_format
+    ctx.obj["quiet"] = quiet
 
 
 @cli.group()
@@ -257,22 +292,47 @@ def _format_inspect_output(file: str, data: dict[str, Any]) -> str:
 
 
 @cli.command()
-@click.argument("files", nargs=-1, required=True, type=click.Path(exists=True))
+@click.argument("files", nargs=-1, required=True, type=str)
 @click.option("--strict", is_flag=True, help="Live Rekor query to confirm log entry.")
 @click.pass_context
 def verify(ctx: click.Context, files: tuple[str, ...], *, strict: bool = False) -> None:
-    """Verify one or more SKILL.md files against their sidecars."""
+    """Verify one or more SKILL.md files against their sidecars.
+
+    FILES may be explicit paths, glob patterns (e.g. 'skills/*.md'), or
+    directories (all *.md files in the directory are verified).
+    """
     from skillsign.verify import exit_code_for, verify_skill
+
+    # Validate that literal paths (non-glob, non-directory args) actually exist.
+    # Glob/directory expansion already filters to existing files.
+    for arg in files:
+        if (
+            not any(c in arg for c in _GLOB_CHARS)
+            and not Path(arg).is_dir()
+            and not Path(arg).exists()
+        ):
+            raise click.BadParameter(
+                f"Path '{arg}' does not exist.",
+                param_hint="'FILES'",
+            )
+
+    expanded = _expand_paths(files)
+    if not expanded:
+        click.echo("Error: no files matched", err=True)
+        sys.exit(EXIT_CLI_ERROR)
 
     worst_exit = 0
     results: list[dict[str, Any]] = []
     text_lines: list[str] = []
 
-    for file in files:
+    for file in expanded:
         skill_path = Path(file)
         try:
             result, meta = verify_skill(skill_path, strict=strict)
         except SkillSignError as e:
+            if e.exit_code == EXIT_CLI_ERROR:
+                click.echo(f"Error: {e}", err=True)
+                sys.exit(EXIT_CLI_ERROR)
             click.echo(f"{file}: ERROR — {e}", err=True)
             if _EXIT_SEVERITY[e.exit_code] > _EXIT_SEVERITY[worst_exit]:
                 worst_exit = e.exit_code
