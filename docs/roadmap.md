@@ -45,7 +45,7 @@ Security-critical features and error handling. This is where the spec's defensiv
 
 | # | Deliverable | Notes |
 |---|-------------|-------|
-| 16 | SKILL_ID_MISMATCH check (Section 8.3) | Owner-path consistency, percent-decode bypass prevention, `--allow-id-mismatch` |
+| 16 | SKILL_ID_MISMATCH check (Section 8.3) | Owner-path consistency, percent-decode bypass prevention |
 | 17 | `--strict` mode (Section 8.2 step 10) | Live Rekor confirmation of log entry |
 | 18 | Sidecar-exists guard (Section 7.2.1 step 3) | Prevent accidental re-signing, `--force` flag |
 | 19 | All error flows with correct exit codes | TAMPERED, INVALID_CERT, IDENTITY_MISMATCH, MALFORMED_SIDECAR, UNSIGNED |
@@ -109,6 +109,7 @@ Features from Section 12 (Known Limitations) and Section 13 (Forward Compatibili
 Descoped from current phases — may be revisited based on user demand:
 
 - **`--offline` mode** — Bundled TUF root fallback, skip Rekor. Limited value while Sigstore is inherently online and no production users exist yet. TUF cache already handles transient network failures. Also defers `--offline` + `--strict` mutual exclusion and `--offline-age-skip`.
+- **`--allow-id-mismatch`** — CLI flag to downgrade SKILL_ID_MISMATCH to a warning. Subsumed by Phase 3 policy engine's `require_signer_id_match` per-rule config. No value as a standalone flag.
 
 ## Not Planned
 
