@@ -89,6 +89,9 @@ REDIRECT
 # Ensure GitHub Pages doesn't process with Jekyll
 touch "$WORK_DIR/.nojekyll"
 
+# CNAME file for custom domain SSL provisioning
+echo "skillsign.ai" > "$WORK_DIR/CNAME"
+
 # Commit
 cd "$WORK_DIR"
 git add -A
