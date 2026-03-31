@@ -1,6 +1,6 @@
 [project]
 name = "skillsign"
-version = "0.1.0"
+version = "0.2.0"
 description = "Cryptographic signing and verification for Claude Code SKILL.md files using Sigstore keyless signing"
 readme = "README.md"
 license = "MIT"
