@@ -12,22 +12,20 @@ _logger = logging.getLogger(__name__)
 _REKOR_BASE_URL = "https://rekor.sigstore.dev"
 
 
-def query_rekor_entry(log_id: str) -> dict[str, Any]:
-    """Fetch a Rekor log entry by its log ID (hex-encoded).
+def query_rekor_entry(log_index: int) -> dict[str, Any]:
+    """Fetch a Rekor log entry by its log index.
 
-    The Rekor search API returns entries matching the given logID.
-    Returns the parsed entry dict for the first match.
+    Uses the Rekor lookup-by-index API to retrieve the entry.
+    Returns the parsed entry dict.
 
     Raise SkillSignError on network or API failure.
     """
-    search_url = f"{_REKOR_BASE_URL}/api/v1/log/entries/retrieve"
-    payload = json.dumps({"logIndexes": [], "entryUUIDs": [log_id]}).encode()
+    lookup_url = f"{_REKOR_BASE_URL}/api/v1/log/entries?logIndex={log_index}"
 
     req = urllib.request.Request(
-        search_url,
-        data=payload,
-        headers={"Content-Type": "application/json", "Accept": "application/json"},
-        method="POST",
+        lookup_url,
+        headers={"Accept": "application/json"},
+        method="GET",
     )
 
     try:
@@ -35,26 +33,22 @@ def query_rekor_entry(log_id: str) -> dict[str, Any]:
             entries = json.loads(resp.read())
     except (urllib.error.URLError, OSError, TimeoutError) as e:
         raise SkillSignError(
-            f"Rekor query failed for log_id {log_id!r}: {e}", exit_code=1
+            f"Rekor query failed for log_index {log_index}: {e}",
+            exit_code=1,
         ) from e
     except (json.JSONDecodeError, ValueError) as e:
         raise SkillSignError(
-            f"Rekor returned invalid JSON for log_id {log_id!r}: {e}", exit_code=1
+            f"Rekor returned invalid JSON for log_index {log_index}: {e}",
+            exit_code=1,
         ) from e
 
-    if not entries or not isinstance(entries, list):
+    # Response is a dict keyed by entry UUID
+    if not entries or not isinstance(entries, dict):
         raise SkillSignError(
-            f"Rekor returned no entries for log_id {log_id!r}", exit_code=1
+            f"Rekor returned no entries for log_index {log_index}",
+            exit_code=1,
         )
 
-    # entries is a list of dicts; each dict has one key (the entry UUID) -> entry data
-    first = entries[0]
-    if not isinstance(first, dict) or not first:
-        raise SkillSignError(
-            f"Rekor entry has unexpected structure for log_id {log_id!r}", exit_code=1
-        )
-
-    # Return the inner entry data (value of the single key)
-    entry_uuid = next(iter(first))
-    result: dict[str, Any] = first[entry_uuid]
+    entry_uuid = next(iter(entries))
+    result: dict[str, Any] = entries[entry_uuid]
     return result

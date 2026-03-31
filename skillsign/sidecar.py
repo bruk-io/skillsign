@@ -37,6 +37,7 @@ _SIDECAR_SCHEMA = Map(
         "timestamp": Str(),
         "digest": Str(),
         "rekor_log_id": Str(),
+        "rekor_log_index": Int(),
         "rekor_timestamp": Str(),
         "rekor_set": Str(),
         "certificate": Str(),
@@ -101,6 +102,7 @@ def _build_yaml(data: dict[str, Any]) -> str:
     _append_scalar(lines, "timestamp", data["timestamp"])
     _append_scalar(lines, "digest", data["digest"])
     _append_scalar(lines, "rekor_log_id", data["rekor_log_id"])
+    _append_scalar(lines, "rekor_log_index", data["rekor_log_index"])
     _append_scalar(lines, "rekor_timestamp", data["rekor_timestamp"])
     _append_scalar(lines, "rekor_set", data["rekor_set"])
     _append_literal_block(lines, "certificate", data["certificate"])
@@ -335,6 +337,11 @@ def read_sidecar(sidecar_path: Path) -> dict[str, Any]:
     # rekor_log_id: 64 lowercase hex chars
     _validate_rekor_log_id(data["rekor_log_id"])
 
+    # rekor_log_index: non-negative integer
+    rekor_log_index = data["rekor_log_index"]
+    if rekor_log_index < 0:
+        raise _malformed("rekor_log_index must be a non-negative integer")
+
     # rekor_timestamp: same ISO 8601 format as timestamp
     _validate_timestamp(data["rekor_timestamp"])
 
@@ -360,6 +367,7 @@ def read_sidecar(sidecar_path: Path) -> dict[str, Any]:
         "timestamp": data["timestamp"],
         "digest": data["digest"],
         "rekor_log_id": data["rekor_log_id"],
+        "rekor_log_index": rekor_log_index,
         "rekor_timestamp": data["rekor_timestamp"],
         "rekor_set": data["rekor_set"],
         "certificate": data["certificate"],

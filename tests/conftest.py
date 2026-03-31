@@ -159,6 +159,7 @@ def write_sidecar_yaml(sidecar: dict, path: Path) -> None:
         f"timestamp: {sidecar['timestamp']}",
         f"digest: {sidecar['digest']}",
         f"rekor_log_id: {sidecar['rekor_log_id']}",
+        f"rekor_log_index: {sidecar['rekor_log_index']}",
         f"rekor_timestamp: {sidecar['rekor_timestamp']}",
         f"rekor_set: {sidecar['rekor_set']}",
         "certificate: |",

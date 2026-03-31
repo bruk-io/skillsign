@@ -39,6 +39,7 @@ _SAMPLE_SIDECAR: dict = {
     "timestamp": "2025-03-01T14:22:00Z",
     "digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "rekor_log_id": "24296fb24b8ad77ae1e714307e30a6f30d97c06a5de3d58e3e68e0e8c2a1e2f9",
+    "rekor_log_index": 12345,
     "rekor_timestamp": "2025-03-01T14:22:03Z",
     "rekor_set": "dGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIFNFVA==",
     "certificate": _SAMPLE_CERT_PEM,
@@ -129,6 +130,7 @@ class TestBuildYaml:
             "timestamp",
             "digest",
             "rekor_log_id",
+            "rekor_log_index",
             "rekor_timestamp",
             "rekor_set",
             "certificate",
@@ -152,6 +154,7 @@ class TestBuildYaml:
             "timestamp",
             "digest",
             "rekor_log_id",
+            "rekor_log_index",
             "rekor_timestamp",
             "rekor_set",
             "certificate",
@@ -344,6 +347,7 @@ signer: {_VALID_SIGNER}
 timestamp: {_VALID_TIMESTAMP}
 digest: {_VALID_DIGEST}
 rekor_log_id: {_VALID_HEX64}
+rekor_log_index: 12345
 rekor_timestamp: {_VALID_TIMESTAMP}
 rekor_set: {_VALID_REKOR_SET}
 certificate: |

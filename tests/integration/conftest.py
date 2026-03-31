@@ -70,6 +70,7 @@ def make_sidecar(
         "timestamp": "2026-01-01T00:00:00Z",
         "digest": digest_hex,
         "rekor_log_id": "a" * 64,
+        "rekor_log_index": 12345,
         "rekor_timestamp": rekor_timestamp,
         "rekor_set": base64.b64encode(b"fake-rekor-set-data").decode(),
         "certificate": cert_pem,

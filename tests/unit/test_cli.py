@@ -307,6 +307,7 @@ def test_format_inspect_output_contains_all_fields() -> None:
         "timestamp": "2026-01-01T00:00:00Z",
         "digest": "sha256:" + "a" * 64,
         "rekor_log_id": "b" * 64,
+        "rekor_log_index": 12345,
         "rekor_timestamp": "2026-01-01T00:00:01Z",
         "certificate": pem,
     }
@@ -336,6 +337,7 @@ def test_format_inspect_output_label_alignment() -> None:
         "timestamp": "2026-01-01T00:00:00Z",
         "digest": "sha256:" + "a" * 64,
         "rekor_log_id": "b" * 64,
+        "rekor_log_index": 12345,
         "rekor_timestamp": "2026-01-01T00:00:01Z",
         "certificate": pem,
     }
@@ -499,6 +501,7 @@ def test_inspect_json_signed(runner: CliRunner) -> None:
             "timestamp": "2026-01-01T00:00:00Z",
             "digest": "sha256:" + "a" * 64,
             "rekor_log_id": "b" * 64,
+            "rekor_log_index": 12345,
             "rekor_timestamp": "2026-01-01T00:00:01Z",
             "certificate": pem,
             "signature": "c" * 64,
@@ -591,6 +594,7 @@ def test_sign_json_output(runner: CliRunner) -> None:
             "timestamp": "2026-01-01T00:00:00Z",
             "digest": "sha256:" + "a" * 64,
             "rekor_log_id": "b" * 64,
+            "rekor_log_index": 12345,
             "rekor_timestamp": "2026-01-01T00:00:01Z",
             "certificate": "pem",
             "signature": "sig",

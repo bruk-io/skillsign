@@ -448,6 +448,7 @@ def test_strict_rekor_success() -> None:
     digest_hex = "ab" * 32
     sidecar: dict[str, Any] = {
         "rekor_log_id": "a" * 64,
+        "rekor_log_index": 12345,
         "digest": f"sha256:{digest_hex}",
     }
     meta: dict[str, Any] = {"signer": SIGNER_URL}
@@ -462,6 +463,7 @@ def test_strict_rekor_wrong_kind() -> None:
     cert, _ = make_test_cert(san_uri=SIGNER_URL)
     sidecar: dict[str, Any] = {
         "rekor_log_id": "a" * 64,
+        "rekor_log_index": 12345,
         "digest": "sha256:" + "ab" * 32,
     }
     meta: dict[str, Any] = {"signer": SIGNER_URL}
@@ -478,6 +480,7 @@ def test_strict_rekor_digest_mismatch() -> None:
     cert, _ = make_test_cert(san_uri=SIGNER_URL)
     sidecar: dict[str, Any] = {
         "rekor_log_id": "a" * 64,
+        "rekor_log_index": 12345,
         "digest": "sha256:" + "ab" * 32,
     }
     meta: dict[str, Any] = {"signer": SIGNER_URL}
@@ -495,6 +498,7 @@ def test_strict_rekor_integrated_time_outside_cert_window() -> None:
     digest_hex = "ab" * 32
     sidecar: dict[str, Any] = {
         "rekor_log_id": "a" * 64,
+        "rekor_log_index": 12345,
         "digest": f"sha256:{digest_hex}",
     }
     meta: dict[str, Any] = {"signer": SIGNER_URL}
@@ -517,6 +521,7 @@ def test_strict_rekor_query_failure() -> None:
     cert, _ = make_test_cert(san_uri=SIGNER_URL)
     sidecar: dict[str, Any] = {
         "rekor_log_id": "a" * 64,
+        "rekor_log_index": 12345,
         "digest": "sha256:" + "ab" * 32,
     }
     meta: dict[str, Any] = {"signer": SIGNER_URL}

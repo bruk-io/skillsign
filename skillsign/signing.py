@@ -126,6 +126,9 @@ def _assemble_sidecar(
             "rekor_log_id must be exactly 64 hex characters", exit_code=10
         )
 
+    # rekor_log_index: integer log index for entry lookup in strict mode
+    rekor_log_index = int(inner.log_index)
+
     # rekor_timestamp: from integrated_time (unix timestamp) to ISO 8601 UTC
     integrated_time = int(inner.integrated_time)
     rekor_timestamp = datetime.fromtimestamp(integrated_time, tz=UTC).strftime(
@@ -151,6 +154,7 @@ def _assemble_sidecar(
         "timestamp": timestamp,
         "digest": digest_hex,
         "rekor_log_id": rekor_log_id,
+        "rekor_log_index": rekor_log_index,
         "rekor_timestamp": rekor_timestamp,
         "rekor_set": rekor_set,
         "certificate": cert_pem,

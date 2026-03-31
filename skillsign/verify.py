@@ -287,17 +287,17 @@ def _verify_strict_rekor(
     """Live Rekor verification for --strict mode (spec steps 9+10).
 
     Queries the Rekor transparency log to confirm:
-      - The entry for rekor_log_id exists
+      - The entry for rekor_log_index exists
       - The entry kind is hashedrekord/v0.0.1
       - The entry body digest matches the sidecar digest
       - The integratedTime falls within the certificate's validity window
 
     Returns None on success. Returns a failure tuple on any mismatch.
     """
-    log_id = sidecar["rekor_log_id"]
+    log_index = sidecar["rekor_log_index"]
 
     try:
-        entry = query_rekor_entry(log_id)
+        entry = query_rekor_entry(log_index)
     except Exception as e:
         return (
             VerificationResult.INVALID_CERT,

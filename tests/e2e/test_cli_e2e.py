@@ -138,6 +138,25 @@ def test_verify_output_format(
     assert "0.0.1" in result.output
 
 
+# --- Strict mode test ---
+
+
+def test_verify_strict_mode(
+    runner: CliRunner,
+    signed_artifacts: SignedArtifacts,
+    tmp_path: Path,
+) -> None:
+    """--strict performs live Rekor query and still returns VERIFIED."""
+    skill_path = setup_signed_copy(signed_artifacts, tmp_path)
+
+    result = runner.invoke(cli, ["verify", "--strict", str(skill_path)])
+
+    assert result.exit_code == 0, (
+        f"Expected exit 0, got {result.exit_code}:\n{result.output}"
+    )
+    assert "VERIFIED" in result.output
+
+
 # --- Inspect tests ---
 
 
