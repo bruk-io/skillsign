@@ -1,0 +1,2222 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Cryptographic signing and verification for Claude Code SKILL.md files">
+      
+      
+      
+        <link rel="canonical" href="https://bruk-io.github.io/skillsign/spec/">
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../roadmap/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Specification - SkillSign</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#skillsign-specification-v01-draft" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="SkillSign" class="md-header__button md-logo" aria-label="SkillSign" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SkillSign
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Specification
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/bruk-io/skillsign" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bruk-io/skillsign
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Specification
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../roadmap/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Roadmap
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../architecture/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Architecture
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="SkillSign" class="md-nav__button md-logo" aria-label="SkillSign" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    SkillSign
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/bruk-io/skillsign" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bruk-io/skillsign
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-motivation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Motivation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-definitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Definitions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-identity-and-key-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Identity and Key Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Identity and Key Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-identity-claims" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Identity Claims
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-revocation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Revocation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-canonical-form" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Canonical Form
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Canonical Form">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-normalization-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Normalization Rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-signed-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Signed Input
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-cryptographic-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Cryptographic Algorithm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-what-is-not-normalized" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 What Is Not Normalized
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-signature-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Signature Storage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Signature Storage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-sidecar-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Sidecar File
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-skill_id-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 skill_id Format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-skill_version-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 skill_version Format
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-signing-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Signing Protocol
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Signing Protocol">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 Prerequisites
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 Steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#721-signing-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2.1 Signing Algorithm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-skill-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 Skill Manifest
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#74-signing-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.4 Signing Output
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-verification-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Verification Protocol
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Verification Protocol">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 Steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-verification-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 Verification Algorithm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-verification-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 Verification Results
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-cli-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. CLI Specification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. CLI Specification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 Commands
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92-global-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 Global Flags
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93-exit-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 Exit Codes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-trust-policies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Trust Policies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. Trust Policies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-policy-file-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 Policy File Format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-signer_org-matching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2 signer_org Matching
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#103-policy-rule-evaluation-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.3 Policy Rule Evaluation Order
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#104-known-policy-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.4 Known Policy Limitations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#105-ci-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.5 CI Integration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-security-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Security Considerations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-known-limitations-and-future-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Known Limitations and Future Work
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-versioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Versioning
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-a-why-not-pgpgpg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix A: Why Not PGP/GPG?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-b-relationship-to-sigstore" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix B: Relationship to Sigstore
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-motivation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Motivation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-definitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Definitions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-identity-and-key-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Identity and Key Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Identity and Key Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-identity-claims" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Identity Claims
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-revocation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Revocation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-canonical-form" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Canonical Form
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Canonical Form">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-normalization-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Normalization Rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-signed-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Signed Input
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-cryptographic-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Cryptographic Algorithm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-what-is-not-normalized" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 What Is Not Normalized
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-signature-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Signature Storage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Signature Storage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-sidecar-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Sidecar File
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-skill_id-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 skill_id Format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-skill_version-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 skill_version Format
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-signing-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Signing Protocol
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Signing Protocol">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 Prerequisites
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 Steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#721-signing-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2.1 Signing Algorithm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-skill-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 Skill Manifest
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#74-signing-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.4 Signing Output
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-verification-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Verification Protocol
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Verification Protocol">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 Steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-verification-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 Verification Algorithm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-verification-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 Verification Results
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-cli-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. CLI Specification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. CLI Specification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 Commands
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92-global-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 Global Flags
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93-exit-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 Exit Codes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-trust-policies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Trust Policies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. Trust Policies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-policy-file-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 Policy File Format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-signer_org-matching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2 signer_org Matching
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#103-policy-rule-evaluation-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.3 Policy Rule Evaluation Order
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#104-known-policy-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.4 Known Policy Limitations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#105-ci-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.5 CI Integration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-security-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Security Considerations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-known-limitations-and-future-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Known Limitations and Future Work
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-versioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Versioning
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-a-why-not-pgpgpg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix A: Why Not PGP/GPG?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-b-relationship-to-sigstore" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix B: Relationship to Sigstore
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="skillsign-specification-v01-draft">SkillSign Specification — v0.1 (Draft)<a class="headerlink" href="#skillsign-specification-v01-draft" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>A trust and signing standard for Claude Code SKILL.md files</p>
+</blockquote>
+<hr />
+<h2 id="1-motivation">1. Motivation<a class="headerlink" href="#1-motivation" title="Permanent link">&para;</a></h2>
+<p>Claude Code skills — distributed as <code>SKILL.md</code> files — are increasingly being shared via npm, GitHub repositories, and informal channels. These files are not documentation. When loaded by Claude Code, they are executed as instructions with access to the filesystem, shell, network, and any configured tools. The ecosystem currently treats them as inert config files, which is the wrong mental model and an emerging security gap.</p>
+<p>The threat model includes:</p>
+<ul>
+<li><strong>Tampered skills</strong>: a legitimate skill modified after publication to inject malicious instructions</li>
+<li><strong>Impersonation</strong>: a skill claiming to be from a trusted author or organisation without any verifiable proof</li>
+<li><strong>Supply chain compromise</strong>: a transitive dependency in an npm skill package that has been taken over</li>
+<li><strong>Runtime instruction injection</strong>: a skill that pulls remote content at execution time to update its own instructions</li>
+</ul>
+<p>This specification defines a signing and verification standard for SKILL.md files that establishes authorship, integrity, and a chain of custody — without requiring authors to manage long-lived private keys.</p>
+<hr />
+<h2 id="2-scope">2. Scope<a class="headerlink" href="#2-scope" title="Permanent link">&para;</a></h2>
+<p><strong>In scope for v0.1:</strong>
+- Signing and verification of <code>SKILL.md</code> files
+- GitHub-based identity via OIDC (Sigstore-compatible)
+- Detached signature storage via sidecar file
+- A canonical serialization format for signing</p>
+<p><strong>Out of scope for v0.1 (reserved for future versions):</strong>
+- <code>CLAUDE.md</code> agent configs
+- MCP server manifests
+- Non-GitHub identity providers
+- A public registry (specified separately)</p>
+<hr />
+<h2 id="3-definitions">3. Definitions<a class="headerlink" href="#3-definitions" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Artifact</strong></td>
+<td>A <code>SKILL.md</code> file intended for distribution and consumption by Claude Code</td>
+</tr>
+<tr>
+<td><strong>Signer</strong></td>
+<td>A GitHub user or organization that asserts authorship or endorsement of an artifact</td>
+</tr>
+<tr>
+<td><strong>Signature</strong></td>
+<td>A cryptographic assertion that a specific signer produced or endorsed a specific artifact at a specific time</td>
+</tr>
+<tr>
+<td><strong>Certificate</strong></td>
+<td>A short-lived X.509 certificate issued by Fulcio (Sigstore's CA) binding a signing key to a GitHub identity</td>
+</tr>
+<tr>
+<td><strong>Transparency Log</strong></td>
+<td>An append-only, publicly auditable log (Rekor) recording all signatures</td>
+</tr>
+<tr>
+<td><strong>Canonical Form</strong></td>
+<td>The normalized byte representation of a SKILL.md file used as signing input</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-identity-and-key-management">4. Identity and Key Management<a class="headerlink" href="#4-identity-and-key-management" title="Permanent link">&para;</a></h2>
+<p>SkillSign uses <strong>keyless signing via Sigstore</strong>. Signers never manage long-lived private keys.</p>
+<h3 id="41-flow">4.1 Flow<a class="headerlink" href="#41-flow" title="Permanent link">&para;</a></h3>
+<ol>
+<li>The signer authenticates with GitHub via OIDC</li>
+<li>Sigstore's Fulcio CA issues a short-lived certificate (valid ~10 minutes) binding an ephemeral keypair to the signer's verified GitHub identity</li>
+<li>The signer uses the ephemeral key to sign the artifact's canonical form</li>
+<li>The signature and certificate are recorded in Rekor (Sigstore's transparency log)</li>
+<li>The ephemeral private key is discarded</li>
+</ol>
+<h3 id="42-identity-claims">4.2 Identity Claims<a class="headerlink" href="#42-identity-claims" title="Permanent link">&para;</a></h3>
+<p>The certificate Subject Alternative Name (SAN) encodes the signer's identity. The SAN type depends on the OIDC provider used during signing:</p>
+<ul>
+<li><strong>Personal OAuth (via Dex)</strong>: Email SAN (RFC822Name) — the user's email address (e.g., <code>user@gmail.com</code>)</li>
+<li><strong>Individual (GitHub)</strong>: URI SAN — <code>https://github.com/{username}</code></li>
+<li><strong>GitHub Actions</strong>: URI SAN — <code>https://github.com/{org}/{repo}/.github/workflows/{workflow}.yml@refs/heads/{branch}</code></li>
+</ul>
+<p>This means skills can be signed by a human developer (with email or GitHub identity) or automatically signed in CI, all with verifiable identity.</p>
+<h3 id="43-revocation">4.3 Revocation<a class="headerlink" href="#43-revocation" title="Permanent link">&para;</a></h3>
+<p>Because certificates are short-lived, traditional revocation is not required. The transparency log provides an audit trail. Consumers can check Rekor directly or rely on a registry that indexes and monitors the log.</p>
+<hr />
+<h2 id="5-canonical-form">5. Canonical Form<a class="headerlink" href="#5-canonical-form" title="Permanent link">&para;</a></h2>
+<p>Signatures are computed over a deterministic, normalized representation of the skill file — not raw bytes. This prevents signature breakage from trivial formatting differences (trailing newlines, line endings, editor whitespace) while ensuring meaningful changes invalidate the signature.</p>
+<h3 id="51-normalization-rules">5.1 Normalization Rules<a class="headerlink" href="#51-normalization-rules" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Verify the SKILL.md file does not exceed 1MB (1,048,576 bytes). If the file exceeds this limit, signing and verification MUST fail with exit code <code>10</code>. This prevents denial-of-service via oversized input.</li>
+<li>Parse the SKILL.md file as UTF-8. If the file contains invalid UTF-8 byte sequences, signing MUST fail with exit code <code>10</code>.</li>
+<li>If a UTF-8 BOM (<code>\xEF\xBB\xBF</code>) is present at the start of the file, it MUST be stripped before further processing.</li>
+<li>Normalize line endings: replace all <code>\r\n</code> (CRLF) sequences with <code>\n</code>, then replace any remaining bare <code>\r</code> (CR) with <code>\n</code>.</li>
+<li>Strip trailing whitespace from each line. "Whitespace" for this purpose means ASCII space (<code>\x20</code>) and horizontal tab (<code>\x09</code>) only. Unicode whitespace characters are not stripped.</li>
+<li>Strip all trailing <code>\n</code> characters from the end of the file, then append exactly one <code>\n</code>.</li>
+<li>Encode as UTF-8 bytes.</li>
+<li>If the resulting canonical form contains any null byte (<code>\x00</code>), signing MUST fail with exit code <code>10</code>.</li>
+</ol>
+<p>An empty SKILL.md file (zero bytes, or containing only whitespace/newlines) normalizes to a single <code>\n</code> byte. This is valid and may be signed.</p>
+<p>The canonical form is what is hashed and signed. Because signatures are stored in a detached sidecar file, no stripping or exclusion logic is required — the SKILL.md file is signed exactly as-is after normalization.</p>
+<h3 id="52-signed-input">5.2 Signed Input<a class="headerlink" href="#52-signed-input" title="Permanent link">&para;</a></h3>
+<p>The digest is computed over the following exact byte sequence:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>&quot;skillsign:v1&quot; + \x00 + canonical_bytes + \x00 + skill_id_bytes + \x00 + skill_version_bytes
+</code></pre></div>
+<p>Where:
+- <code>"skillsign:v1"</code> is a fixed ASCII domain separator (12 bytes), prefixed to prevent cross-protocol confusion and aid future version migration
+- <code>canonical_bytes</code> is the UTF-8 encoded canonical form of the SKILL.md file (Section 5.1)
+- <code>skill_id_bytes</code> is the UTF-8 encoded value of the <code>skill_id</code> field, trimmed of leading and trailing ASCII whitespace (space <code>\x20</code> and horizontal tab <code>\x09</code> only, matching Section 5.1 step 5)
+- <code>skill_version_bytes</code> is the UTF-8 encoded value of the <code>skill_version</code> field, trimmed of leading and trailing ASCII whitespace (space <code>\x20</code> and horizontal tab <code>\x09</code> only, matching Section 5.1 step 5)
+- <code>\x00</code> is a single null byte separator
+- There is no trailing separator after <code>skill_version_bytes</code></p>
+<p>SHA-256 is applied to this concatenated byte sequence to produce a 32-byte digest. <strong>The cryptographic signature is computed over the 32-byte SHA-256 digest, not the raw concatenated byte sequence.</strong> This follows Sigstore convention.</p>
+<p>The <code>skill_id</code> and <code>skill_version</code> values MUST NOT contain null bytes (<code>\x00</code>). If either field contains a null byte after trimming, signing MUST fail with exit code <code>10</code>. Similarly, the canonical form MUST NOT contain null bytes after normalization — if null bytes are present, signing MUST fail with exit code <code>10</code>.</p>
+<p><code>skill_id</code> is case-sensitive — <code>github.com/Anthropic/foo</code> and <code>github.com/anthropic/foo</code> produce different digests. However, because GitHub usernames and org names are case-insensitive, signers SHOULD use lowercase for the owner segment to avoid identity confusion. <code>skill_id</code> MUST contain only ASCII characters in the range U+0001–U+007F (printable ASCII, null excluded). Non-ASCII characters in <code>skill_id</code> are rejected at signing time to prevent Unicode homoglyph attacks.</p>
+<p><code>skill_id</code> MUST conform to the format <code>{host}/{owner}/{name}</code> with exactly three slash-separated segments. Validation rules:
+- Each segment MUST match the pattern <code>[a-zA-Z0-9._-]+</code> (one or more alphanumeric, dot, underscore, or hyphen characters)
+- No segment may be <code>..</code> or <code>.</code>
+- <code>host</code> MUST contain at least one <code>.</code> (e.g., <code>github.com</code>)
+- The total length of <code>skill_id</code> MUST NOT exceed 255 characters</p>
+<p>Skills with <code>skill_id</code> values that fail validation MUST be rejected at signing time with exit code <code>10</code>.</p>
+<p>This ensures a valid signature for <code>github.com/org/skill-a</code> cannot be reused for <code>github.com/org/skill-b</code> even if the file contents are identical.</p>
+<h3 id="53-cryptographic-algorithm">5.3 Cryptographic Algorithm<a class="headerlink" href="#53-cryptographic-algorithm" title="Permanent link">&para;</a></h3>
+<p>SkillSign v0.1 uses the following fixed algorithm suite, matching Sigstore/Fulcio's current issuance:</p>
+<ul>
+<li><strong>Key type</strong>: ECDSA P-256 (as issued by Fulcio via the ephemeral keypair)</li>
+<li><strong>Digest algorithm</strong>: SHA-256</li>
+<li><strong>Signature input</strong>: the 32-byte SHA-256 digest (see Section 5.2). The ECDSA signature is computed directly over these 32 bytes — implementations MUST NOT re-hash the digest before signing (i.e., use a "prehash" or "raw" signing mode, not a "hash-then-sign" mode that would double-hash).</li>
+<li><strong>Signature format</strong>: DER-encoded ECDSA signature (<code>SEQUENCE { INTEGER r, INTEGER s }</code>) as defined by RFC 3279. This is the default output format of most ECDSA libraries and matches Sigstore/Fulcio convention.</li>
+<li><strong>Signature encoding</strong>: the DER-encoded signature bytes are encoded as standard Base64 as defined in RFC 4648 §4, with no line breaks.</li>
+</ul>
+<p>Algorithm agility is not supported in v0.1. A sidecar with a different algorithm suite MUST be rejected with <code>MALFORMED_SIDECAR</code>.</p>
+<h3 id="54-what-is-not-normalized">5.4 What Is Not Normalized<a class="headerlink" href="#54-what-is-not-normalized" title="Permanent link">&para;</a></h3>
+<p>Content, structure, and ordering of the markdown body are preserved exactly. Only whitespace and line endings are normalized. A change to any instruction, section heading, or code block produces a different digest and invalidates all existing signatures.</p>
+<hr />
+<h2 id="6-signature-storage">6. Signature Storage<a class="headerlink" href="#6-signature-storage" title="Permanent link">&para;</a></h2>
+<p>Signatures are stored exclusively in detached sidecar files. The SKILL.md file itself is never modified by the signing process, keeping the artifact clean for model consumption and making git history readable.</p>
+<h3 id="61-sidecar-file">6.1 Sidecar File<a class="headerlink" href="#61-sidecar-file" title="Permanent link">&para;</a></h3>
+<p>The signature is stored in a file with the <code>.skillsign</code> extension, co-located with the skill file:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>SKILL.md
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>SKILL.md.skillsign
+</code></pre></div>
+<p>The <code>.skillsign</code> file is YAML 1.2. Parsers MUST use YAML 1.2 semantics — notably, bare <code>yes</code>/<code>no</code>/<code>on</code>/<code>off</code> are plain strings in YAML 1.2, not booleans. The <code>certificate</code> and <code>signature</code> values below are truncated for illustration — real values will be significantly longer:</p>
+<p><strong>YAML parsing restrictions</strong>: To prevent parsing ambiguities from being used to bypass verification, parsers MUST:
+- Reject files with duplicate keys (fail with <code>MALFORMED_SIDECAR</code>)
+- Reject YAML anchors and aliases (<code>&amp;anchor</code>, <code>*alias</code>)
+- Reject YAML tags (e.g., <code>!!str</code>, <code>!!map</code>)
+- Reject multi-document streams (files containing <code>---</code> document separators after the first document)
+- Reject files larger than 64KB</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nt">skill_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">github.com/example-org/python-linter</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nt">skill_version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.2.0</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nt">signer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/example-user</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nt">timestamp</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2025-03-01T14:22:00Z</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="nt">digest</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="nt">rekor_log_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">24296fb24b8ad77ae1e714307e30a6f30d97c06a5de3d58e3e68e0e8c2a1e2f9</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="nt">rekor_timestamp</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2025-03-01T14:22:03Z</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="nt">rekor_set</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;base64-encoded Rekor Signed Entry Timestamp&gt;</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="nt">certificate</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="no">-----BEGIN CERTIFICATE-----</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">  </span><span class="no">MIIBxTCCAWqgAwIBAgIRAK...</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">  </span><span class="no">-----END CERTIFICATE-----</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="nt">certificate_chain</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">  </span><span class="no">-----BEGIN CERTIFICATE-----</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">  </span><span class="no">MIIBxTCCAWqgAwIBAgIRAK... (Fulcio intermediate)</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">  </span><span class="no">-----END CERTIFICATE-----</span>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="nt">signature</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MEQCIBn9...</span>
+</code></pre></div>
+<p>Values above are illustrative. See Section 6.2 for field definitions.</p>
+<h3 id="62-fields">6.2 Fields<a class="headerlink" href="#62-fields" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>version</code></td>
+<td>Yes</td>
+<td>SkillSign format version. Must be <code>1</code> for this spec.</td>
+</tr>
+<tr>
+<td><code>skill_id</code></td>
+<td>Yes</td>
+<td>Canonical identifier for this skill. ASCII only, format: <code>{host}/{owner}/{name}</code>. Case-sensitive. Exactly 3 slash-separated segments.</td>
+</tr>
+<tr>
+<td><code>skill_version</code></td>
+<td>Yes</td>
+<td>Opaque version string. Non-empty, max 255 chars, printable ASCII only (U+0020–U+007E). Case-sensitive exact match. See Section 6.4.</td>
+</tr>
+<tr>
+<td><code>signer</code></td>
+<td>Yes</td>
+<td>The exact SAN value from the Fulcio certificate. For URI SANs (GitHub Actions OIDC): full HTTPS URL (e.g., <code>https://github.com/example-user</code>), MUST use <code>https</code> scheme, MUST have host <code>github.com</code>, MUST NOT contain query params, fragments, userinfo, or port. For email SANs (personal OAuth via Dex): the raw email address (e.g., <code>user@gmail.com</code>). Case-sensitive. Must match SAN exactly. MUST NOT exceed 2048 characters.</td>
+</tr>
+<tr>
+<td><code>timestamp</code></td>
+<td>Yes</td>
+<td>ISO 8601 UTC timestamp of signing operation with mandatory <code>Z</code> suffix: <code>YYYY-MM-DDTHH:MM:SS[.fff]Z</code>. Fractional seconds MAY be present. Sourced from the signer's local system clock. Informational only — not used for policy evaluation (see <code>rekor_timestamp</code>).</td>
+</tr>
+<tr>
+<td><code>digest</code></td>
+<td>Yes</td>
+<td>SHA-256 digest of the signed input (as defined in Section 5.2), prefixed with <code>sha256:</code>. Hex characters MUST be lowercase.</td>
+</tr>
+<tr>
+<td><code>rekor_log_id</code></td>
+<td>Yes</td>
+<td>Rekor transparency log entry UUID: a lowercase hex string of exactly 64 characters, as returned by the Rekor <code>/api/v1/log/entries</code> endpoint.</td>
+</tr>
+<tr>
+<td><code>rekor_timestamp</code></td>
+<td>Yes</td>
+<td>Authoritative tamper-evident timestamp from Rekor, in ISO 8601 UTC format with mandatory <code>Z</code> suffix: <code>YYYY-MM-DDTHH:MM:SS[.fff]Z</code>. Fractional seconds MAY be present. Used for <code>max_age_days</code> policy evaluation (evaluated as: current UTC time minus <code>rekor_timestamp</code> &lt;= <code>max_age_days</code> * 86400 seconds, no clock skew tolerance). Not self-asserted.</td>
+</tr>
+<tr>
+<td><code>rekor_set</code></td>
+<td>Yes</td>
+<td>Rekor Signed Entry Timestamp (SET), encoded as standard Base64 (RFC 4648 §4) with no line breaks. Used in default and offline modes to verify that the signing occurred within the certificate's validity window without a live Rekor query. The SET is a cryptographically signed timestamp structure issued by Rekor at log entry time, verifiable against Rekor's public key distributed via TUF.</td>
+</tr>
+<tr>
+<td><code>certificate</code></td>
+<td>Yes</td>
+<td>PEM-encoded short-lived leaf certificate issued by Fulcio</td>
+</tr>
+<tr>
+<td><code>certificate_chain</code></td>
+<td>No</td>
+<td>PEM-encoded Fulcio intermediate certificate(s). If absent, the verifier must fetch the chain from the TUF root. Recommended for offline verification.</td>
+</tr>
+<tr>
+<td><code>signature</code></td>
+<td>Yes</td>
+<td>ECDSA P-256 signature over the SHA-256 digest, encoded as standard Base64 (RFC 4648 §4) with no line breaks</td>
+</tr>
+</tbody>
+</table>
+<h3 id="63-skill_id-format">6.3 skill_id Format<a class="headerlink" href="#63-skill_id-format" title="Permanent link">&para;</a></h3>
+<p>The <code>skill_id</code> is a stable, globally unique identifier for a skill that is independent of where the file lives on disk. It must be included in the signed payload (the digest is computed over canonical form + skill_id + skill_version as a concatenated input — see Section 5.2) to prevent substitution attacks where a valid signature for one skill is served under a different skill's name.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>skill_id format: {host}/{owner}/{name}
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>examples:
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  github.com/anthropic/python-linter
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>  github.com/my-org/sql-reviewer
+</code></pre></div>
+<h3 id="64-skill_version-format">6.4 skill_version Format<a class="headerlink" href="#64-skill_version-format" title="Permanent link">&para;</a></h3>
+<p><code>skill_version</code> is an opaque string. No specific versioning scheme is enforced by SkillSign — authors may use semver (<code>1.2.0</code>), calver (<code>2025.03.01</code>), build hashes, or any other convention. The value is treated as an exact string for the purposes of the signed digest; two version strings are equal only if they are byte-for-byte identical. Consumers should not attempt to parse or compare version strings for ordering.</p>
+<p><strong>Validation rules</strong>: <code>skill_version</code> MUST be a non-empty UTF-8 string after trimming leading and trailing whitespace. It MUST NOT exceed 255 characters. It MUST contain only printable ASCII characters (U+0020–U+007E). Null bytes (<code>\x00</code>), newlines, and control characters are not permitted. An empty or invalid <code>skill_version</code> MUST be rejected at signing time with exit code <code>10</code>.</p>
+<hr />
+<h2 id="7-signing-protocol">7. Signing Protocol<a class="headerlink" href="#7-signing-protocol" title="Permanent link">&para;</a></h2>
+<h3 id="71-prerequisites">7.1 Prerequisites<a class="headerlink" href="#71-prerequisites" title="Permanent link">&para;</a></h3>
+<ul>
+<li>A GitHub account</li>
+<li>The <code>skillsign</code> CLI (see Section 9)</li>
+<li>A <code>skillsign.yaml</code> manifest in the same directory as the SKILL.md file (see Section 7.3)</li>
+</ul>
+<h3 id="72-steps">7.2 Steps<a class="headerlink" href="#72-steps" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Authenticate with GitHub (opens browser for OIDC flow)</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>skillsign<span class="w"> </span>auth<span class="w"> </span>login
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Sign a skill file (reads skill_id and skill_version from skillsign.yaml)</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>skillsign<span class="w"> </span>sign<span class="w"> </span>./SKILL.md
+</code></pre></div>
+<h3 id="721-signing-algorithm">7.2.1 Signing Algorithm<a class="headerlink" href="#721-signing-algorithm" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Read the <code>skillsign.yaml</code> manifest from the same directory as the SKILL.md file. Parse it with the YAML restrictions defined in Section 7.3. Fail with exit code <code>10</code> if the manifest is missing or invalid.</li>
+<li>Extract <code>skill_id</code> and <code>skill_version</code> from the manifest. Validate <code>skill_id</code> per Section 5.2 format rules. Validate <code>skill_version</code> per Section 6.4 constraints. Fail with exit code <code>10</code> if either field is invalid.</li>
+<li>If a sidecar already exists for the current <code>skill_id</code> and <code>skill_version</code> and <code>--force</code> was not passed, fail with exit code <code>10</code>.</li>
+<li>Compute the canonical form of the SKILL.md file (Section 5.1). This includes the file size check (step 1 of Section 5.1).</li>
+<li>Compute the SHA-256 digest over the signed input byte sequence (Section 5.2).</li>
+<li>Authenticate with GitHub via OIDC. Obtain an OIDC identity token. Fail with exit code <code>10</code> if authentication fails.</li>
+<li>Submit the OIDC token to Fulcio to obtain a short-lived certificate binding an ephemeral keypair to the signer's GitHub identity. Fail with exit code <code>10</code> if certificate issuance fails.</li>
+<li>Sign the 32-byte SHA-256 digest from step 5 using the ephemeral private key (ECDSA P-256). The signature is computed directly over the digest bytes without re-hashing (see Section 5.3).</li>
+<li>Submit the signature, certificate, and digest to Rekor as a <code>hashedrekord/v0.0.1</code> entry. Fail with exit code <code>10</code> if Rekor submission fails. The sidecar MUST NOT be written until Rekor confirms the log entry.</li>
+<li>Assemble the sidecar file with all fields defined in Section 6.2. The <code>signer</code> field MUST be set to the exact SAN value from the Fulcio certificate. The <code>rekor_log_id</code>, <code>rekor_timestamp</code>, and <code>rekor_set</code> fields MUST be populated from the Rekor response.</li>
+<li>Write the sidecar to <code>&lt;filename&gt;.md.skillsign</code>. Discard the ephemeral private key.</li>
+</ol>
+<h3 id="73-skill-manifest">7.3 Skill Manifest<a class="headerlink" href="#73-skill-manifest" title="Permanent link">&para;</a></h3>
+<p>The <code>skillsign.yaml</code> manifest declares the stable identity of the skill. It must be present in the same directory as the SKILL.md file and is read by the CLI at signing time to populate <code>skill_id</code> and <code>skill_version</code> in the sidecar.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># skillsign.yaml</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nt">skill_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">github.com/example-org/python-linter</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nt">skill_version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.2.0</span>
+</code></pre></div>
+<p><code>skill_version</code> is an opaque string — any versioning convention is acceptable (see Section 6.4). Authors must update <code>skill_version</code> before each re-signing to distinguish releases.</p>
+<p><strong>YAML parsing restrictions</strong>: The <code>skillsign.yaml</code> manifest MUST be parsed with the same YAML restrictions as the sidecar file (Section 6.1): no duplicate keys, no anchors/aliases, no tags, no multi-document streams, and a maximum file size of 64KB. Violations MUST cause signing to fail with exit code <code>10</code>.</p>
+<p>The manifest is not signed itself — only the SKILL.md content and the identity fields extracted from the manifest are included in the signed digest. The sidecar is the authoritative record of what was signed; the manifest is just the input source for <code>skill_id</code> and <code>skill_version</code> at signing time. Modifying the manifest after signing does not invalidate the existing sidecar, but running <code>skillsign sign</code> again with updated manifest values will produce a new sidecar with a different digest. Authors must keep <code>skill_version</code> updated before each re-signing.</p>
+<p>If a sidecar already exists for the current <code>skill_id</code> and <code>skill_version</code>, the CLI will exit with code <code>10</code> and require an explicit <code>--force</code> flag to overwrite. This prevents accidental re-signing of the same version with a different key, which would produce a confusingly different but valid sidecar.</p>
+<h3 id="74-signing-output">7.4 Signing Output<a class="headerlink" href="#74-signing-output" title="Permanent link">&para;</a></h3>
+<p>On success, the CLI outputs:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>✓ Signed by: github.com/example-user
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>✓ Skill: github.com/example-org/python-linter@1.2.0
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>✓ Certificate issued: 2025-03-01T14:22:00Z (expires 2025-03-01T14:32:00Z)
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>✓ Rekor log entry: https://rekor.sigstore.dev/api/v1/log/entries/24296fb2...
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>✓ Signature written to: SKILL.md.skillsign
+</code></pre></div>
+<hr />
+<h2 id="8-verification-protocol">8. Verification Protocol<a class="headerlink" href="#8-verification-protocol" title="Permanent link">&para;</a></h2>
+<h3 id="81-steps">8.1 Steps<a class="headerlink" href="#81-steps" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Verify a skill file</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>skillsign<span class="w"> </span>verify<span class="w"> </span>./SKILL.md
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># Verify with policy (only accept skills signed by a specific GitHub org)</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>skillsign<span class="w"> </span>verify<span class="w"> </span>--signer-org<span class="w"> </span>my-org<span class="w"> </span>./SKILL.md
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># Verify in strict mode (require Rekor log confirmation, not just the certificate in the sidecar)</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>skillsign<span class="w"> </span>verify<span class="w"> </span>--strict<span class="w"> </span>./SKILL.md
+</code></pre></div>
+<h3 id="82-verification-algorithm">8.2 Verification Algorithm<a class="headerlink" href="#82-verification-algorithm" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Locate the sidecar file (<code>&lt;filename&gt;.md.skillsign</code>) adjacent to the SKILL.md file</li>
+<li>Parse the sidecar as YAML 1.2 with the restrictions defined in Section 6.1. Fail with <code>MALFORMED_SIDECAR</code> if parsing fails, required fields are missing, or <code>version</code> is not <code>1</code>. A CLI encountering an unknown <code>version</code> value MUST fail with <code>MALFORMED_SIDECAR</code> and MUST NOT attempt partial verification.</li>
+<li>Compute the canonical form of the SKILL.md file (Section 5.1)</li>
+<li>Compute SHA-256 digest over the signed input byte sequence (Section 5.2)</li>
+<li>Verify digest matches the <code>digest</code> field in the sidecar (lowercase hex comparison)</li>
+<li>Verify the cryptographic signature (ECDSA P-256) against the certificate's public key, over the freshly-computed 32-byte SHA-256 digest from step 4 (not the <code>digest</code> field from the sidecar)</li>
+<li>Verify the certificate was issued by Fulcio by validating its chain against the pinned Sigstore TUF root. The CLI bundles the Sigstore TUF root metadata and uses it to fetch the current trusted Fulcio root certificate, following the <a href="https://tuf-repo-cdn.sigstore.dev">Sigstore TUF repository</a>. This handles root key rotations without requiring CLI updates. In <code>--offline</code> mode, the CLI skips the TUF network fetch and falls back to its bundled TUF root metadata and Fulcio root certificate. This means offline verification may not reflect recent Sigstore root key rotations.</li>
+<li>Verify the certificate's SAN matches the <code>signer</code> field in the sidecar. Extract the SAN value from the certificate — try URI SAN first, then email SAN (RFC822Name). Matching is case-sensitive and exact. Additionally, verify the certificate contains the Extended Key Usage (EKU) extension <code>id-kp-codeSigning</code> (OID 1.3.6.1.5.5.7.3.3), which is present in Fulcio-issued certificates. Fail with <code>INVALID_CERT</code> if the EKU is absent.</li>
+<li><strong>Verify certificate temporal validity</strong>: First, verify the cryptographic signature of the <code>rekor_set</code> field (the Rekor Signed Entry Timestamp) against Rekor's public key, obtained via the Sigstore TUF root (or the bundled copy in <code>--offline</code> mode). If the SET signature is invalid, fail with <code>INVALID_CERT</code>. Then confirm the SET's embedded timestamp falls within the certificate's <code>notBefore</code>/<code>notAfter</code> window. The SET proves the signing occurred during the certificate's validity period without requiring a live Rekor query, and is valid in both default and <code>--offline</code> modes. In <code>--strict</code> mode, additionally confirm via live Rekor query that <code>rekor_log_id</code> exists and its <code>rekor_timestamp</code> falls within the certificate window.</li>
+<li>In <code>--strict</code> mode: confirm the <code>rekor_log_id</code> exists in Rekor as a <code>hashedrekord/v0.0.1</code> entry and the entry's digest matches the <code>digest</code> field in the sidecar</li>
+<li>Perform owner-path consistency check: compare the <code>skill_id</code> owner path against the <code>signer</code> owner path using the <code>SKILL_ID_MISMATCH</code> algorithm (Section 8.3). By default, a mismatch is a hard failure (exit code <code>1</code>). This can be downgraded to a warning via <code>--allow-id-mismatch</code> or <code>require_signer_id_match: false</code> in a policy file.</li>
+<li>Apply trust policy if provided (Section 10)</li>
+</ol>
+<p><strong>Verification is not mandatory</strong> by default — the CLI exits <code>UNSIGNED</code> (code <code>2</code>) when no sidecar is present, rather than failing hard. Consumers who require verification MUST enforce it via policy (<code>default: deny</code>) or by treating exit code <code>2</code> as a failure in their pipelines.</p>
+<h3 id="83-verification-results">8.3 Verification Results<a class="headerlink" href="#83-verification-results" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Result</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>VERIFIED</code></td>
+<td>Signature is valid, signer identity confirmed, content unmodified</td>
+</tr>
+<tr>
+<td><code>TAMPERED</code></td>
+<td>Digest mismatch — file has been modified after signing</td>
+</tr>
+<tr>
+<td><code>INVALID_CERT</code></td>
+<td>Certificate cannot be verified against Fulcio root</td>
+</tr>
+<tr>
+<td><code>IDENTITY_MISMATCH</code></td>
+<td>Certificate SAN does not match claimed signer</td>
+</tr>
+<tr>
+<td><code>UNSIGNED</code></td>
+<td>No sidecar file found</td>
+</tr>
+<tr>
+<td><code>POLICY_FAIL</code></td>
+<td>Signature is valid but does not meet caller's trust policy</td>
+</tr>
+<tr>
+<td><code>SKILL_ID_MISMATCH</code></td>
+<td>Hard failure (exit code <code>1</code>) by default: <code>skill_id</code> owner path does not match <code>signer</code> owner path. The comparison algorithm is: (1) from <code>skill_id</code>, extract the first two segments as <code>{host}/{owner}</code>; (2) from <code>signer</code>, parse as URL, extract <code>{host}/{first-path-segment}</code> (percent-decoding the path first); (3) compare case-insensitively after lowercasing both owner segments. <strong>Email signers</strong> (RFC822Name SANs) skip this check entirely — there is no URL to extract an owner path from; the policy engine's <code>signer</code> rule handles email identity matching. This check is always performed during verification (step 11 in Section 8.2) for URI signers, regardless of whether a policy file is provided. It can be downgraded to an advisory warning by passing <code>--allow-id-mismatch</code> or by setting <code>require_signer_id_match: false</code> in a policy file.</td>
+</tr>
+<tr>
+<td><code>MALFORMED_SIDECAR</code></td>
+<td>Sidecar file is present but cannot be parsed (invalid YAML, missing required fields, or unknown version value). This is a hard verification failure, not a best-effort parse. A v1 CLI encountering <code>version: 2</code> must fail with this result rather than attempt partial verification</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-cli-specification">9. CLI Specification<a class="headerlink" href="#9-cli-specification" title="Permanent link">&para;</a></h2>
+<h3 id="91-commands">9.1 Commands<a class="headerlink" href="#91-commands" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>skillsign auth login</code></td>
+<td>Authenticate with GitHub via OIDC</td>
+</tr>
+<tr>
+<td><code>skillsign auth status</code></td>
+<td>Show current authentication state</td>
+</tr>
+<tr>
+<td><code>skillsign sign &lt;file&gt;</code></td>
+<td>Sign a SKILL.md file, writing a sidecar</td>
+</tr>
+<tr>
+<td><code>skillsign verify &lt;file&gt; [&lt;file&gt;...]</code></td>
+<td>Verify one or more SKILL.md files (glob patterns accepted) against their sidecars</td>
+</tr>
+<tr>
+<td><code>skillsign inspect &lt;file&gt;</code></td>
+<td>Show signature metadata without verifying</td>
+</tr>
+<tr>
+<td><code>skillsign unsign &lt;file&gt;</code></td>
+<td>Delete the sidecar file for a given SKILL.md</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Per-command flags:</strong></p>
+<p><code>skillsign sign</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--force</code></td>
+<td>Overwrite an existing sidecar. Without this flag, signing fails with code <code>10</code> if a sidecar already exists for the current <code>skill_id</code> and <code>skill_version</code>.</td>
+</tr>
+</tbody>
+</table>
+<p><code>skillsign verify</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--strict</code></td>
+<td>Require live Rekor confirmation of the log entry. Without this flag, verification relies on the <code>rekor_set</code> SET for temporal binding.</td>
+</tr>
+<tr>
+<td><code>--policy &lt;file&gt;</code></td>
+<td>Path to a <code>.skillsign-policy.yaml</code> trust policy file to evaluate after cryptographic verification.</td>
+</tr>
+<tr>
+<td><code>--signer-org &lt;org&gt;</code></td>
+<td>Shorthand for a single-rule policy: only accept skills signed by GitHub Actions workflows in the specified org. Equivalent to a policy with <code>signer_org: &lt;org&gt;</code> and <code>default: deny</code>.</td>
+</tr>
+<tr>
+<td><code>--policy-digest &lt;sha256:hex&gt;</code></td>
+<td>Pin the expected SHA-256 digest of the policy file. Before parsing, the CLI computes the policy file's SHA-256 digest and compares it to the provided value. If they do not match, verification fails with exit code <code>10</code>. This mitigates the risk of an attacker modifying the unsigned policy file (see Section 11). The digest format is <code>sha256:</code> followed by lowercase hex.</td>
+</tr>
+<tr>
+<td><code>--emit-canonical</code></td>
+<td>After successful verification, output the verified canonical bytes (Section 5.1) to stdout. This enables callers to pipe verified content directly to a loader without a filesystem re-read, mitigating TOCTOU attacks where the file is swapped between verification and use (see Section 11). When this flag is active, all other output (verification status, warnings) is written to stderr.</td>
+</tr>
+<tr>
+<td><code>--allow-id-mismatch</code></td>
+<td>Downgrade <code>SKILL_ID_MISMATCH</code> from a hard failure (exit code <code>1</code>) to an advisory warning. By default, the CLI fails when the <code>skill_id</code> owner path does not match the <code>signer</code> owner path. This flag is for cases where cross-owner signing is intentional (e.g., a third-party auditor signing another org's skill).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="92-global-flags">9.2 Global Flags<a class="headerlink" href="#92-global-flags" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--format json</code></td>
+<td>Output machine-readable JSON</td>
+</tr>
+<tr>
+<td><code>--quiet</code></td>
+<td>Suppress output, use exit codes only</td>
+</tr>
+<tr>
+<td><code>--offline</code></td>
+<td>Skip Rekor log checks (no network required). When a policy contains <code>max_age_days</code>, the CLI will exit with code <code>10</code> and an explanatory message, since <code>max_age_days</code> requires network access to confirm <code>rekor_timestamp</code>. Pass <code>--offline-age-skip</code> alongside <code>--offline</code> to explicitly acknowledge this degraded check and proceed</td>
+</tr>
+<tr>
+<td><code>--offline-age-skip</code></td>
+<td>Used alongside <code>--offline</code>. Acknowledges that <code>max_age_days</code> policy rules cannot be verified without network access and proceeds without evaluating them. Without this flag, <code>--offline</code> with a <code>max_age_days</code> policy exits with code <code>10</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="93-exit-codes">9.3 Exit Codes<a class="headerlink" href="#93-exit-codes" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0</code></td>
+<td>Success / VERIFIED (all files verified when multiple files provided)</td>
+</tr>
+<tr>
+<td><code>1</code></td>
+<td>Verification failed (TAMPERED, INVALID_CERT, IDENTITY_MISMATCH, SKILL_ID_MISMATCH, or MALFORMED_SIDECAR on any file)</td>
+</tr>
+<tr>
+<td><code>2</code></td>
+<td>UNSIGNED — no sidecar file found (only returned when a single file is verified and no policy is active)</td>
+</tr>
+<tr>
+<td><code>3</code></td>
+<td>POLICY_FAIL — signature valid but trust policy not satisfied</td>
+</tr>
+<tr>
+<td><code>10</code></td>
+<td>CLI error or precondition failure (bad arguments, file not found, sidecar already exists without <code>--force</code>, incompatible flag combinations, etc.)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Multi-file verification</strong>: When verifying multiple files (via glob or multiple arguments), the CLI reports per-file results and exits with the highest severity code across all files. Exit code <code>1</code> takes precedence over <code>3</code>, which takes precedence over <code>2</code>, which takes precedence over <code>0</code>. This means a single failed file causes the overall exit code to reflect that failure.</p>
+<p><strong><code>--offline</code> + <code>--strict</code> conflict</strong>: These flags are mutually exclusive. Using both together exits with code <code>10</code> and an explanatory message. <code>--strict</code> requires a live Rekor query, which is incompatible with <code>--offline</code>.</p>
+<hr />
+<h2 id="10-trust-policies">10. Trust Policies<a class="headerlink" href="#10-trust-policies" title="Permanent link">&para;</a></h2>
+<p>Consumers can define trust policies that go beyond binary verified/unverified decisions.</p>
+<h3 id="101-policy-file-format">10.1 Policy File Format<a class="headerlink" href="#101-policy-file-format" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># .skillsign-policy.yaml</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">deny</span><span class="w">  </span><span class="c1"># REQUIRED. &quot;deny&quot; or &quot;allow&quot;. Missing default is a parse error — fail closed.</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="nt">rules</span><span class="p">:</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">allow</span><span class="p">:</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">      </span><span class="nt">signer_org</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-company</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">allow</span><span class="p">:</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">      </span><span class="nt">signer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/trusted-individual</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">allow</span><span class="p">:</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">      </span><span class="nt">signer_org</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">anthropic</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="w">      </span><span class="nt">max_age_days</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">90</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">deny</span><span class="p">:</span>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="w">      </span><span class="nt">signer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/untrusted-actor</span>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="nt">require_signer_id_match</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</code></pre></div>
+<p><strong>YAML parsing restrictions</strong>: The <code>.skillsign-policy.yaml</code> file MUST be parsed with the same YAML restrictions as the sidecar file (Section 6.1): no duplicate keys, no anchors/aliases, no tags, no multi-document streams, and a maximum file size of 64KB. Violations MUST cause policy evaluation to fail with exit code <code>10</code>.</p>
+<p><strong><code>default</code> is required.</strong> A policy file missing the <code>default</code> field MUST be rejected with exit code <code>10</code>. This prevents silent fail-open behaviour from a missing or truncated policy file.</p>
+<p><strong><code>version</code> is required.</strong> A policy file with an unknown or missing <code>version</code> MUST be rejected with exit code <code>10</code>. A v0.1 CLI MUST NOT attempt to evaluate a policy with <code>version: 2</code> or higher.</p>
+<p><strong>Strict field validation</strong>: Unknown top-level fields in the policy file and unknown fields within rule objects MUST be rejected with exit code <code>10</code>. This prevents silent typos (e.g., <code>signer_og</code> instead of <code>signer_org</code>) from being ignored and inadvertently weakening the policy. The recognized top-level fields for <code>version: 1</code> are: <code>version</code>, <code>default</code>, <code>rules</code>, and <code>require_signer_id_match</code>. The recognized fields within a rule's <code>allow</code> or <code>deny</code> object are: <code>signer</code>, <code>signer_org</code>, and <code>max_age_days</code>.</p>
+<p><strong><code>signer</code> field format</strong>: The <code>signer</code> field in policy rules uses the same full HTTPS URL format as the <code>signer</code> field in the sidecar (e.g., <code>https://github.com/example-user</code>). Bare paths without the scheme (<code>github.com/example-user</code>) are invalid and MUST be rejected at policy parse time with exit code <code>10</code>. Matching is case-sensitive and exact against the sidecar's <code>signer</code> value.</p>
+<p><strong>Multiple fields in one rule</strong>: When a rule specifies multiple match fields (e.g., <code>signer_org</code> and <code>max_age_days</code>), all fields MUST match for the rule to apply (AND semantics). There is no OR semantics within a single rule — use multiple rules for OR behaviour.</p>
+<p><strong>Wildcard/glob matching</strong>: Policy <code>signer</code> and <code>signer_org</code> fields are exact string matches. No wildcard or glob expansion is performed. Prefix matching is not supported. The only partial-match mechanism is <code>signer_org</code>, which matches any signer URL whose first path segment equals the specified org value.</p>
+<p><code>max_age_days</code> requires that <code>rekor_timestamp</code> be independently confirmed — it MUST NOT be evaluated against the self-asserted <code>rekor_timestamp</code> field in the sidecar without Rekor verification. When a policy rule contains <code>max_age_days</code>, the CLI automatically enables strict Rekor verification for that check, equivalent to <code>--strict</code>, regardless of whether <code>--strict</code> was explicitly passed. Using <code>max_age_days</code> with <code>--offline</code> exits with code <code>10</code> unless <code>--offline-age-skip</code> is also passed. <code>max_age_days</code> MUST be a positive integer. A value of <code>0</code> or a negative value MUST be rejected at policy parse time with exit code <code>10</code>.</p>
+<h3 id="102-signer_org-matching">10.2 signer_org Matching<a class="headerlink" href="#102-signer_org-matching" title="Permanent link">&para;</a></h3>
+<p>The <code>signer_org</code> policy field matches against the GitHub organization extracted from the <code>signer</code> field in the sidecar using the following algorithm:</p>
+<ol>
+<li>Parse the <code>signer</code> value as a URL</li>
+<li>Percent-decode the path component (to prevent <code>anthropic%2Ffoo</code> from bypassing org extraction)</li>
+<li>Split the decoded path on <code>/</code>, discarding empty segments</li>
+<li>The first non-empty path segment is the owner segment</li>
+</ol>
+<p>Matching rules:
+- For <strong>email signers</strong> (RFC822Name SAN, e.g., <code>user@gmail.com</code>): <code>signer_org</code> rules CANNOT match. Email signers have no URL to extract an org from and must be matched using the <code>signer</code> rule with their exact email address.
+- For <strong>individual signers</strong> (SAN format: <code>https://github.com/{username}</code>, one path segment): <code>signer_org</code> rules CANNOT match. Individual signers must be matched using the <code>signer</code> rule with their full URL. This is intentional — <code>signer_org</code> is designed for CI/org-level trust, not individuals.
+- For <strong>GitHub Actions signers</strong> (SAN format: <code>https://github.com/{org}/{repo}/.github/workflows/...</code>, multiple path segments): <code>signer_org</code> matches if the extracted first path segment (after lowercase normalization) equals the rule's <code>signer_org</code> value.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Matches github.com/anthropic/* Actions signers only, NOT individual users</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">allow</span><span class="p">:</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="nt">signer_org</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">anthropic</span>
+</code></pre></div>
+<p><strong>Case normalization</strong>: GitHub usernames and org names are case-insensitive on the platform. To prevent case-sensitivity mismatches, implementations MUST lowercase the owner segment during <code>signer_org</code> extraction (step 4 above) before comparing against the policy rule value. Policy authors MUST write <code>signer_org</code> values in lowercase. A policy rule with an uppercase <code>signer_org</code> value (e.g., <code>signer_org: Anthropic</code>) MUST be rejected at policy parse time with exit code <code>10</code>. The same lowercase normalization applies to <code>SKILL_ID_MISMATCH</code> owner-path comparison (Section 8.3, Section 11).</p>
+<h3 id="103-policy-rule-evaluation-order">10.3 Policy Rule Evaluation Order<a class="headerlink" href="#103-policy-rule-evaluation-order" title="Permanent link">&para;</a></h3>
+<p>Rules are evaluated in the order they appear in the <code>rules</code> list. The first matching rule wins. If no rule matches, the <code>default</code> action applies. <code>deny</code> rules are evaluated alongside <code>allow</code> rules in declaration order — a <code>deny</code> rule appearing before an <code>allow</code> rule will match first.</p>
+<h3 id="104-known-policy-limitations">10.4 Known Policy Limitations<a class="headerlink" href="#104-known-policy-limitations" title="Permanent link">&para;</a></h3>
+<p><code>SKILL_ID_MISMATCH</code> is a hard failure (exit code <code>1</code>) by default, regardless of whether a policy file is provided. This ensures that even bare <code>skillsign verify</code> calls detect namespace squatting. The check can be downgraded to an advisory warning in two ways: (1) passing <code>--allow-id-mismatch</code> on the CLI, or (2) setting <code>require_signer_id_match: false</code> in a policy file. <code>require_signer_id_match</code> defaults to <code>true</code> when not explicitly set. When active, the check is evaluated after all other verification steps and before the <code>rules</code> list. A <code>SKILL_ID_MISMATCH</code> failure results in exit code <code>1</code>, not <code>3</code> (POLICY_FAIL).</p>
+<p>No <code>signer_repo</code> or <code>signer_ref</code> fields are supported in v0.1 for granular CI trust (e.g., "only trust signatures from the <code>main</code> branch of <code>org/repo</code>"). These are deferred to v0.2.</p>
+<h3 id="105-ci-integration">10.5 CI Integration<a class="headerlink" href="#105-ci-integration" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># .github/workflows/verify-skills.yml</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Verify skills</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="no">skillsign verify --policy .skillsign-policy.yaml ./skills/**/*.md --quiet</span>
+</code></pre></div>
+<p>Note: the CLI performs its own glob expansion and does not rely on shell globbing. The pattern <code>./skills/**/*.md</code> is evaluated by the CLI using standard doublestar matching, consistent across shells and operating systems. Shell quoting of glob patterns is recommended to prevent the shell from pre-expanding them.</p>
+<hr />
+<h2 id="11-security-considerations">11. Security Considerations<a class="headerlink" href="#11-security-considerations" title="Permanent link">&para;</a></h2>
+<p><strong>Signature freshness</strong>: Certificates are short-lived but signatures are permanent. A signature made with a now-expired certificate is still valid — the certificate was valid at signing time, and Rekor proves this via the <code>rekor_timestamp</code>. Consumers who require recent signatures should use <code>max_age_days</code> in their policy, evaluated against <code>rekor_timestamp</code>.</p>
+<p><strong>Key compromise</strong>: Because keys are ephemeral, compromise of a signing key after the fact is not meaningful — the key no longer exists. Compromise of a GitHub account is the relevant threat, and that's addressed by GitHub's own security model.</p>
+<p><strong>Substitution attacks</strong>: The <code>skill_id</code> and <code>skill_version</code> are included in the signed digest (Section 5.2), preventing a valid signature for one skill from being reused for another skill with identical content.</p>
+<p><strong>skill_id ownership</strong>: The <code>skill_id</code> field is self-asserted by the signer. The signing layer alone cannot prevent a malicious actor at <code>github.com/bad-actor</code> from claiming <code>skill_id: github.com/anthropic/python-linter</code>. The cryptographic signature guarantees that the file was signed by the claimed GitHub identity — it does not guarantee that the claimed GitHub identity is the legitimate owner of that <code>skill_id</code>. Enforcement of <code>skill_id</code> ownership is the responsibility of a registry, which can associate skill namespaces with verified owners and reject claims from non-owners. Consumers relying solely on the CLI without a registry should treat <code>skill_id</code> as informational and evaluate trust based on the <code>signer</code> identity directly.</p>
+<p>As a mitigation, the CLI performs an owner-path consistency check at verify time: if the <code>skill_id</code> owner path (the <code>{host}/{owner}</code> prefix, e.g., <code>github.com/anthropic</code>) does not match the signer owner path (e.g., <code>github.com/random-user</code>), the CLI fails with <code>SKILL_ID_MISMATCH</code> (exit code <code>1</code>). This is a hard failure by default — it can be downgraded to a warning via <code>--allow-id-mismatch</code> or <code>require_signer_id_match: false</code> in a policy file. The CLI cannot determine GitHub org membership, so this heuristic is intentionally conservative.</p>
+<p><strong>Canonical form attacks</strong>: The normalization rules are intentionally minimal to reduce the attack surface. Future versions should consider whether more aggressive canonicalization (e.g., normalizing Unicode) is warranted.</p>
+<p><strong>Offline verification</strong>: In <code>--offline</code> mode, Rekor is not consulted. This is weaker than strict mode but still verifies content integrity and certificate validity against the bundled Fulcio root. Note that <code>max_age_days</code> policy enforcement is unavailable in offline mode since <code>rekor_timestamp</code> cannot be independently confirmed, and bundled TUF root metadata may not reflect recent Sigstore root key rotations.</p>
+<p><strong>Non-strict verification</strong>: In default (non-strict) mode, the <code>rekor_log_id</code> and <code>rekor_timestamp</code> fields in the sidecar are not independently verified against the Rekor transparency log. The cryptographic signature and Fulcio certificate are still fully verified, so signer identity and content integrity are assured. However, without <code>--strict</code>, there is no guarantee that the signature was recorded in the public transparency log. Consumers who require a public audit trail should use <code>--strict</code> or a policy that enforces it.</p>
+<p><strong>TOCTOU (time-of-check to time-of-use)</strong>: Verification happens at check time, but the file is loaded and executed at a later point. An attacker with write access to the filesystem could swap the SKILL.md between verification and load. This is a general filesystem security concern not specific to SkillSign. Mitigations include verifying immediately before loading (not in a separate pipeline step), running the CLI in a trusted execution environment, and using filesystem integrity tools. SkillSign does not attempt to hold an exclusive lock between verify and load. As a concrete mitigation, the <code>--emit-canonical</code> flag (Section 9.1) outputs verified canonical bytes to stdout, enabling callers to pipe verified content directly to the loader without a filesystem re-read: <code>skillsign verify --emit-canonical ./SKILL.md | loader</code>.</p>
+<p><strong>Skill composition</strong>: A verified SKILL.md may reference or load other skill files. SkillSign makes no claims about the trust status of transitively loaded skills. Consumers should verify all skills in a composition, not just the entry point. A future version may introduce a composition manifest that extends signing to skill dependency trees.</p>
+<p><strong>Policy file is unsigned</strong>: The <code>.skillsign-policy.yaml</code> file is consumed by the verifier but is not itself signed. An attacker with write access to the policy file can weaken or remove trust constraints. Policy files should be stored in version control, treated as security-sensitive configuration, and protected with the same access controls as other security policy artifacts. As a concrete mitigation, the <code>--policy-digest &lt;sha256:hex&gt;</code> flag (Section 9.1) allows callers to pin the expected policy file hash. The CLI computes the policy file's SHA-256 digest before parsing and rejects it with exit code <code>10</code> if the digest does not match. CI pipelines SHOULD use <code>--policy-digest</code> to prevent runtime policy tampering.</p>
+<hr />
+<h2 id="12-known-limitations-and-future-work">12. Known Limitations and Future Work<a class="headerlink" href="#12-known-limitations-and-future-work" title="Permanent link">&para;</a></h2>
+<p>The following are acknowledged design gaps that are acceptable for v0.1 and flagged for future revision.</p>
+<p><strong>Exit code granularity</strong>: <code>MALFORMED_SIDECAR</code> maps to exit code <code>1</code>, the same as cryptographic failures. Scripts cannot distinguish parse failures from cryptographic failures. A future version should introduce a dedicated exit code for structural errors.</p>
+<p><strong>Verification results table mixing concerns</strong>: Section 8.3 mixes result codes, warnings, and error conditions. A future revision should split into "Verification Results" and "Diagnostics."</p>
+<p><strong>Version downgrade attacks (M1)</strong>: There is no mechanism to declare a minimum acceptable signer format version. A registry-level "current version" metadata field is the appropriate solution and is deferred to the registry spec.</p>
+<p><strong>Sidecar rollback (M2)</strong>: An attacker who retains an old valid sidecar for a skill can serve it alongside the current SKILL.md. There is no mechanism in v0.1 to supersede or invalidate old sidecars short of revoking the signer's GitHub account. The registry can address this by publishing a canonical "latest sidecar" and rejecting older ones.</p>
+<p><strong>Signer pinning / TOFU (M3)</strong>: There is no trust-on-first-use mechanism. Consumers who want to pin a specific signer for a skill must express this via policy. Automated TOFU is deferred to a future version.</p>
+<p><strong>npm distribution (M4)</strong>: Skills distributed via npm have no verify-before-load requirement enforced by SkillSign. Tool integrations (Claude Code, etc.) are responsible for invoking verification before loading. This spec does not mandate enforcement points.</p>
+<p><strong>GitHub account rename and transfer (M5)</strong>: If a GitHub account is renamed or transferred, historical signatures remain valid (they reference the identity at signing time), but the identity claim may no longer point to the original author. The <code>rekor_timestamp</code> bounds the signing event, which partially mitigates this.</p>
+<p><strong>ASCII lookalike homoglyphs (M11)</strong>: The ASCII-only restriction on <code>skill_id</code> prevents Unicode homoglyphs but does not prevent ASCII lookalikes (e.g., <code>l</code> vs <code>1</code>, <code>O</code> vs <code>0</code>). This is an inherent limitation of any text-based namespace.</p>
+<p><strong>Unicode normalization in content (M12)</strong>: SKILL.md content is signed as-is after whitespace normalization. If the same logical content is represented in different Unicode normalization forms (NFC vs NFD), the digests will differ. Authors and tooling should use consistent Unicode normalization. NFC normalization as a preprocessing step is under consideration for v0.2.</p>
+<hr />
+<h2 id="13-versioning">13. Versioning<a class="headerlink" href="#13-versioning" title="Permanent link">&para;</a></h2>
+<p>This document is v0.1. The <code>version: 1</code> field in signature blocks refers to the SkillSign signature format version, not the spec document version. Breaking changes to the signature format will increment the format version.</p>
+<p><strong>Forward compatibility note</strong>: The sidecar format in v0.1 supports exactly one signature per file. Future format versions (v2+) may extend the <code>signature</code> and <code>certificate</code> fields to support co-signing (e.g., author + CI pipeline). Implementations should not make assumptions that preclude this extension. A planned v0.2 change will introduce a <code>signatures</code> array to support these workflows.</p>
+<hr />
+<h2 id="appendix-a-why-not-pgpgpg">Appendix A: Why Not PGP/GPG?<a class="headerlink" href="#appendix-a-why-not-pgpgpg" title="Permanent link">&para;</a></h2>
+<p>PGP is the obvious prior art but has well-documented usability failures. Key distribution requires a web of trust or keyserver infrastructure. Key revocation is unreliable. Expired keys cause confusion. The burden on signers to manage long-lived private keys results in poor key hygiene in practice. Sigstore's keyless model solves all of these by tying identity to an existing, well-maintained IdP (GitHub) and eliminating long-lived keys entirely.</p>
+<h2 id="appendix-b-relationship-to-sigstore">Appendix B: Relationship to Sigstore<a class="headerlink" href="#appendix-b-relationship-to-sigstore" title="Permanent link">&para;</a></h2>
+<p>SkillSign is not a fork of Sigstore — it uses Sigstore's public infrastructure (Fulcio CA, Rekor log) as its trust backbone. The SkillSign-specific contribution is the canonical form definition, the detached sidecar signature format, and the skill-specific CLI and tooling. This means SkillSign signatures can be independently verified by anyone using raw Sigstore tooling, and the transparency log is not controlled by SkillSign.</p>
+<hr />
+<p><em>SkillSign is an open specification. Feedback and contributions welcome.</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

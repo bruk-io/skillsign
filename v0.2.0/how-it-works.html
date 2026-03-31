@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="How SkillSign signing and verification works — Sigstore keyless signing for Claude Code skills">
+  <title>How It Works — SkillSign</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/site.css">
+  <script type="module" src="vendor/bh-01/bh-01.bundled.js"></script>
+  <script type="module" src="js/logo.js"></script>
+  <script type="module" src="vendor/likec4/likec4-views.js"></script>
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <bh-pixel-display class="site-logo" label="SkillSign logo"></bh-pixel-display>
+        <span class="nav-title">SkillSign</span>
+      </a>
+      <bh-cluster gap="md" class="nav-links">
+        <a href="how-it-works.html">How It Works</a>
+        <a href="getting-started.html">Get Started</a>
+        <a href="https://github.com/bruk-io/skillsign/blob/main/docs/spec.md">Spec</a>
+        <a href="https://github.com/bruk-io/skillsign" class="nav-github" aria-label="GitHub">
+          <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+        </a>
+      </bh-cluster>
+    </div>
+  </nav>
+
+  <main>
+    <section class="page-header">
+      <h1 class="heading-xl">How It Works</h1>
+      <p class="text-muted header-subtitle">
+        SkillSign uses Sigstore keyless signing to bind your GitHub identity to your SKILL.md files
+        without managing long-lived private keys.
+      </p>
+    </section>
+
+    <section class="section">
+      <div class="section-inner">
+        <bh-stack gap="lg">
+          <bh-card variant="outlined" padding="lg" callout>
+            <div slot="header">
+              <span class="heading-sm">Important: Signing is not authorization</span>
+            </div>
+            <bh-stack gap="sm">
+              <p class="text-muted">
+                Today, anyone can create a <code class="code-inline">skill_id</code> and sign it with their own identity.
+                Verification confirms <em>who</em> signed a skill and that the content hasn't been tampered with — but
+                it does not confirm that the signer is <em>trustworthy</em>.
+              </p>
+              <p class="text-muted">
+                A future <strong>skill registry</strong> will bind <code class="code-inline">skill_id</code> ownership
+                to specific signers, closing this gap. Until then, consumers should verify the signer's identity
+                matches who they expect, not just that a valid signature exists.
+              </p>
+            </bh-stack>
+          </bh-card>
+
+          <bh-tabs active="authors">
+            <bh-tab-bar slot="tab-bar" active="authors">
+              <bh-tab tab-id="authors" label="For Authors"></bh-tab>
+              <bh-tab tab-id="consumers" label="For Consumers"></bh-tab>
+            </bh-tab-bar>
+
+            <!-- For Authors -->
+            <bh-tab-panel tab-id="authors">
+              <bh-stack gap="xl" class="tab-panel-content">
+                <!-- Signing Flow -->
+                <bh-stack gap="md">
+                  <h2 class="heading-lg">Signing Flow</h2>
+                  <p class="text-muted">
+                    The signing protocol produces a detached sidecar file containing the signature,
+                    certificate, and transparency log entry. The SKILL.md file is never modified.
+                  </p>
+                  <likec4-view view-id="signingFlow"></likec4-view>
+                </bh-stack>
+
+                <bh-divider></bh-divider>
+
+                <!-- Signing Modes -->
+                <bh-stack gap="lg">
+                  <bh-stack gap="sm">
+                    <h2 class="heading-lg">Signing Modes</h2>
+                    <p class="text-muted">
+                      SkillSign supports two signing paths with different identity and trust properties.
+                    </p>
+                  </bh-stack>
+
+                  <bh-grid gap="lg" min="320px">
+                    <bh-card variant="outlined" padding="lg">
+                      <div slot="header">
+                        <span class="heading-sm">CI Signing (GitHub Actions)</span>
+                      </div>
+                      <bh-stack gap="md">
+                        <p>
+                          In GitHub Actions, SkillSign uses <strong>ambient OIDC credentials</strong> — no browser
+                          login needed. The Fulcio certificate SAN encodes the full workflow path:
+                        </p>
+                        <bh-code-block language="text">https://github.com/{org}/{repo}/.github/workflows/{workflow}.yml@refs/heads/{branch}</bh-code-block>
+                        <p class="text-muted">
+                          This ties the signature to a <strong>repository and workflow</strong>, not a person.
+                          Anyone with write access can trigger the workflow and produce a valid signature.
+                          The trust boundary is the repo's access controls.
+                        </p>
+                      </bh-stack>
+                    </bh-card>
+
+                    <bh-card variant="outlined" padding="lg">
+                      <div slot="header">
+                        <span class="heading-sm">Developer Signing (Interactive)</span>
+                      </div>
+                      <bh-stack gap="md">
+                        <p>
+                          When a developer runs <code class="code-inline">skillsign sign</code> locally, they
+                          authenticate via browser-based OIDC. The certificate SAN encodes their personal identity:
+                        </p>
+                        <bh-code-block language="text">GitHub OAuth:  https://github.com/{username}
+Email OAuth:   user@example.com</bh-code-block>
+                        <p class="text-muted">
+                          This ties the signature to an <strong>individual</strong>. Only someone who can
+                          authenticate as that GitHub user can produce the signature. The trust boundary is
+                          the person's account security.
+                        </p>
+                      </bh-stack>
+                    </bh-card>
+                  </bh-grid>
+
+                  <bh-stack gap="md">
+                    <h3 class="heading-sm">Why signing alone isn't enough</h3>
+                    <p class="text-muted text-sm">
+                      Today, signing proves identity but not authorization. Anyone can sign any <code class="code-inline">skill_id</code>.
+                      A future registry will enforce who is allowed to sign what.
+                    </p>
+                    <p class="text-muted">
+                      CI signatures prove <em>"this repo produced this artifact"</em> — but repos change hands,
+                      maintainers rotate, and workflow files can be modified by anyone with push access.
+                      A compromised repo produces legitimate-looking CI signatures.
+                    </p>
+                    <p class="text-muted">
+                      Developer signatures prove <em>"this person endorsed this artifact."</em> Combined with a
+                      future registry that maps <code class="code-inline">skill_id</code> to authorized signers,
+                      this enables a stronger trust model:
+                    </p>
+                    <ol class="registry-list">
+                      <li>A registry entry says <em>"skill <code class="code-inline">github.com/acme/deploy</code> may only be signed by <code class="code-inline">https://github.com/alice</code>"</em></li>
+                      <li>Even if the repo is compromised, an attacker can't produce a signature that matches the registry's authorized signer</li>
+                      <li>Consumers verify both the signature <em>and</em> the signer-to-skill binding from the registry</li>
+                    </ol>
+                    <p class="text-muted">
+                      <strong>CI signing is convenient for automation. Developer signing is stronger for trust</strong>
+                      — especially once a registry exists to enforce who is allowed to sign what.
+                    </p>
+                  </bh-stack>
+                </bh-stack>
+              </bh-stack>
+            </bh-tab-panel>
+
+            <!-- For Consumers -->
+            <bh-tab-panel tab-id="consumers">
+              <bh-stack gap="xl" class="tab-panel-content">
+                <!-- Verification Flow -->
+                <bh-stack gap="md">
+                  <h2 class="heading-lg">Verification Flow</h2>
+                  <p class="text-muted">
+                    Verification checks the signature, certificate chain, signer identity, and optionally
+                    enforces a trust policy. Each failure produces a specific result code.
+                  </p>
+                  <likec4-view view-id="verificationFlow"></likec4-view>
+                </bh-stack>
+
+                <bh-divider></bh-divider>
+
+                <!-- Verification Results -->
+                <bh-stack gap="md">
+                  <h2 class="heading-lg">Verification Results</h2>
+                  <p class="text-muted">
+                    Every verification attempt produces one of these results, each with a specific exit code
+                    for CI integration.
+                  </p>
+                  <p class="text-muted text-sm">
+                    Remember: a <code class="code-inline">VERIFIED</code> result confirms the signature is valid and the
+                    signer's identity — but until a registry exists, it's up to you to confirm the signer is someone you trust
+                    for that particular skill.
+                  </p>
+
+                  <bh-grid gap="md" min="320px">
+                    <bh-card variant="outlined" padding="md">
+                      <bh-cluster gap="sm" slot="header">
+                        <bh-badge variant="success">Exit 0</bh-badge>
+                        <span class="heading-sm">VERIFIED</span>
+                      </bh-cluster>
+                      Signature valid, signer identity confirmed, content unmodified.
+                    </bh-card>
+
+                    <bh-card variant="outlined" padding="md">
+                      <bh-cluster gap="sm" slot="header">
+                        <bh-badge variant="danger">Exit 1</bh-badge>
+                        <span class="heading-sm">TAMPERED</span>
+                      </bh-cluster>
+                      Digest mismatch — the file has been modified after signing.
+                    </bh-card>
+
+                    <bh-card variant="outlined" padding="md">
+                      <bh-cluster gap="sm" slot="header">
+                        <bh-badge variant="danger">Exit 1</bh-badge>
+                        <span class="heading-sm">INVALID_CERT</span>
+                      </bh-cluster>
+                      Certificate cannot be verified against the Fulcio root.
+                    </bh-card>
+
+                    <bh-card variant="outlined" padding="md">
+                      <bh-cluster gap="sm" slot="header">
+                        <bh-badge variant="danger">Exit 1</bh-badge>
+                        <span class="heading-sm">IDENTITY_MISMATCH</span>
+                      </bh-cluster>
+                      Certificate SAN does not match the claimed signer.
+                    </bh-card>
+
+                    <bh-card variant="outlined" padding="md">
+                      <bh-cluster gap="sm" slot="header">
+                        <bh-badge variant="warning">Exit 2</bh-badge>
+                        <span class="heading-sm">UNSIGNED</span>
+                      </bh-cluster>
+                      No sidecar file found. Not a hard failure by default.
+                    </bh-card>
+
+                    <bh-card variant="outlined" padding="md">
+                      <bh-cluster gap="sm" slot="header">
+                        <bh-badge variant="warning">Exit 3</bh-badge>
+                        <span class="heading-sm">POLICY_FAIL</span>
+                      </bh-cluster>
+                      Signature is valid but does not meet the caller's trust policy.
+                    </bh-card>
+
+                    <bh-card variant="outlined" padding="md">
+                      <bh-cluster gap="sm" slot="header">
+                        <bh-badge variant="danger">Exit 1</bh-badge>
+                        <span class="heading-sm">SKILL_ID_MISMATCH</span>
+                      </bh-cluster>
+                      Skill_id owner path doesn't match signer owner path.
+                    </bh-card>
+
+                    <bh-card variant="outlined" padding="md">
+                      <bh-cluster gap="sm" slot="header">
+                        <bh-badge variant="danger">Exit 1</bh-badge>
+                        <span class="heading-sm">MALFORMED_SIDECAR</span>
+                      </bh-cluster>
+                      Sidecar file is present but cannot be parsed or has invalid structure.
+                    </bh-card>
+                  </bh-grid>
+                </bh-stack>
+              </bh-stack>
+            </bh-tab-panel>
+          </bh-tabs>
+        </bh-stack>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <bh-pixel-display class="site-logo" label="SkillSign logo"></bh-pixel-display>
+        <span>SkillSign</span>
+      </div>
+      <bh-cluster gap="md" justify="center" class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="how-it-works.html">How It Works</a>
+        <a href="getting-started.html">Get Started</a>
+        <a href="https://github.com/bruk-io/skillsign/blob/main/docs/spec.md">Specification</a>
+        <a href="https://github.com/bruk-io/skillsign">GitHub</a>
+      </bh-cluster>
+      <div class="footer-copy text-muted">
+        &copy; 2026 SkillSign. MIT License.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
