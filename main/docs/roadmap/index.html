@@ -505,6 +505,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#deferred" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deferred
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#not-planned" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -625,6 +636,17 @@
     <span class="md-ellipsis">
       
         Phase 4: Ecosystem — "Can the community build on it?"
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deferred" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deferred
       
     </span>
   </a>
@@ -786,7 +808,7 @@
 <tr>
 <td>16</td>
 <td>SKILL_ID_MISMATCH check (Section 8.3)</td>
-<td>Owner-path consistency, percent-decode bypass prevention, <code>--allow-id-mismatch</code></td>
+<td>Owner-path consistency, percent-decode bypass prevention</td>
 </tr>
 <tr>
 <td>17</td>
@@ -795,46 +817,36 @@
 </tr>
 <tr>
 <td>18</td>
-<td><code>--offline</code> mode</td>
-<td>Bundled TUF root fallback, skip Rekor</td>
-</tr>
-<tr>
-<td>19</td>
-<td><code>--offline</code> + <code>--strict</code> mutual exclusion</td>
-<td>Exit code 10 with explanatory message</td>
-</tr>
-<tr>
-<td>20</td>
 <td>Sidecar-exists guard (Section 7.2.1 step 3)</td>
 <td>Prevent accidental re-signing, <code>--force</code> flag</td>
 </tr>
 <tr>
-<td>21</td>
+<td>19</td>
 <td>All error flows with correct exit codes</td>
 <td>TAMPERED, INVALID_CERT, IDENTITY_MISMATCH, MALFORMED_SIDECAR, UNSIGNED</td>
 </tr>
 <tr>
-<td>22</td>
+<td>20</td>
 <td><code>skillsign inspect</code> command</td>
 <td>Show signature metadata without verifying</td>
 </tr>
 <tr>
-<td>23</td>
+<td>21</td>
 <td><code>skillsign unsign</code> command</td>
 <td>Delete sidecar file</td>
 </tr>
 <tr>
-<td>24</td>
+<td>22</td>
 <td><code>--format json</code> output</td>
 <td>Machine-readable output for all commands</td>
 </tr>
 <tr>
-<td>25</td>
+<td>23</td>
 <td><code>--quiet</code> flag</td>
 <td>Suppress output, exit codes only</td>
 </tr>
 <tr>
-<td>26</td>
+<td>24</td>
 <td>Multi-file verification</td>
 <td>Glob support, per-file results, highest-severity exit code</td>
 </tr>
@@ -978,6 +990,12 @@
 </table>
 <p><strong>Exit criteria:</strong> v0.2 spec draft published. Breaking changes (if any) documented with migration path.</p>
 <hr />
+<h2 id="deferred">Deferred<a class="headerlink" href="#deferred" title="Permanent link">&para;</a></h2>
+<p>Descoped from current phases — may be revisited based on user demand:</p>
+<ul>
+<li><strong><code>--offline</code> mode</strong> — Bundled TUF root fallback, skip Rekor. Limited value while Sigstore is inherently online and no production users exist yet. TUF cache already handles transient network failures. Also defers <code>--offline</code> + <code>--strict</code> mutual exclusion and <code>--offline-age-skip</code>.</li>
+<li><strong><code>--allow-id-mismatch</code></strong> — CLI flag to downgrade SKILL_ID_MISMATCH to a warning. Subsumed by Phase 3 policy engine's <code>require_signer_id_match</code> per-rule config. No value as a standalone flag.</li>
+</ul>
 <h2 id="not-planned">Not Planned<a class="headerlink" href="#not-planned" title="Permanent link">&para;</a></h2>
 <p>These are explicitly out of scope or deferred indefinitely:</p>
 <ul>
